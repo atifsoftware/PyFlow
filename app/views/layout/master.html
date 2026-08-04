@@ -1,17 +1,21 @@
 <!DOCTYPE html>
 <html lang="{{ current_lang }}">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PyMVC Framework</title>
+    <title>PyFlow Framework</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
-        body { 
-            font-family: 'Hind Siliguri', 'Inter', sans-serif; 
+        body {
+            font-family: 'Hind Siliguri', 'Inter', sans-serif;
         }
+
         .btn-lang {
             padding: 4px 10px;
             border: 1px solid #ddd;
@@ -24,30 +28,32 @@
             margin-left: 10px;
             transition: all 0.2s ease;
         }
+
         .btn-lang:hover {
             background: #f0f0f0;
             border-color: #bbb;
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar">
-        <a href="/" class="brand">Py<span style="color:#e056fd;">MVC</span></a>
+        <a href="/" class="brand">Py<span style="color:#e056fd;">Flow</span></a>
         <div class="nav-links" style="display: flex; align-items: center; gap: 15px;">
             <a href="/">{{ __('home') }}</a>
             <a href="/docs">{{ __('docs') }}</a>
             @if(user_name)
-                <a href="/dashboard">{{ __('dashboard') }}</a>
-                <a href="/logout">{{ __('logout') }}</a>
+            <a href="/dashboard">{{ __('dashboard') }}</a>
+            <a href="/logout">{{ __('logout') }}</a>
             @else
-                <a href="/login">{{ __('login') }}</a>
-                <a href="/register">{{ __('register') }}</a>
+            <a href="/login">{{ __('login') }}</a>
+            <a href="/register">{{ __('register') }}</a>
             @endif
-            
+
             @if(current_lang == 'bn')
-                <a href="?lang=en" class="btn-lang"><i class="fas fa-globe"></i> English</a>
+            <a href="?lang=en" class="btn-lang"><i class="fas fa-globe"></i> English</a>
             @else
-                <a href="?lang=bn" class="btn-lang"><i class="fas fa-globe"></i> বাংলা</a>
+            <a href="?lang=bn" class="btn-lang"><i class="fas fa-globe"></i> বাংলা</a>
             @endif
         </div>
     </nav>
@@ -55,4 +61,5 @@
         @yield('content')
     </main>
 </body>
+
 </html>
