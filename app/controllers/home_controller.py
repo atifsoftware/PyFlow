@@ -11,3 +11,8 @@ class HomeController(Controller):
             "title": "PyMVC Framework",
             "user_name": self.session.get("user_name"),
         })
+
+    def docs(self):
+        return self.view("docs.index", {
+            "title": "ডকুমেন্টেশন — PyMVC Framework"
+        })

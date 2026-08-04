@@ -1,0 +1,417 @@
+@extends('layout.master')
+@section('content')
+
+<style>
+    .docs-container {
+        display: flex;
+        gap: 30px;
+        margin-top: 30px;
+        min-height: 70vh;
+    }
+    .docs-sidebar {
+        width: 280px;
+        flex-shrink: 0;
+        background: #ffffff;
+        border-right: 1px solid rgba(0, 0, 0, 0.05);
+        padding-right: 20px;
+    }
+    .docs-menu {
+        position: sticky;
+        top: 100px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .docs-menu-title {
+        font-size: 12px;
+        text-transform: uppercase;
+        font-weight: 800;
+        color: #a4b0be;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+        padding-left: 10px;
+    }
+    .docs-menu-item {
+        margin-bottom: 5px;
+    }
+    .docs-menu-link {
+        display: block;
+        padding: 10px 15px;
+        border-radius: 10px;
+        color: #57606f;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14.5px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .docs-menu-link:hover {
+        background: rgba(224, 86, 253, 0.04);
+        color: #be2edd;
+        padding-left: 18px;
+    }
+    .docs-menu-link.active {
+        background: rgba(224, 86, 253, 0.08);
+        color: #be2edd;
+        font-weight: 700;
+    }
+    .docs-content {
+        flex: 1;
+        background: #ffffff;
+        padding: 10px 10px 40px 10px;
+    }
+    .docs-section {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    .docs-section.active {
+        display: block;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .docs-h1 {
+        font-size: 32px;
+        font-weight: 800;
+        color: #2f3542;
+        margin-bottom: 15px;
+        border-left: 5px solid #be2edd;
+        padding-left: 12px;
+    }
+    .docs-lead {
+        font-size: 16px;
+        color: #747d8c;
+        line-height: 1.6;
+        margin-bottom: 30px;
+    }
+    .docs-h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #2f3542;
+        margin-top: 35px;
+        margin-bottom: 15px;
+    }
+    code {
+        font-family: 'Courier New', Courier, monospace;
+        background: #f1f2f6;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 14px;
+        color: #e056fd;
+        font-weight: bold;
+    }
+    pre {
+        background: #1e272e;
+        color: #f1f2f6;
+        padding: 20px;
+        border-radius: 12px;
+        font-size: 14px;
+        overflow-x: auto;
+        margin-bottom: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    pre code {
+        background: transparent;
+        padding: 0;
+        color: inherit;
+        font-weight: normal;
+    }
+    .alert-info {
+        background: rgba(224, 86, 253, 0.04);
+        border: 1px dashed rgba(224, 86, 253, 0.25);
+        color: #be2edd;
+        padding: 16px;
+        border-radius: 12px;
+        font-size: 14.5px;
+        margin-bottom: 25px;
+        line-height: 1.5;
+    }
+    @media(max-width: 768px) {
+        .docs-container {
+            flex-direction: column;
+        }
+        .docs-sidebar {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            padding-right: 0;
+        }
+    }
+</style>
+
+<div class="docs-container">
+    <!-- Sidebar Menu -->
+    <aside class="docs-sidebar">
+        <ul class="docs-menu">
+            <li class="docs-menu-title">{{ "সূচিপত্র" if current_lang == 'bn' else "Table of Contents" }}</li>
+            
+            <li class="docs-menu-item">
+                <a class="docs-menu-link active" onclick="switchSection('intro')">
+                    <i class="fas fa-circle-info" style="width: 20px;"></i>
+                    {{ "ভূমিকা" if current_lang == 'bn' else "Introduction" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('setup')">
+                    <i class="fas fa-screwdriver-wrench" style="width: 20px;"></i>
+                    {{ "সেটআপ ও রান" if current_lang == 'bn' else "Setup & Installation" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('routing')">
+                    <i class="fas fa-route" style="width: 20px;"></i>
+                    {{ "রাউটিং" if current_lang == 'bn' else "Routing" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('controllers')">
+                    <i class="fas fa-cubes" style="width: 20px;"></i>
+                    {{ "কন্ট্রোলার" if current_lang == 'bn' else "Controllers" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('orm')">
+                    <i class="fas fa-database" style="width: 20px;"></i>
+                    {{ "অ্যাক্টিভ রেকর্ড ওআরএম" if current_lang == 'bn' else "Active Record ORM" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('validator')">
+                    <i class="fas fa-circle-check" style="width: 20px;"></i>
+                    {{ "ইনপুট ভ্যালিডেশন" if current_lang == 'bn' else "Input Validation" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('fastapi')">
+                    <i class="fas fa-bolt" style="width: 20px;"></i>
+                    {{ "FastAPI ও সোয়াগার" if current_lang == 'bn' else "FastAPI & Swagger" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('api-keys')">
+                    <i class="fas fa-key" style="width: 20px;"></i>
+                    {{ "API কী ও অডিট লগ" if current_lang == 'bn' else "API Keys & Audits" }}
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Docs Content Area -->
+    <main class="docs-content">
+        
+        <!-- SECTION: Introduction -->
+        <section id="docs-intro" class="docs-section active">
+            <h1 class="docs-h1">{{ "ভূমিকা" if current_lang == 'bn' else "Introduction" }}</h1>
+            <p class="docs-lead">
+                {{ "PyMVC একটি অত্যন্ত হালকা এবং সিকিউর পাইথন এমভিসি ফ্রেমওয়ার্ক। এটি পাইথনের স্ট্যান্ডার্ড লাইব্রেরি ব্যবহার করে তৈরি করা হয়েছে। একই সাথে এটিASGI গেটওয়ের সাহায্যে FastAPI ইন্টিগ্রেশন সমর্থন করে।" if current_lang == 'bn' else "PyMVC is a lightweight, secure Python MVC framework written from scratch using Python's standard library. It natively supports FastAPI side-by-side integration using an ASGI-to-WSGI bridge." }}
+            </p>
+            <div class="alert-info">
+                <strong>{{ "নোট:" if current_lang == 'bn' else "Note:" }}</strong>
+                {{ "এই ডক পেজটি PyMVC-র মূল সুবিধা ও কাজ করার ধারণাকে সহজে ব্যখ্যা করার জন্য ডিজাইন করা হয়েছে।" if current_lang == 'bn' else "This documentation is designed to guide developers through the advanced architectures of PyMVC." }}
+            </div>
+            <h2 class="docs-h2">{{ "কোর বৈশিষ্ঠসমূহ" if current_lang == 'bn' else "Core Strengths" }}</h2>
+            <ul>
+                <li>{{ "সম্পূর্ণ কাস্টম টেমপ্লেট ও রাউটিং ইঞ্জিন" if current_lang == 'bn' else "Completely custom templating and routing engine." }}</li>
+                <li>{{ "SQL Injection ও CSRF ভ্যালিডেশন শিল্ড" if current_lang == 'bn' else "Full SQL injection defense and CSRF automatic validation middleware." }}</li>
+                <li>{{ "FastAPI দিয়ে এপিআই তৈরি ও সোয়াগার ডক্স" if current_lang == 'bn' else "Create async APIs using FastAPI with Swagger UI integration." }}</li>
+            </ul>
+        </section>
+
+        <!-- SECTION: Setup -->
+        <section id="docs-setup" class="docs-section">
+            <h1 class="docs-h1">{{ "সেটআপ ও রান" if current_lang == 'bn' else "Setup & Installation" }}</h1>
+            <p class="docs-lead">
+                {{ "PyMVC চালানোর জন্য Python >= 3.10 প্রয়োজন।" if current_lang == 'bn' else "PyMVC requires Python >= 3.10 to run." }}
+            </p>
+            
+            <h2 class="docs-h2">১. {{ "ডিপেন্ডেন্সি ইনস্টল করা" if current_lang == 'bn' else "Install Dependencies" }}</h2>
+            <pre><code>pip install -r requirements.txt</code></pre>
+            
+            <h2 class="docs-h2">২. {{ "এনভায়রনমেন্ট ফাইল সেটআপ" if current_lang == 'bn' else "Setup Environment Configuration" }}</h2>
+            <p>{{ "রুট ফোল্ডারে .env.example ফাইলটি কপি করে .env ফাইলে পরিবর্তন করুন:" if current_lang == 'bn' else "Copy .env.example to .env and configure details:" }}</p>
+            <pre><code>DB_DRIVER=sqlite
+DB_NAME=storage/database.sqlite</code></pre>
+            
+            <h2 class="docs-h2">৩. {{ "ডাটাবেজ মাইগ্রেশন রান করা" if current_lang == 'bn' else "Run Database Migrations" }}</h2>
+            <pre><code>python migrate.py</code></pre>
+            
+            <h2 class="docs-h2">৪. {{ "ডেভেলপমেন্ট সার্ভার চালু করা" if current_lang == 'bn' else "Start Development Server" }}</h2>
+            <pre><code>python run.py</code></pre>
+        </section>
+
+        <!-- SECTION: Routing -->
+        <section id="docs-routing" class="docs-section">
+            <h1 class="docs-h1">{{ "রাউটিং সিস্টেম" if current_lang == 'bn' else "Routing System" }}</h1>
+            <p class="docs-lead">
+                {{ "সব রুট config/routes.py ফাইলে রেজিস্টার করতে হয়।" if current_lang == 'bn' else "All web routes are configured in config/routes.py." }}
+            </p>
+            <h2 class="docs-h2">{{ "সাধারণ রুট উদাহরণ" if current_lang == 'bn' else "Basic Route Examples" }}</h2>
+            <pre><code># config/routes.py
+router.get("/docs", action(HomeController, "docs"), name="docs")
+router.post("/settings", action(SettingController, "update"), name="settings.update")</code></pre>
+            
+            <h2 class="docs-h2">{{ "মিডলওয়্যার ও গ্রুপিং" if current_lang == 'bn' else "Middleware & Route Grouping" }}</h2>
+            <pre><code># নির্দিষ্ট মিডলওয়্যার গ্রুপ তৈরি
+with router.group(prefix="/admin", middleware=[auth_middleware]):
+    router.get("/settings", action(SettingController, "index"), name="admin.settings")</code></pre>
+        </section>
+
+        <!-- SECTION: Controllers -->
+        <section id="docs-controllers" class="docs-section">
+            <h1 class="docs-h1">{{ "কন্ট্রোলার ও রিকোয়েস্ট" if current_lang == 'bn' else "Controllers & Requests" }}</h1>
+            <p class="docs-lead">
+                {{ "কন্ট্রোলার ক্লাসগুলো app/controllers/ ডিরেক্টরির অধীনে থাকে এবং core.controller.Controller কে ইনহেরিট করে।" if current_lang == 'bn' else "Controllers live in app/controllers/ and inherit core.controller.Controller." }}
+            </p>
+            <h2 class="docs-h2">{{ "কন্ট্রোলার ক্লাস উদাহরণ" if current_lang == 'bn' else "Controller Example" }}</h2>
+            <pre><code>from core.controller import Controller
+
+class ProductController(Controller):
+    def index(self):
+        # input রিডিং
+        name = self.request.input("name")
+        # ভিউ রেন্ডারিং
+        return self.view("products.index", {"name": name})
+        
+    def api_data(self):
+        # JSON রেসপন্স পাঠানো
+        return self.json({"status": "success"})</code></pre>
+        </section>
+
+        <!-- SECTION: ORM -->
+        <section id="docs-orm" class="docs-section">
+            <h1 class="docs-h1">{{ "অ্যাক্টিভ রেকর্ড ওআরএম (ORM)" if current_lang == 'bn' else "Active Record ORM" }}</h1>
+            <p class="docs-lead">
+                {{ "মডেল তৈরি করে কোয়েরি বিল্ডারের সাহায্যে ডাটাবেস অপারেশন সম্পন্ন করা অত্যন্ত সহজ।" if current_lang == 'bn' else "Interact with the database using simple and parameterized Active Record models." }}
+            </p>
+            <h2 class="docs-h2">{{ "মডেল তৈরি করা" if current_lang == 'bn' else "Define a Model" }}</h2>
+            <pre><code># app/models/product_model.py
+from core.model import Model
+
+class Product(Model):
+    table = "products"
+    fillable = ["name", "price", "stock"]</code></pre>
+            
+            <h2 class="docs-h2">{{ "কোয়েরি চালানোর উদাহরণ" if current_lang == 'bn' else "Running Queries" }}</h2>
+            <pre><code># ১. সকল রেকর্ড ফেচ
+products = Product.all()
+
+# ২. চেইন্ড কুয়েরি এবং ফিল্টারিং
+premium_items = Product.query().where("price", ">", 500).order_by("created_at", "DESC").get()
+
+# ৩. ক্রিয়েট অপারেশন
+Product.create({"name": "Mobile", "price": 12000, "stock": 10})</code></pre>
+        </section>
+
+        <!-- SECTION: Validator -->
+        <section id="docs-validator" class="docs-section">
+            <h1 class="docs-h1">{{ "ইনপুট ভ্যালিডেশন" if current_lang == 'bn' else "Input Validation" }}</h1>
+            <p class="docs-lead">
+                {{ "ভ্যালিডেটর ক্লাস ব্যবহার করে ফর্ম ইনপুট খুব সহজে যাচাই করা যায়।" if current_lang == 'bn' else "Validate user inputs securely using core/validator.py rules." }}
+            </p>
+            <h2 class="docs-h2">{{ "কন্ট্রোলারে ব্যবহার" if current_lang == 'bn' else "Usage inside Controller" }}</h2>
+            <pre><code>def store(self):
+    errors = self.validate({
+        "name": ["required", "min:3"],
+        "email": ["required", "email", "unique:users,email"],
+        "password": ["required", "min:8"]
+    })
+    
+    if errors:
+        return self.back_with_errors(errors)
+        
+    # ইনপুট ডাটা সফল ভ্যালিডেট হলে সেভ করার প্রসেস...</code></pre>
+        </section>
+
+        <!-- SECTION: FastAPI -->
+        <section id="docs-fastapi" class="docs-section">
+            <h1 class="docs-h1">{{ "FastAPI ও সোয়াগার এপিআই" if current_lang == 'bn' else "FastAPI & Swagger UI" }}</h1>
+            <p class="docs-lead">
+                {{ "PyMVC-তে FastAPI-কে সাইড-বাই-সাইড ইন্টিগ্রেট করা হয়েছে।" if current_lang == 'bn' else "PyMVC hosts FastAPI side-by-side using an ASGI bridge." }}
+            </p>
+            
+            <h2 class="docs-h2">{{ "এপিআই রুট" if current_lang == 'bn' else "API URLs" }}</h2>
+            <ul>
+                <li><strong>OpenAPI Specs Docs:</strong> <code>http://127.0.0.1:8000/api/docs</code></li>
+                <li><strong>JSON Schema:</strong> <code>http://127.0.0.1:8000/api/openapi.json</code></li>
+                <li><strong>Endpoint Prefix:</strong> <code>http://127.0.0.1:8000/api/*</code></li>
+            </ul>
+            
+            <h2 class="docs-h2">{{ "অথেন্টিকেশন" if current_lang == 'bn' else "API Authentication" }}</h2>
+            <p>
+                {{ "FastAPI এন্ডপয়েন্টগুলো এক্সেস করার জন্য JWT Bearer টোকেন অথবা API Key ব্যবহার করা যায়।" if current_lang == 'bn' else "FastAPI endpoints support both JWT Bearer Tokens and secure API Keys." }}
+            </p>
+        </section>
+
+        <!-- SECTION: API Keys & Audits -->
+        <section id="docs-api-keys" class="docs-section">
+            <h1 class="docs-h1">{{ "API কী ও অ্যাক্টিভিটি লগ" if current_lang == 'bn' else "API Keys & Activity Logs" }}</h1>
+            <p class="docs-lead">
+                {{ "নিরাপত্তা ও অ্যাপ্লিকেশনের গতিবিধি ট্র্যাকিংয়ের জন্য PyMVC-তে এপিআই কী ও অ্যাক্টিভিটি লগ যুক্ত করা হয়েছে।" if current_lang == 'bn' else "Advanced keys management and system audits trail built into the core." }}
+            </p>
+            
+            <h2 class="docs-h2">{{ "এপিআই কী রিকোয়েস্ট হেডার" if current_lang == 'bn' else "API Key Request Header" }}</h2>
+            <p>{{ "FastAPI-র রিকোয়েস্টে নিচের হেডারটি পাস করুন:" if current_lang == 'bn' else "Pass the key in the request header as follows:" }}</p>
+            <pre><code>X-API-Key: pm_sk_your_plaintext_token_here</code></pre>
+            
+            <h2 class="docs-h2">{{ "অ্যাক্টিভিটি লগিং (Audit Trail)" if current_lang == 'bn' else "Logging Actions Programmatically" }}</h2>
+            <pre><code>from app.models.activity_log_model import ActivityLog
+
+# ম্যানুয়ালি কার্যক্রম লগ করা
+ActivityLog.log(
+    self.request,
+    action="custom.action",
+    description="ব্যবহারকারী একটি ফাইল ডাউনলোড করেছেন।",
+    user_id=self.session.get("user_id")
+)</code></pre>
+        </section>
+
+    </main>
+</div>
+
+<script>
+function switchSection(sectionId) {
+    // 1. Hide all sections
+    var sections = document.querySelectorAll('.docs-section');
+    sections.forEach(function(sec) {
+        sec.classList.remove('active');
+    });
+
+    // 2. Remove active class from all links
+    var links = document.querySelectorAll('.docs-menu-link');
+    links.forEach(function(link) {
+        link.classList.remove('active');
+    });
+
+    // 3. Show selected section
+    var targetSec = document.getElementById('docs-' + sectionId);
+    if (targetSec) {
+        targetSec.classList.add('active');
+    }
+
+    // 4. Highlight current sidebar item
+    var eventSource = window.event ? window.event.currentTarget : null;
+    if (eventSource) {
+        eventSource.classList.add('active');
+    } else {
+        // Find link manually if triggered programmatically
+        var menuLinks = document.querySelectorAll('.docs-menu-link');
+        menuLinks.forEach(function(l) {
+            if (l.getAttribute('onclick').indexOf(sectionId) > -1) {
+                l.classList.add('active');
+            }
+        });
+    }
+    
+    // Scroll to top of content
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+<footer style="text-align: center; padding: 40px 20px; color: #a4b0be; font-size: 13px; margin-top: 50px; border-top: 1px solid #f1f2f6;">
+    <p style="margin-bottom: 6px;">{{ __('footer_text') }}</p>
+    <p>&copy; {{ date('Y') if hasattr(date, 'Y') else '2026' }} PyMVC Framework. All rights reserved.</p>
+</footer>
+
+@endsection

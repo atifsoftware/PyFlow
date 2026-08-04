@@ -18,6 +18,7 @@ def build_router() -> Router:
 
     # ------------------------------------------------------------- public
     router.get("/", action(HomeController, "index"), name="home")
+    router.get("/docs", action(HomeController, "docs"), name="docs")
 
     # --------------------------------------------------------------- auth
     with router.group(prefix="", middleware=[guest_middleware]):
