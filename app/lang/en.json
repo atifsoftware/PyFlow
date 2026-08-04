@@ -1,0 +1,62 @@
+{
+  "version": "Version 1.0.0",
+  "welcome_title": "Welcome to PyMVC Framework",
+  "welcome_subtitle": "A premium lightweight Python MVC framework built from scratch using Python's standard library, now featuring a seamless side-by-side FastAPI integration and a custom ASGI gateway!",
+  "get_started": "Get Started",
+  "login": "Login",
+  "register": "Register",
+  "dashboard": "Dashboard",
+  "logout": "Logout",
+  "features_title": "Powerful Features of PyMVC",
+  "features_subtitle": "PyMVC comes packed with robust and ready-made solutions to facilitate quick and professional web development in Python.",
+  
+  "routing_title": "Dynamic Routing System",
+  "routing_desc": "Supports custom middleware grouping, dynamic path parameter binding (e.g. {id:int}), and RESTful resource routes.",
+  
+  "di_title": "Dependency Injection Container",
+  "di_desc": "Core dependency resolver that simplifies object lifecycles and eliminates tightly coupled code.",
+  
+  "orm_title": "Active Record ORM",
+  "orm_desc": "Lightweight, powerful ORM model system for easily handling database tables, records, and relationships.",
+  
+  "qb_title": "SQL Injection-Proof Query Builder",
+  "qb_desc": "Chained and fluent database query builder, always driving parameterized queries for maximum protection.",
+  
+  "validator_title": "Request Validation Engine",
+  "validator_desc": "Robust validator in core/validator.py supporting required, email, unique, min, and max rules.",
+  
+  "transactions_title": "Nested Database Transactions",
+  "transactions_desc": "Supports SQL SAVEPOINT nested database transactions to safely handle partial execution failures.",
+  
+  "fastapi_title": "FastAPI Integration (ASGI Bridge)",
+  "fastapi_desc": "Custom ASGI gateway running FastAPI side-by-side on the same port at /api/* with automatic Swagger docs.",
+  
+  "api_keys_title": "API Key Management",
+  "api_keys_desc": "Laravel Sanctum-like secure SHA-256 tokens supporting dual authentication (JWT and X-API-Key) on API endpoints.",
+  
+  "logs_title": "Activity Logs (Audit Trail)",
+  "logs_desc": "Automatically logs user security events, logins, and settings changes with IP address and User-Agent tracking.",
+  
+  "security_title": "Complete Security Shield",
+  "security_desc": "CSRF verification, secure PBKDF2 hashing, session fixation defense, and custom CSP security headers.",
+  
+  "debug_title": "Interactive Debug Bar",
+  "debug_desc": "Diagnostics bar at the page bottom displaying load times, database queries executed, and session variables.",
+  
+  "rate_limit_title": "Brute-Force Protection",
+  "rate_limit_desc": "Dynamic IP and session-based rate limiter to protect authentication paths from spamming.",
+
+  "why_pymvc": "Why Choose PyMVC?",
+  "why_desc_1_title": "Lightweight & Ultra-Fast",
+  "why_desc_1_body": "Delivers maximum execution speed and low memory usage without any framework overhead.",
+  
+  "why_desc_2_title": "FastAPI & Swagger Docs",
+  "why_desc_2_body": "Allows building a web frontend alongside highly performant, auto-documented async APIs.",
+  
+  "why_desc_3_title": "Bilingual Interface",
+  "why_desc_3_body": "Easily toggle application content and layout language between English and Bengali dynamically.",
+
+  "home": "Home",
+  "docs": "Documentation",
+  "footer_text": "A Premium lightweight custom MVC Framework for professional Python developers."
+}
