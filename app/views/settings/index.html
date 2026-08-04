@@ -1,0 +1,104 @@
+@extends('layout.admin')
+@section('content')
+
+<!-- Page Header -->
+<div class="adm-page-header fade-up">
+    <div>
+        <div class="adm-page-title">
+            <div class="title-icon" style="background: linear-gradient(135deg, #6366f1, #3b82f6);"><i class="fas fa-sliders"></i></div>
+            সিস্টেম সেটিংস (System Settings)
+        </div>
+        <div class="adm-page-subtitle">অ্যাপ্লিকেশনের গ্লোবাল কনফিগারেশন পরিবর্তন করুন</div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8 fade-up">
+        <div class="pm-card">
+            <div class="pm-card-header">
+                <div class="pm-card-title">
+                    <div class="pm-card-icon" style="background: linear-gradient(135deg, #6366f1, #3b82f6);">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    সেটিংস ফর্ম
+                </div>
+            </div>
+            <div class="pm-card-body">
+                <form method="POST" action="/settings">
+                    @csrf
+
+                    <!-- General Settings Section -->
+                    <h5 style="color: var(--tx-1); font-weight: 700; margin-bottom: 20px; border-left: 4px solid var(--purple); padding-left: 10px;">
+                        সাধারণ কনফিগারেশন (General)
+                    </h5>
+
+                    <!-- Site Name -->
+                    <div class="mb-4">
+                        <label class="pm-label">সাইটের নাম (Site Name)</label>
+                        <input type="text" name="site_name" class="pm-input"
+                               placeholder="যেমন: PyMVC App"
+                               value="{{ settings.get('site_name', '') }}" required>
+                        @if(errors.get('site_name'))
+                        <div class="pm-field-error">
+                            <i class="fas fa-circle-exclamation" style="font-size:11px;"></i>
+                            {{ errors.get('site_name')[0] }}
+                        </div>
+                        @endif
+                    </div>
+
+                    <!-- Site Email -->
+                    <div class="mb-4">
+                        <label class="pm-label">অ্যাডমিন ইমেইল (Site Email)</label>
+                        <input type="email" name="site_email" class="pm-input"
+                               placeholder="যেমন: admin@example.com"
+                               value="{{ settings.get('site_email', '') }}" required>
+                        @if(errors.get('site_email'))
+                        <div class="pm-field-error">
+                            <i class="fas fa-circle-exclamation" style="font-size:11px;"></i>
+                            {{ errors.get('site_email')[0] }}
+                        </div>
+                        @endif
+                    </div>
+
+                    <!-- Permissions Section -->
+                    <h5 style="color: var(--tx-1); font-weight: 700; margin-top: 40px; margin-bottom: 20px; border-left: 4px solid var(--cyan); padding-left: 10px;">
+                        সিস্টেম পারমিশন ও এক্সেস (System Access)
+                    </h5>
+
+                    <!-- Allow Registration -->
+                    <div class="mb-4 d-flex align-items-center justify-content-between" style="padding: 16px; background: rgba(99,102,241,0.03); border: 1px solid var(--bd); border-radius: 12px;">
+                        <div>
+                            <div style="font-size: 14px; font-weight: 700; color: var(--tx-1);"><i class="fas fa-user-plus" style="margin-right:8px; color:var(--purple);"></i> নতুন রেজিস্ট্রেশন অনুমোদন</div>
+                            <div style="font-size: 12px; color: var(--tx-3); margin-top: 4px;">সিস্টেমে নতুন ব্যবহারকারীদের অ্যাকাউন্ট খোলার অনুমতি দিন</div>
+                        </div>
+                        <div class="form-check form-switch" style="padding-left: 2.5em; font-size: 20px;">
+                            <input class="form-check-input" type="checkbox" name="allow_registration" value="1"
+                                   style="cursor: pointer;"
+                                   @if(settings.get('allow_registration') == '1') checked @endif>
+                        </div>
+                    </div>
+
+                    <!-- Maintenance Mode -->
+                    <div class="mb-5 d-flex align-items-center justify-content-between" style="padding: 16px; background: rgba(239,68,68,0.03); border: 1px solid var(--bd); border-radius: 12px;">
+                        <div>
+                            <div style="font-size: 14px; font-weight: 700; color: var(--tx-1);"><i class="fas fa-screwdriver-wrench" style="margin-right:8px; color:#ef4444;"></i> মেইনটেইন্যান্স মোড (Maintenance Mode)</div>
+                            <div style="font-size: 12px; color: var(--tx-3); margin-top: 4px;">সিস্টেম ডাউন বা মেইনটেইন্যান্স অবস্থায় সাধারণ ইউজারদের লক-আউট করতে</div>
+                        </div>
+                        <div class="form-check form-switch" style="padding-left: 2.5em; font-size: 20px;">
+                            <input class="form-check-input" type="checkbox" name="maintenance_mode" value="1"
+                                   style="cursor: pointer;"
+                                   @if(settings.get('maintenance_mode') == '1') checked @endif>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="pm-btn pm-btn-primary" style="width:100%; justify-content:center; padding: 12px;">
+                        <i class="fas fa-floppy-disk"></i> সেটিংস পরিবর্তন সংরক্ষণ করুন
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@endsection

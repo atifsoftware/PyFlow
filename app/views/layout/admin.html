@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="bn" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyMVC — Admin Panel</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- Apply theme BEFORE render to avoid flash -->
+    <script>
+        (function () {
+            var saved = 'dark';
+            try {
+                saved = localStorage.getItem('pymvc_theme') || 'dark';
+            } catch (e) {}
+            document.documentElement.setAttribute('data-theme', saved);
+        })();
+    </script>
+    <!-- External CSS -->
+    <link rel="stylesheet" href="/static/css/admin.css?v=2.3">
+</head>
+
+<body>
+
+    <!-- Overlay (mobile) -->
+    <div class="adm-overlay" id="admOverlay" onclick="closeSidebar()"></div>
+
+    <!-- ===========================================
+     SIDEBAR
+=========================================== -->
+    <aside class="adm-sidebar" id="admSidebar">
+
+        <!-- Brand -->
+        <div class="sb-brand">
+            <a href="/dashboard">
+                <div class="sb-brand-icon"><i class="fas fa-bolt"></i></div>
+                <div>
+                    <div class="sb-brand-name">Py<span>MVC</span></div>
+                    <span class="sb-brand-tag">v2.0 BETA</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Profile -->
+        <div class="sb-profile">
+            <div class="sb-avatar-wrap">
+                <div class="sb-avatar">P</div>
+                <div class="sb-online"></div>
+            </div>
+            <div style="flex:1; min-width:0;">
+                <div class="sb-user-name">{{ user_name }}</div>
+                <div class="sb-user-role">
+                    <i class="fas fa-shield-halved" style="font-size:9px;"></i>
+                    অ্যাডমিনিস্ট্রেটর
+                </div>
+            </div>
+        </div>
+
+        <!-- Nav -->
+        <nav class="sb-nav">
+
+            <div class="sb-label">প্রধান মেনু</div>
+
+            <!-- Dashboard -->
+            <div class="sb-item-wrap">
+                <a href="/dashboard" class="sb-link" id="menu-dashboard">
+                    <span class="sb-icon"><i class="fas fa-chart-pie"></i></span>
+                    <span class="sb-text">ড্যাশবোর্ড</span>
+                </a>
+            </div>
+
+            <div class="sb-divider"></div>
+            <div class="sb-label">ব্যবস্থাপনা</div>
+
+            <!-- Users accordion -->
+            <div class="sb-section" id="section-users">
+                <div class="sb-item-wrap">
+                    <div class="sb-link sb-toggle">
+                        <span class="sb-icon"><i class="fas fa-users-cog"></i></span>
+                        <span class="sb-text">ব্যবহারকারী</span>
+                        <i class="fas fa-angle-left sb-arrow"></i>
+                    </div>
+                </div>
+                <div class="sb-sub">
+                    <a href="/users" class="sb-sub-link" id="sub-users">সকল ব্যবহারকারী</a>
+                    <a href="/users/create" class="sb-sub-link" id="sub-users-create">নতুন যোগ করুন</a>
+                </div>
+            </div>
+
+            <div class="sb-divider"></div>
+            <div class="sb-label">সিস্টেম</div>
+
+            <!-- Settings (Admin Only) -->
+            @if(user_role == 'admin')
+            <div class="sb-item-wrap">
+                <a href="/settings" class="sb-link" id="menu-settings">
+                    <span class="sb-icon"><i class="fas fa-sliders"></i></span>
+                    <span class="sb-text">সিস্টেম সেটিংস</span>
+                </a>
+            </div>
+            <div class="sb-item-wrap">
+                <a href="/logs" class="sb-link" id="menu-logs">
+                    <span class="sb-icon"><i class="fas fa-list-check"></i></span>
+                    <span class="sb-text">অ্যাক্টিভিটি লগ</span>
+                </a>
+            </div>
+            @endif
+
+            <!-- API Keys (All Users) -->
+            <div class="sb-item-wrap">
+                <a href="/api-keys" class="sb-link" id="menu-api-keys">
+                    <span class="sb-icon"><i class="fas fa-key"></i></span>
+                    <span class="sb-text">API কী ম্যানেজমেন্ট</span>
+                </a>
+            </div>
+
+            <!-- API -->
+            <div class="sb-item-wrap">
+                <a href="#" class="sb-link">
+                    <span class="sb-icon"><i class="fas fa-code"></i></span>
+                    <span class="sb-text">API এক্সপ্লোরার</span>
+                    <span class="sb-badge">New</span>
+                </a>
+            </div>
+
+            <!-- Docs -->
+            <div class="sb-item-wrap">
+                <a href="#" class="sb-link">
+                    <span class="sb-icon"><i class="fas fa-book-open"></i></span>
+                    <span class="sb-text">ডকুমেন্টেশন</span>
+                </a>
+            </div>
+
+        </nav>
+
+        <!-- Footer -->
+        <div class="sb-footer">
+            <a href="/logout" class="sb-logout">
+                <i class="fas fa-arrow-right-from-bracket"></i>
+                লগআউট করুন
+            </a>
+        </div>
+    </aside>
+
+    <!-- ===========================================
+     TOPBAR
+=========================================== -->
+    <div class="adm-topbar" id="admTopbar">
+
+        <button class="tb-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Breadcrumb -->
+        <div class="tb-crumb">
+            <a href="/dashboard" class="tb-crumb-home">
+                <i class="fas fa-house" style="font-size:11px;"></i> Admin
+            </a>
+            <i class="fas fa-chevron-right tb-crumb-sep"></i>
+            <span class="tb-crumb-cur" id="tb-page-title">কন্ট্রোল প্যানেল</span>
+        </div>
+
+        <!-- Right -->
+        <div class="tb-right">
+
+            <!-- Live clock -->
+            <div class="tb-clock">
+                <i class="fas fa-clock" style="font-size:10px;"></i>
+                <span id="liveTime">--:--:--</span>
+            </div>
+
+            <!-- Notification -->
+            <a href="#" class="tb-btn" title="নোটিফিকেশন">
+                <i class="fas fa-bell"></i>
+                <span class="tb-notif-dot"></span>
+            </a>
+
+            <!-- ✨ DARK / LIGHT TOGGLE ✨ -->
+            <div class="theme-toggle" id="themeToggle" title="থিম পরিবর্তন করুন" onclick="toggleTheme()">
+                <div class="theme-toggle-knob" id="themeKnob">
+                    <i class="fas fa-moon" id="themeKnobIcon"></i>
+                </div>
+                <div class="theme-toggle-icons">
+                    <i class="fas fa-moon icon-moon"></i>
+                    <i class="fas fa-sun icon-sun"></i>
+                </div>
+            </div>
+
+            <!-- Avatar -->
+            <div class="tb-avatar" title="{{ user_name }}">P</div>
+        </div>
+    </div>
+
+    <!-- ===========================================
+     CONTENT
+=========================================== -->
+    <div class="adm-content" id="admContent">
+        <div class="adm-page">
+
+            @if(success)
+            <div class="adm-flash">
+                <i class="fas fa-circle-check"></i> {{ success }}
+            </div>
+            @endif
+
+            @yield('content')
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ============================================================
+        //  THEME TOGGLE — Dark / Light
+        // ============================================================
+        function toggleTheme() {
+            var html = document.documentElement;
+            var current = html.getAttribute('data-theme') || 'dark';
+            var next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            try {
+                localStorage.setItem('pymvc_theme', next);
+            } catch (e) {}
+
+            var icon = document.getElementById('themeKnobIcon');
+            if (icon) icon.className = next === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        }
+
+        // Sync knob icon on load
+        (function () {
+            var t = 'dark';
+            try {
+                t = localStorage.getItem('pymvc_theme') || 'dark';
+            } catch (e) {}
+            var icon = document.getElementById('themeKnobIcon');
+            if (icon) icon.className = t === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        })();
+
+        // ============================================================
+        //  SIDEBAR
+        // ============================================================
+        function toggleSidebar() {
+            document.getElementById('admSidebar').classList.toggle('open');
+            document.getElementById('admOverlay').classList.toggle('open');
+        }
+        function closeSidebar() {
+            document.getElementById('admSidebar').classList.remove('open');
+            document.getElementById('admOverlay').classList.remove('open');
+        }
+
+        // ============================================================
+        //  ACCORDION SUBMENU (slideToggle with jQuery)
+        // ============================================================
+        $(function () {
+            $('.sb-toggle').on('click', function () {
+                var sec = $(this).closest('.sb-section');
+                var sub = sec.find('.sb-sub');
+                var isOpen = sec.hasClass('open');
+
+                // Close all first
+                $('.sb-section.open').not(sec).each(function () {
+                    $(this).removeClass('open');
+                    $(this).find('.sb-sub').slideUp(220);
+                });
+
+                // Toggle current
+                if (isOpen) {
+                    sec.removeClass('open');
+                    sub.slideUp(220);
+                } else {
+                    sec.addClass('open');
+                    sub.slideDown(220);
+                }
+            });
+
+            // Auto-activate & expand based on current path
+            var path = window.location.pathname;
+
+            if (path === '/dashboard') {
+                $('#menu-dashboard').addClass('active');
+                document.getElementById('tb-page-title').textContent = 'ড্যাশবোর্ড';
+            }
+
+            if (path === '/settings') {
+                $('#menu-settings').addClass('active');
+                document.getElementById('tb-page-title').textContent = 'সিস্টেম সেটিংস';
+            }
+
+            if (path === '/logs') {
+                $('#menu-logs').addClass('active');
+                document.getElementById('tb-page-title').textContent = 'অ্যাক্টিভিটি লগ';
+            }
+
+            if (path === '/api-keys') {
+                $('#menu-api-keys').addClass('active');
+                document.getElementById('tb-page-title').textContent = 'API কী ম্যানেজমেন্ট';
+            }
+
+            if (path.startsWith('/users')) {
+                var sec = $('#section-users');
+                sec.addClass('open');
+                sec.find('.sb-sub').show();
+
+                if (path === '/users') { $('#sub-users').addClass('active'); document.getElementById('tb-page-title').textContent = 'ব্যবহারকারী তালিকা'; }
+                if (path === '/users/create') { $('#sub-users-create').addClass('active'); document.getElementById('tb-page-title').textContent = 'নতুন ব্যবহারকারী'; }
+                if (path.indexOf('/edit') > -1) { $('#sub-users').addClass('active'); document.getElementById('tb-page-title').textContent = 'ব্যবহারকারী সম্পাদনা'; }
+            }
+        });
+
+        // ============================================================
+        //  LIVE CLOCK
+        // ============================================================
+        function tick() {
+            var n = new Date();
+            var t = [n.getHours(), n.getMinutes(), n.getSeconds()]
+                .map(function (v) { return String(v).padStart(2, '0'); })
+                .join(':');
+            var el = document.getElementById('liveTime');
+            if (el) el.textContent = t;
+        }
+        tick();
+        setInterval(tick, 1000);
+    </script>
+</body>
+
+</html>

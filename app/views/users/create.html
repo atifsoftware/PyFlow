@@ -1,0 +1,93 @@
+@extends('layout.admin')
+@section('content')
+
+<!-- Page Header -->
+<div class="adm-page-header fade-up">
+    <div>
+        <div class="adm-page-title">
+            <div class="title-icon" style="background: linear-gradient(135deg, #43e97b, #38f9d7);"><i class="fas fa-user-plus"></i></div>
+            নতুন ব্যবহারকারী যোগ করুন
+        </div>
+        <div class="adm-page-subtitle">সিস্টেমে একটি নতুন অ্যাকাউন্ট তৈরি করুন</div>
+    </div>
+    <a href="/users" class="pm-btn pm-btn-outline">
+        <i class="fas fa-arrow-left" style="font-size:12px;"></i> ফিরে যান
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6 fade-up">
+        <div class="pm-card">
+            <div class="pm-card-header">
+                <div class="pm-card-title">
+                    <div class="pm-card-icon" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    অ্যাকাউন্ট বিবরণ পূরণ করুন
+                </div>
+            </div>
+            <div class="pm-card-body">
+                <form method="POST" action="/users">
+                    @csrf
+
+                    <!-- Name -->
+                    <div class="mb-4">
+                        <label class="pm-label">পূর্ণ নাম</label>
+                        <input type="text" name="name" class="pm-input"
+                               placeholder="যেমন: আবদুর রহমান"
+                               value="{{ old.get('name', '') }}" required>
+                        @if(errors.get('name'))
+                        <div class="pm-field-error">
+                            <i class="fas fa-circle-exclamation" style="font-size:11px;"></i>
+                            {{ errors.get('name')[0] }}
+                        </div>
+                        @endif
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-4">
+                        <label class="pm-label">ইমেইল এড্রেস</label>
+                        <input type="email" name="email" class="pm-input"
+                               placeholder="যেমন: info@example.com"
+                               value="{{ old.get('email', '') }}" required>
+                        @if(errors.get('email'))
+                        <div class="pm-field-error">
+                            <i class="fas fa-circle-exclamation" style="font-size:11px;"></i>
+                            {{ errors.get('email')[0] }}
+                        </div>
+                        @endif
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-4">
+                        <label class="pm-label">পাসওয়ার্ড</label>
+                        <input type="password" name="password" class="pm-input"
+                               placeholder="কমপক্ষে ৮ অক্ষর" required minlength="8">
+                        @if(errors.get('password'))
+                        <div class="pm-field-error">
+                            <i class="fas fa-circle-exclamation" style="font-size:11px;"></i>
+                            {{ errors.get('password')[0] }}
+                        </div>
+                        @endif
+                    </div>
+
+                    <!-- Role -->
+                    <div class="mb-5">
+                        <label class="pm-label">ব্যবহারকারীর রোল</label>
+                        <select name="role" class="pm-input pm-select">
+                            <option value="user">সাধারণ ব্যবহারকারী (User)</option>
+                            <option value="admin">সিস্টেম অ্যাডমিন (Admin)</option>
+                        </select>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="pm-btn pm-btn-primary" style="width:100%; justify-content:center;">
+                        <i class="fas fa-circle-check"></i> অ্যাকাউন্ট সংরক্ষণ করুন
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@endsection

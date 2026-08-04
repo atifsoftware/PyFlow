@@ -1,0 +1,161 @@
+@extends('layout.admin')
+@section('content')
+
+<!-- Page Header -->
+<div class="adm-page-header fade-up">
+    <div>
+        <div class="adm-page-title">
+            <div class="title-icon" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-key"></i></div>
+            এপিআই কী ম্যানেজমেন্ট (API Key Management)
+        </div>
+        <div class="adm-page-subtitle">FastAPI অ্যাক্সেস করতে আপনার ব্যক্তিগত সিক্রেট কী তৈরি ও বাতিল করুন</div>
+    </div>
+</div>
+
+<!-- Alert for newly created API Key (Displayed Only Once) -->
+@if(new_token)
+<div class="row justify-content-center fade-up mb-4">
+    <div class="col-12">
+        <div style="padding: 24px; background: rgba(16,185,129,0.08); border: 2px dashed #10b981; border-radius: 16px; position: relative; overflow: hidden;">
+            <div style="font-size: 18px; font-weight: 800; color: #10b981; margin-bottom: 10px;">
+                <i class="fas fa-circle-check" style="margin-right: 8px;"></i> এপিআই কী সফলভাবে তৈরি হয়েছে!
+            </div>
+            <p style="color: var(--tx-2); font-size: 14px; margin-bottom: 16px; max-width: 600px;">
+                নিরাপত্তার স্বার্থে কী-টি <strong>শুধুমাত্র একবারই দেখানো হবে</strong>। পেজ রিফ্রেশ বা অন্য পেজে গেলে এটি আর দেখা যাবে না। দয়া করে কী-টি কপি করে নিরাপদ স্থানে সংরক্ষণ করুন:
+            </p>
+            <div style="display: flex; gap: 10px; align-items: center; max-width: 650px;">
+                <input type="text" id="plain-token-input" value="{{ new_token }}" readonly
+                       style="flex: 1; padding: 12px 16px; font-family: monospace; font-size: 15px; border-radius: 8px; border: 1px solid var(--bd); background: var(--bg-1); color: var(--tx-1); font-weight: bold; text-align: center; letter-spacing: 1px;">
+                <button type="button" class="pm-btn pm-btn-success" id="btn-copy-token" onclick="copyTokenToClipboard()" style="padding: 12px 20px;">
+                    <i class="fas fa-copy"></i> কপি করুন
+                </button>
+            </div>
+            <div id="copy-success-msg" style="display: none; font-size: 12px; color: #10b981; font-weight: 700; margin-top: 8px;">
+                <i class="fas fa-check-double"></i> ক্লিপবোর্ডে কপি করা হয়েছে!
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+<div class="row">
+    <!-- Generate API Key Form -->
+    <div class="col-12 col-lg-4 fade-up mb-4">
+        <div class="pm-card">
+            <div class="pm-card-header">
+                <div class="pm-card-title">
+                    <div class="pm-card-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    নতুন এপিআই কী তৈরি করুন
+                </div>
+            </div>
+            <div class="pm-card-body">
+                <form method="POST" action="/api-keys">
+                    @csrf
+                    <div class="mb-4">
+                        <label class="pm-label">কী-এর নাম/বিবরণ (Name / Description)</label>
+                        <input type="text" name="name" class="pm-input"
+                               placeholder="যেমন: Mobile App Client" required>
+                        @if(errors.get('name'))
+                        <div class="pm-field-error">
+                            <i class="fas fa-circle-exclamation" style="font-size:11px;"></i>
+                            {{ errors.get('name')[0] }}
+                        </div>
+                        @endif
+                    </div>
+                    <button type="submit" class="pm-btn pm-btn-success" style="width: 100%; justify-content: center;">
+                        <i class="fas fa-plus-circle"></i> এপিআই কী জেনারেট করুন
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active API Keys List -->
+    <div class="col-12 col-lg-8 fade-up mb-4">
+        <div class="pm-card" style="height: 100%;">
+            <div class="pm-card-header">
+                <div class="pm-card-title">
+                    <div class="pm-card-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    সক্রিয় এপিআই কীসমূহ (Active API Keys)
+                </div>
+            </div>
+            <div class="pm-card-body" style="padding: 0;">
+                <div class="table-responsive">
+                    <table class="pm-table">
+                        <thead>
+                            <tr>
+                                <th>নাম/বিবরণ</th>
+                                <th>কী (Hashed Key Prefix)</th>
+                                <th>সর্বশেষ ব্যবহার</th>
+                                <th>তৈরির তারিখ</th>
+                                <th>অ্যাকশন</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if(len(keys) == 0)
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 40px; color: var(--tx-3);">
+                                    <i class="fas fa-shield-halved" style="font-size: 28px; margin-bottom: 8px; display: block; color: var(--tx-3);"></i>
+                                    কোনো সক্রিয় এপিআই কী নেই।
+                                </td>
+                            </tr>
+                            @endif
+                            @foreach(k in keys)
+                            <tr>
+                                <td style="font-weight: 700; color: var(--tx-1);">{{ k.get('name') }}</td>
+                                <td>
+                                    <span style="font-family: monospace; font-size: 13px; color: var(--tx-2);">
+                                        {{ k.get('key')[:8] }}...
+                                    </span>
+                                </td>
+                                <td>
+                                    @if(k.get('last_used_at'))
+                                    <span style="color: var(--tx-2);">{{ k.get('last_used_at') }}</span>
+                                    @else
+                                    <span style="color: var(--tx-3); font-style: italic; font-size: 12px;">কখনো ব্যবহৃত হয়নি</span>
+                                    @endif
+                                </td>
+                                <td style="color: var(--tx-2); font-size: 13px;">{{ k.get('created_at') }}</td>
+                                <td>
+                                    <form method="POST" action="/api-keys/{{ k.get('id') }}" onsubmit="return confirm('আপনি কি নিশ্চিত যে এই এপিআই কীটি চিরতরে বাতিল করতে চান?')" style="margin: 0;">
+                                        @csrf
+                                        <input type="hidden" name="_method" value="DELETE">
+                                        <button type="submit" class="pm-btn pm-btn-danger" style="padding: 4px 8px; font-size: 11px;">
+                                            <i class="fas fa-trash-can" style="font-size: 10px;"></i> বাতিল করুন
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyTokenToClipboard() {
+    var copyText = document.getElementById("plain-token-input");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); /* For mobile devices */
+    
+    // Copy the text inside the text field
+    navigator.clipboard.writeText(copyText.value).then(function() {
+        var msg = document.getElementById("copy-success-msg");
+        msg.style.display = "block";
+        setTimeout(function() {
+            msg.style.display = "none";
+        }, 3000);
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+</script>
+
+@endsection

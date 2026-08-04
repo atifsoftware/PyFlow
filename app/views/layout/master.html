@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyMVC</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="brand">PyMVC</a>
+        <div class="nav-links">
+            <a href="/">হোম</a>
+            <a href="/dashboard">ড্যাশবোর্ড</a>
+            <a href="/users">ইউজারস</a>
+            <a href="/logout">লগআউট</a>
+        </div>
+    </nav>
+    <main class="container">
+        @yield('content')
+    </main>
+</body>
+</html>

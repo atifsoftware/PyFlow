@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>রেজিস্ট্রেশন — PyMVC Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Hind Siliguri', 'Inter', sans-serif;
+            min-height: 100vh;
+            background: #0f0c29;
+            display: flex; align-items: center; justify-content: center;
+            padding: 30px 20px; overflow: hidden; position: relative;
+        }
+        .bg-orb { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.16; pointer-events: none; animation: orb-float 8s ease-in-out infinite; }
+        .bg-orb.orb1 { width: 450px; height: 450px; background: #7c3aed; top: -100px; right: -80px; }
+        .bg-orb.orb2 { width: 350px; height: 350px; background: #0ea5e9; bottom: -80px; left: -80px; animation-delay: 3s; }
+        @keyframes orb-float { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-15px, 20px); } }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image: radial-gradient(rgba(167,139,250,0.07) 1px, transparent 1px);
+            background-size: 30px 30px; pointer-events: none;
+        }
+
+        .login-card {
+            width: 100%; max-width: 450px;
+            background: rgba(15,12,41,0.75);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(167,139,250,0.2);
+            border-radius: 24px; padding: 40px;
+            position: relative; z-index: 10;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+            animation: card-in 0.5s ease forwards;
+        }
+        @keyframes card-in { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+        .login-logo { text-align: center; margin-bottom: 28px; }
+        .login-logo-icon {
+            width: 56px; height: 56px;
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            border-radius: 16px;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 24px; color: white; margin-bottom: 12px;
+            box-shadow: 0 8px 28px rgba(67,233,123,0.4);
+        }
+        .login-title { font-family:'Inter',sans-serif; font-size:22px; font-weight:800; color:white; }
+        .login-title span { color: #6ee7b7; }
+        .login-subtitle { font-size:13px; color:rgba(167,139,250,0.55); margin-top:4px; }
+
+        .alert-box {
+            border-radius: 10px; padding: 11px 15px;
+            font-size: 13px; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .alert-error { background:rgba(239,68,68,0.1); color:#f87171; border:1px solid rgba(239,68,68,0.2); }
+
+        .form-group { margin-bottom: 18px; }
+        .form-label { display:block; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:rgba(167,139,250,0.65); margin-bottom:7px; }
+        .form-input-wrap { position: relative; }
+        .form-input-icon { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:rgba(167,139,250,0.4); font-size:13px; pointer-events:none; }
+        .form-input {
+            width:100%; padding: 12px 13px 12px 40px;
+            background: rgba(255,255,255,0.04);
+            border: 1.5px solid rgba(167,139,250,0.18);
+            border-radius: 11px; font-size:14px; color:white;
+            font-family: inherit; outline: none; transition: all 0.22s;
+        }
+        .form-input::placeholder { color: rgba(167,139,250,0.28); }
+        .form-input:focus { border-color: rgba(110,231,183,0.5); background: rgba(110,231,183,0.05); box-shadow: 0 0 0 4px rgba(67,233,123,0.12); }
+
+        .login-btn {
+            width:100%; padding:13px;
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            border:none; border-radius:12px;
+            color: #0f4c35; font-size:15px; font-weight:700;
+            font-family:inherit; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            transition: all 0.28s; margin-top:6px;
+            box-shadow: 0 6px 20px rgba(67,233,123,0.35);
+        }
+        .login-btn:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(67,233,123,0.5); }
+
+        .login-footer { text-align:center; font-size:13.5px; color:rgba(167,139,250,0.5); margin-top:22px; }
+        .login-footer a { color:#a78bfa; text-decoration:none; font-weight:700; }
+        .login-footer a:hover { color:#c4b5fd; }
+        .login-divider { display:flex; align-items:center; gap:12px; margin:20px 0; }
+        .login-divider-line { flex:1; height:1px; background:rgba(167,139,250,0.1); }
+        .login-divider-text { font-size:12px; color:rgba(167,139,250,0.35); }
+    </style>
+</head>
+<body>
+<div class="bg-orb orb1"></div>
+<div class="bg-orb orb2"></div>
+
+<div class="login-card">
+    <div class="login-logo">
+        <div class="login-logo-icon"><i class="fas fa-user-plus"></i></div>
+        <div class="login-title">নতুন <span>অ্যাকাউন্ট</span></div>
+        <div class="login-subtitle">PyMVC Admin Panel-এ রেজিস্ট্রেশন করুন</div>
+    </div>
+
+    @if(errors.get('name'))
+    <div class="alert-box alert-error"><i class="fas fa-circle-exclamation"></i> {{ errors.get('name')[0] }}</div>
+    @endif
+    @if(errors.get('email'))
+    <div class="alert-box alert-error"><i class="fas fa-circle-exclamation"></i> {{ errors.get('email')[0] }}</div>
+    @endif
+    @if(errors.get('password'))
+    <div class="alert-box alert-error"><i class="fas fa-circle-exclamation"></i> {{ errors.get('password')[0] }}</div>
+    @endif
+
+    <form method="POST" action="/register">
+        @csrf
+
+        <div class="form-group">
+            <label class="form-label">পূর্ণ নাম</label>
+            <div class="form-input-wrap">
+                <span class="form-input-icon"><i class="fas fa-user"></i></span>
+                <input type="text" name="name" class="form-input" placeholder="আপনার নাম লিখুন" value="{{ old.get('name', '') }}" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">ইমেইল এড্রেস</label>
+            <div class="form-input-wrap">
+                <span class="form-input-icon"><i class="fas fa-envelope"></i></span>
+                <input type="email" name="email" class="form-input" placeholder="আপনার ইমেইল লিখুন" value="{{ old.get('email', '') }}" required>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 26px;">
+            <label class="form-label">পাসওয়ার্ড <span style="font-weight:400; text-transform:none; letter-spacing:0;">(কমপক্ষে ৮ অক্ষর)</span></label>
+            <div class="form-input-wrap">
+                <span class="form-input-icon"><i class="fas fa-lock"></i></span>
+                <input type="password" name="password" class="form-input" placeholder="একটি শক্তিশালী পাসওয়ার্ড দিন" required minlength="8">
+            </div>
+        </div>
+
+        <button type="submit" class="login-btn">
+            <i class="fas fa-user-check"></i> রেজিস্ট্রেশন সম্পন্ন করুন
+        </button>
+    </form>
+
+    <div class="login-divider">
+        <div class="login-divider-line"></div>
+        <div class="login-divider-text">বা</div>
+        <div class="login-divider-line"></div>
+    </div>
+
+    <div class="login-footer">
+        অ্যাকাউন্ট আছে? <a href="/login">লগইন করুন</a>
+    </div>
+</div>
+
+</body>
+</html>

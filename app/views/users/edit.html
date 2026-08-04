@@ -1,0 +1,78 @@
+@extends('layout.admin')
+@section('content')
+
+<!-- Page Header -->
+<div class="adm-page-header fade-up">
+    <div>
+        <div class="adm-page-title">
+            <div class="title-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><i class="fas fa-user-pen"></i></div>
+            ব্যবহারকারী তথ্য সম্পাদনা
+        </div>
+        <div class="adm-page-subtitle">আইডি #{{ user.get('id') }} — {{ user.get('name') }}</div>
+    </div>
+    <a href="/users" class="pm-btn pm-btn-outline">
+        <i class="fas fa-arrow-left" style="font-size:12px;"></i> ফিরে যান
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6 fade-up">
+        <div class="pm-card">
+            <div class="pm-card-header">
+                <div class="pm-card-title">
+                    <div class="pm-card-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-pen"></i>
+                    </div>
+                    তথ্য পরিবর্তন করুন
+                </div>
+                <!-- User badge -->
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div class="tbl-avatar" style="width:30px; height:30px; font-size:12px; border-radius:8px;">{{ user.get('name')[0].upper() }}</div>
+                    <span style="font-size:13px; font-weight:600; color:var(--tx-2);">{{ user.get('name') }}</span>
+                </div>
+            </div>
+            <div class="pm-card-body">
+                <form method="POST" action="/users/{{ user.get('id') }}">
+                    @csrf
+                    <input type="hidden" name="_method" value="PUT">
+
+                    <!-- Name -->
+                    <div class="mb-4">
+                        <label class="pm-label">পূর্ণ নাম</label>
+                        <input type="text" name="name" class="pm-input"
+                               value="{{ user.get('name') }}" required>
+                        @if(errors.get('name'))
+                        <div class="pm-field-error">
+                            <i class="fas fa-circle-exclamation" style="font-size:11px;"></i>
+                            {{ errors.get('name')[0] }}
+                        </div>
+                        @endif
+                    </div>
+
+                    <!-- Email (Disabled) -->
+                    <div class="mb-4">
+                        <label class="pm-label">ইমেইল এড্রেস <span style="color:var(--tx-3); font-weight:400;">(পরিবর্তনযোগ্য নয়)</span></label>
+                        <input type="email" class="pm-input"
+                               value="{{ user.get('email') }}" disabled>
+                    </div>
+
+                    <!-- Role -->
+                    <div class="mb-5">
+                        <label class="pm-label">ব্যবহারকারীর রোল</label>
+                        <select name="role" class="pm-input pm-select">
+                            <option value="user" @if(user.get('role') == 'user') selected @endif>সাধারণ ব্যবহারকারী (User)</option>
+                            <option value="admin" @if(user.get('role') == 'admin') selected @endif>সিস্টেম অ্যাডমিন (Admin)</option>
+                        </select>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="pm-btn pm-btn-warning" style="width:100%; justify-content:center;">
+                        <i class="fas fa-floppy-disk"></i> পরিবর্তন সংরক্ষণ করুন
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@endsection

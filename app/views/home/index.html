@@ -1,0 +1,12 @@
+@extends('layout.master')
+@section('content')
+<div class="card">
+    <h1>{{ title }}</h1>
+    <p>একটা Python দিয়ে বানানো কাস্টম MVC ফ্রেমওয়ার্ক - Router, Query Builder, এবং Security সহ।</p>
+    <p>স্বাগতম, {{ user_name }}!</p>
+    <div class="actions">
+        <a class="btn" href="/login">লগইন</a>
+        <a class="btn secondary" href="/register">রেজিস্টার</a>
+    </div>
+</div>
+@endsection

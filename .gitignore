@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.env
+storage/database.sqlite
+storage/sessions/*
+storage/logs/*
+storage/cache/*
+storage/uploads/*
+!storage/sessions/.gitkeep
+!storage/logs/.gitkeep
+!storage/cache/.gitkeep
+!storage/uploads/.gitkeep

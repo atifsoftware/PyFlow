@@ -1,0 +1,243 @@
+@extends('layout.admin')
+@section('content')
+
+<!-- ===================== HERO BANNER ===================== -->
+<div class="dash-hero">
+    <div class="dash-hero-left">
+        <div class="dash-hero-greeting">&#127775; স্বাগতম ফিরে আসুন</div>
+        <div class="dash-hero-title">হ্যালো, <span>{{ user_name }}</span>!</div>
+        <div class="dash-hero-sub">আজকের সিস্টেম সব ঠিকঠাক আছে। পরিচালনা শুরু করুন।</div>
+    </div>
+    <div class="dash-hero-actions">
+        <a href="/users/create" class="hero-btn hero-btn-primary">
+            <i class="fas fa-user-plus"></i> নতুন ইউজার
+        </a>
+        <a href="/users" class="hero-btn hero-btn-ghost">
+            <i class="fas fa-users"></i> সব ব্যবহারকারী
+        </a>
+    </div>
+</div>
+
+<!-- ===================== STAT CARDS ===================== -->
+<div class="stat-grid">
+
+    <!-- Card 1: Users -->
+    <div class="ds-stat purple" style="animation-delay: 0.05s;">
+        <div class="ds-stat-head">
+            <div class="ds-stat-icon purple"><i class="fas fa-users"></i></div>
+            <span class="ds-stat-trend up"><i class="fas fa-arrow-up" style="font-size:9px;"></i> সক্রিয়</span>
+        </div>
+        <div class="ds-stat-label">মোট ব্যবহারকারী</div>
+        <div class="ds-stat-value">{{ total_users }}</div>
+        <div class="ds-stat-meta">
+            <i class="fas fa-circle" style="font-size: 7px; color: #34d399;"></i>
+            সিস্টেমে নিবন্ধিত অ্যাকাউন্ট
+        </div>
+    </div>
+
+    <!-- Card 2: DB -->
+    <div class="ds-stat cyan" style="animation-delay: 0.1s;">
+        <div class="ds-stat-head">
+            <div class="ds-stat-icon cyan"><i class="fas fa-database"></i></div>
+            <span class="ds-stat-trend info"><i class="fas fa-circle" style="font-size:7px;"></i> Connected</span>
+        </div>
+        <div class="ds-stat-label">ডাটাবেস সিস্টেম</div>
+        <div class="ds-stat-value" style="font-size: 22px; padding-top: 5px;">{{ db_driver }}</div>
+        <div class="ds-stat-meta">
+            <i class="fas fa-bolt" style="font-size: 9px; color: #4facfe;"></i>
+            সংযোগ স্বাভাবিক
+        </div>
+    </div>
+
+    <!-- Card 3: Gemini AI -->
+    <div class="ds-stat green" style="animation-delay: 0.15s;">
+        <div class="ds-stat-head">
+            <div class="ds-stat-icon green"><i class="fas fa-robot"></i></div>
+            @if(gemini_active)
+            <span class="ds-stat-trend up"><i class="fas fa-circle" style="font-size:7px;"></i> Active</span>
+            @else
+            <span class="ds-stat-trend warn"><i class="fas fa-key" style="font-size:9px;"></i> No Key</span>
+            @endif
+        </div>
+        <div class="ds-stat-label">Gemini 2.0 AI</div>
+        @if(gemini_active)
+        <div class="ds-stat-value" style="font-size: 20px; padding-top: 5px;">সক্রিয় ✓</div>
+        @else
+        <div class="ds-stat-value" style="font-size: 20px; padding-top: 5px;">নিষ্ক্রিয়</div>
+        @endif
+        <div class="ds-stat-meta">
+            <i class="fas fa-microchip" style="font-size: 9px; color: #43e97b;"></i>
+            AI Integration Layer
+        </div>
+    </div>
+
+    <!-- Card 4: Debug Mode -->
+    <div class="ds-stat pink" style="animation-delay: 0.2s;">
+        <div class="ds-stat-head">
+            <div class="ds-stat-icon pink"><i class="fas fa-bug"></i></div>
+            <span class="ds-stat-trend red"><i class="fas fa-triangle-exclamation" style="font-size:9px;"></i> Dev</span>
+        </div>
+        <div class="ds-stat-label">সিস্টেম মোড</div>
+        <div class="ds-stat-value" style="font-size: 22px; padding-top: 5px;">DEBUG</div>
+        <div class="ds-stat-meta">
+            <i class="fas fa-circle" style="font-size: 7px; color: #f093fb;"></i>
+            ডেভেলপমেন্ট পরিবেশ
+        </div>
+    </div>
+
+</div>
+
+<!-- ===================== CHART + INFO ROW ===================== -->
+<div class="dash-bottom">
+
+    <!-- Activity Chart -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <div class="chart-card-title">
+                <div class="chart-card-icon"><i class="fas fa-chart-line"></i></div>
+                সিস্টেম অ্যাক্টিভিটি ওভারভিউ
+            </div>
+            <div class="metric-pills" style="margin-bottom:0;">
+                <div class="metric-pill active">
+                    <div class="metric-pill-dot" style="background:#6366f1;"></div> অ্যাক্টিভিটি
+                </div>
+                <div class="metric-pill inactive">
+                    <div class="metric-pill-dot" style="background:#d1d5db;"></div> রিকোয়েস্ট
+                </div>
+            </div>
+        </div>
+        <div class="chart-body">
+            <!-- Bar Chart (CSS-based) -->
+            <div class="bar-chart-wrap">
+                <div class="bar-item">
+                    <div class="bar-fill" style="height: 60%;"></div>
+                </div>
+                <div class="bar-item">
+                    <div class="bar-fill" style="height: 80%;"></div>
+                </div>
+                <div class="bar-item">
+                    <div class="bar-fill accent" style="height: 95%;"></div>
+                </div>
+                <div class="bar-item">
+                    <div class="bar-fill" style="height: 55%;"></div>
+                </div>
+                <div class="bar-item">
+                    <div class="bar-fill" style="height: 70%;"></div>
+                </div>
+                <div class="bar-item">
+                    <div class="bar-fill accent" style="height: 88%;"></div>
+                </div>
+                <div class="bar-item">
+                    <div class="bar-fill" style="height: 45%;"></div>
+                </div>
+            </div>
+            <div class="chart-x-labels" style="margin-top: 12px;">
+                <span>শনি</span><span>রবি</span><span>সোম</span><span>মঙ্গল</span><span>বুধ</span><span>বৃহঃ</span><span>আজ</span>
+            </div>
+
+            <!-- Summary stats under chart -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px;">
+                <div style="text-align:center; padding: 14px; background: rgba(99,102,241,0.05); border-radius: 12px;">
+                    <div style="font-size:20px; font-weight:800; color:#6366f1; font-family:'Inter',sans-serif;">{{ total_users }}</div>
+                    <div style="font-size:11px; color:#9ca3af; margin-top:3px; font-weight:600;">মোট ইউজার</div>
+                </div>
+                <div style="text-align:center; padding: 14px; background: rgba(52,211,153,0.06); border-radius: 12px;">
+                    <div style="font-size:20px; font-weight:800; color:#059669; font-family:'Inter',sans-serif;">100%</div>
+                    <div style="font-size:11px; color:#9ca3af; margin-top:3px; font-weight:600;">আপটাইম</div>
+                </div>
+                <div style="text-align:center; padding: 14px; background: rgba(251,191,36,0.07); border-radius: 12px;">
+                    <div style="font-size:20px; font-weight:800; color:#d97706; font-family:'Inter',sans-serif;">8000</div>
+                    <div style="font-size:11px; color:#9ca3af; margin-top:3px; font-weight:600;">পোর্ট</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Server Info -->
+    <div class="info-card">
+        <div class="info-card-header">
+            <div class="info-card-title">
+                <div class="info-card-icon"><i class="fas fa-server"></i></div>
+                সার্ভার ও কনফিগ
+            </div>
+        </div>
+
+        <div class="info-row">
+            <span class="info-row-label"><i class="fas fa-network-wired"></i> হোস্ট</span>
+            <code class="val">127.0.0.1</code>
+        </div>
+        <div class="info-row">
+            <span class="info-row-label"><i class="fas fa-ethernet"></i> পোর্ট</span>
+            <code class="val">8000</code>
+        </div>
+        <div class="info-row">
+            <span class="info-row-label"><i class="fab fa-python"></i> ফ্রেমওয়ার্ক</span>
+            <span class="info-row-value" style="font-size:12px;">
+                <span style="background:rgba(99,102,241,0.1);color:#6366f1;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">Python WSGI</span>
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-row-label"><i class="fas fa-database"></i> ডাটাবেস</span>
+            <span class="info-row-value">
+                <span style="background:rgba(79,172,254,0.1);color:#0ea5e9;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">{{ db_driver }}</span>
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-row-label"><i class="fas fa-robot"></i> Gemini AI</span>
+            @if(gemini_active)
+            <span style="background:rgba(52,211,153,0.1);color:#059669;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">Active ✓</span>
+            @else
+            <span style="background:rgba(239,68,68,0.1);color:#dc2626;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">No API Key</span>
+            @endif
+        </div>
+        <div class="info-row">
+            <span class="info-row-label"><i class="fas fa-code-branch"></i> ভার্সন</span>
+            <span style="background:rgba(124,58,237,0.1);color:#7c3aed;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">v2.0 Beta</span>
+        </div>
+
+        <!-- Framework intro -->
+        <div style="padding: 16px 20px; background: linear-gradient(135deg, rgba(99,102,241,0.05), rgba(124,58,237,0.05)); border-top: 1px solid rgba(99,102,241,0.06);">
+            <p style="font-size: 12px; color: #9ca3af; line-height: 1.7; margin: 0;">
+                <strong style="color:#6366f1;">PyMVC</strong> হলো একটি কাস্টম Python MVC ফ্রেমওয়ার্ক যা WSGI প্রোটোকল ব্যবহার করে। MySQL PDO-স্টাইল, JWT, ORM রিলেশন এবং Debug Bar সহ বিল্ট।
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===================== QUICK ACTIONS ===================== -->
+<div class="quick-actions">
+
+    <a href="/users" class="qa-card" style="border-top: 3px solid #6366f1;">
+        <div class="qa-icon" style="background: linear-gradient(135deg,#667eea,#764ba2);">
+            <i class="fas fa-users"></i>
+        </div>
+        <div>
+            <div class="qa-title">ব্যবহারকারী তালিকা</div>
+            <div class="qa-desc">সকল নিবন্ধিত অ্যাকাউন্ট দেখুন</div>
+        </div>
+    </a>
+
+    <a href="/users/create" class="qa-card" style="border-top: 3px solid #43e97b;">
+        <div class="qa-icon" style="background: linear-gradient(135deg,#43e97b,#38f9d7);">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <div>
+            <div class="qa-title">নতুন ব্যবহারকারী</div>
+            <div class="qa-desc">সিস্টেমে নতুন অ্যাকাউন্ট যোগ করুন</div>
+        </div>
+    </a>
+
+    <a href="#" class="qa-card" style="border-top: 3px solid #f093fb;">
+        <div class="qa-icon" style="background: linear-gradient(135deg,#f093fb,#f5576c);">
+            <i class="fas fa-code"></i>
+        </div>
+        <div>
+            <div class="qa-title">API এক্সপ্লোরার</div>
+            <div class="qa-desc">JWT ও REST API পরীক্ষা করুন</div>
+        </div>
+    </a>
+
+</div>
+
+@endsection

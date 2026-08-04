@@ -1,0 +1,9 @@
+@extends('layout.master')
+@section('content')
+<div class="card narrow">
+    <h1>{{ user.get('name') }}</h1>
+    <p>ইমেইল: {{ user.get('email') }}</p>
+    <p>যোগদান: {{ user.get('created_at') }}</p>
+    <a class="btn secondary" href="/users">← ফিরে যান</a>
+</div>
+@endsection

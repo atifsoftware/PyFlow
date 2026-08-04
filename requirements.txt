@@ -1,0 +1,28 @@
+# PyMVC Framework Dependencies
+# ================================
+# Python 3.9+ প্রয়োজন
+
+# ─── Core: MySQL ড্রাইভার (PHP-এর PDO-র মতো কাজ করে) ─────────────────────
+# Pure Python MySQL client — কোনো C extension লাগে না
+pymysql==1.1.1
+
+# ─── FastAPI Integration ────────────────────────────────────────────────────
+# REST API + Swagger UI + OpenAPI — একই পোর্টে /api/* path-এ
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0   # ASGI server (FastAPI চালাতে)
+a2wsgi>=1.10.0              # WSGI→ASGI bridge (PyMVC wrap করতে)
+
+# ─── Production WSGI Server ────────────────────────────────────────────────
+# ডেভেলপমেন্টে uvicorn (run.py) যথেষ্ট।
+# প্রোডাকশনে gunicorn + uvicorn worker ব্যবহার করুন:
+# gunicorn core.asgi_bridge:application -w 4 -k uvicorn.workers.UvicornWorker
+gunicorn==23.0.0
+
+# ─── Optional: উন্নত পাসওয়ার্ড হ্যাশিং ──────────────────────────────────
+# bcrypt ইনস্টল থাকলে Hash.make() অটো bcrypt ব্যবহার করবে।
+# না থাকলে stdlib PBKDF2-HMAC-SHA256 ব্যবহার হয় (নিরাপদ)।
+# bcrypt==4.2.0
+
+# ─── Image Processing ──────────────────────────────────────────────────────
+# Pillow (PIL) - PHP GD লাইব্রেরির সমতুল্য ইমেজ প্রসেসর
+Pillow==12.3.0

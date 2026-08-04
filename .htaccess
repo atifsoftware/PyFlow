@@ -1,0 +1,11 @@
+# প্রজেক্ট রুটের .htaccess - shared hosting-এ (যেখানে document root বদলানো যায় না)
+# সব ট্রাফিক public/ ফোল্ডারে পাঠিয়ে দেয়। cPanel-এ document root সরাসরি
+# public/ এ সেট করতে পারলে এই ফাইলের দরকার নেই।
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ /public/$1 [L]
+</IfModule>
+
+Options -Indexes

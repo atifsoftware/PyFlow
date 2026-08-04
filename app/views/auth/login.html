@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>লগইন — PyMVC Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Hind Siliguri', 'Inter', sans-serif;
+            min-height: 100vh;
+            background: #0f0c29;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background orbs */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.18;
+            pointer-events: none;
+            animation: orb-float 8s ease-in-out infinite;
+        }
+        .bg-orb.orb1 { width: 500px; height: 500px; background: #7c3aed; top: -150px; left: -100px; animation-delay: 0s; }
+        .bg-orb.orb2 { width: 400px; height: 400px; background: #2563eb; bottom: -100px; right: -100px; animation-delay: 3s; }
+        .bg-orb.orb3 { width: 300px; height: 300px; background: #db2777; top: 50%; left: 50%; transform: translate(-50%,-50%); animation-delay: 1.5s; }
+
+        @keyframes orb-float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(15px, -20px) scale(1.05); }
+        }
+
+        /* Grid dots background */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image: radial-gradient(rgba(167,139,250,0.08) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+        }
+
+        /* Login Card */
+        .login-card {
+            width: 100%; max-width: 440px;
+            background: rgba(15, 12, 41, 0.75);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(167,139,250,0.2);
+            border-radius: 24px;
+            padding: 42px 40px;
+            position: relative; z-index: 10;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(167,139,250,0.08);
+            animation: card-in 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        @keyframes card-in {
+            from { opacity: 0; transform: translateY(22px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Logo area */
+        .login-logo {
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; gap: 12px; margin-bottom: 32px; text-align: center;
+        }
+        .login-logo-icon {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; color: white;
+            box-shadow: 0 8px 30px rgba(102,126,234,0.5);
+            margin-bottom: 4px;
+        }
+        .login-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 24px; font-weight: 800;
+            color: white; letter-spacing: -0.4px;
+        }
+        .login-title span { color: #a78bfa; }
+        .login-subtitle {
+            font-size: 13px; color: rgba(167,139,250,0.6);
+            margin-top: 2px;
+        }
+
+        /* Alerts */
+        .alert-box {
+            border-radius: 11px; padding: 12px 16px;
+            font-size: 13.5px; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 9px;
+        }
+        .alert-error { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+        .alert-success { background: rgba(52,211,153,0.1); color: #34d399; border: 1px solid rgba(52,211,153,0.2); }
+
+        /* Form */
+        .form-group { margin-bottom: 20px; }
+        .form-label {
+            display: block; font-size: 12px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.6px;
+            color: rgba(167,139,250,0.7); margin-bottom: 8px;
+        }
+        .form-input-wrap { position: relative; }
+        .form-input-icon {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: rgba(167,139,250,0.45); font-size: 14px; pointer-events: none;
+        }
+        .form-input {
+            width: 100%; padding: 12px 14px 12px 42px;
+            background: rgba(255,255,255,0.05);
+            border: 1.5px solid rgba(167,139,250,0.2);
+            border-radius: 12px; font-size: 14.5px;
+            color: white; font-family: inherit; outline: none;
+            transition: all 0.25s;
+        }
+        .form-input::placeholder { color: rgba(167,139,250,0.3); }
+        .form-input:focus {
+            border-color: rgba(167,139,250,0.6);
+            background: rgba(167,139,250,0.07);
+            box-shadow: 0 0 0 4px rgba(124,58,237,0.15);
+        }
+
+        /* Submit Button */
+        .login-btn {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none; border-radius: 13px;
+            color: white; font-size: 15px; font-weight: 700;
+            font-family: inherit; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 9px;
+            transition: all 0.3s; margin-top: 8px;
+            box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+        }
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102,126,234,0.55);
+        }
+        .login-btn:active { transform: translateY(0); }
+
+        /* Divider */
+        .login-divider {
+            display: flex; align-items: center; gap: 12px;
+            margin: 22px 0;
+        }
+        .login-divider-line { flex: 1; height: 1px; background: rgba(167,139,250,0.1); }
+        .login-divider-text { font-size: 12px; color: rgba(167,139,250,0.4); white-space: nowrap; }
+
+        /* Footer link */
+        .login-footer {
+            text-align: center; font-size: 13.5px;
+            color: rgba(167,139,250,0.5);
+        }
+        .login-footer a {
+            color: #a78bfa; text-decoration: none; font-weight: 700;
+            transition: color 0.2s;
+        }
+        .login-footer a:hover { color: #c4b5fd; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<!-- Background Orbs -->
+<div class="bg-orb orb1"></div>
+<div class="bg-orb orb2"></div>
+<div class="bg-orb orb3"></div>
+
+<!-- Login Card -->
+<div class="login-card">
+
+    <!-- Logo -->
+    <div class="login-logo">
+        <div class="login-logo-icon">
+            <i class="fas fa-bolt"></i>
+        </div>
+        <div class="login-title">Py<span>MVC</span> Admin</div>
+        <div class="login-subtitle">আপনার অ্যাকাউন্টে প্রবেশ করুন</div>
+    </div>
+
+    <!-- Alerts -->
+    @if(errors.get('email'))
+    <div class="alert-box alert-error">
+        <i class="fas fa-circle-exclamation"></i>
+        {{ errors.get('email')[0] }}
+    </div>
+    @endif
+    @if(errors.get('_token'))
+    <div class="alert-box alert-error">
+        <i class="fas fa-shield-exclamation"></i>
+        {{ errors.get('_token')[0] }}
+    </div>
+    @endif
+    @if(success)
+    <div class="alert-box alert-success">
+        <i class="fas fa-circle-check"></i>
+        {{ success }}
+    </div>
+    @endif
+
+    <!-- Form -->
+    <form method="POST" action="/login">
+        @csrf
+
+        <div class="form-group">
+            <label class="form-label">ইমেইল এড্রেস</label>
+            <div class="form-input-wrap">
+                <span class="form-input-icon"><i class="fas fa-envelope"></i></span>
+                <input type="email" name="email" class="form-input"
+                       placeholder="আপনার ইমেইল লিখুন"
+                       value="{{ old.get('email', '') }}" required autocomplete="email">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">পাসওয়ার্ড</label>
+            <div class="form-input-wrap">
+                <span class="form-input-icon"><i class="fas fa-lock"></i></span>
+                <input type="password" name="password" class="form-input"
+                       placeholder="আপনার পাসওয়ার্ড লিখুন"
+                       required autocomplete="current-password">
+            </div>
+        </div>
+
+        <button type="submit" class="login-btn">
+            <i class="fas fa-right-to-bracket"></i>
+            লগইন করুন
+        </button>
+    </form>
+
+    <div class="login-divider">
+        <div class="login-divider-line"></div>
+        <div class="login-divider-text">বা</div>
+        <div class="login-divider-line"></div>
+    </div>
+
+    <div class="login-footer">
+        অ্যাকাউন্ট নেই? <a href="/register">নতুন রেজিস্ট্রেশন করুন</a>
+    </div>
+</div>
+
+</body>
+</html>

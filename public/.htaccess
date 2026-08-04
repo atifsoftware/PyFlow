@@ -1,0 +1,22 @@
+# public/.htaccess
+# Apache + mod_wsgi দিয়ে ডিপ্লয় করার জন্য (mod_wsgi ইনস্টল থাকতে হবে)।
+# সাধারণত Apache ব্যবহার হবে শুধুমাত্র static ফাইল সার্ভ করতে অথবা
+# reverse-proxy হিসেবে gunicorn-এর সামনে থাকতে; নিচেরটা mod_wsgi সেটআপের জন্য।
+
+<IfModule mod_wsgi.c>
+    WSGIScriptAlias / /var/www/pymvc/public/index.py
+    WSGIPythonPath /var/www/pymvc
+
+    <Directory /var/www/pymvc/public>
+        Require all granted
+    </Directory>
+</IfModule>
+
+# storage, config, core, app ফোল্ডার সরাসরি ব্রাউজার থেকে অ্যাক্সেস বন্ধ
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} ^/(storage|config|core|app)/ [NC]
+    RewriteRule ^ - [F,L]
+</IfModule>
+
+Options -Indexes

@@ -1,0 +1,91 @@
+@extends('layout.admin')
+@section('content')
+
+<!-- Page Header -->
+<div class="adm-page-header fade-up">
+    <div>
+        <div class="adm-page-title">
+            <div class="title-icon"><i class="fas fa-users"></i></div>
+            ব্যবহারকারী ব্যবস্থাপনা
+        </div>
+        <div class="adm-page-subtitle">সিস্টেমে নিবন্ধিত সকল ব্যবহারকারীর তালিকা</div>
+    </div>
+    <a href="/users/create" class="pm-btn pm-btn-primary">
+        <i class="fas fa-user-plus"></i> নতুন ব্যবহারকারী
+    </a>
+</div>
+
+<!-- Table Card -->
+<div class="pm-card fade-up">
+    <div class="pm-card-header">
+        <div class="pm-card-title">
+            <div class="pm-card-icon"><i class="fas fa-table-list"></i></div>
+            ব্যবহারকারী তালিকা
+        </div>
+        <span style="font-size: 12px; color: var(--tx-3);">মোট {{ total_users }} জন ব্যবহারকারী</span>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table class="pm-table">
+            <thead>
+                <tr>
+                    <th style="padding-left: 22px;">#</th>
+                    <th>নাম ও পরিচয়</th>
+                    <th>ইমেইল এড্রেস</th>
+                    <th>রোল</th>
+                    <th style="text-align: right; padding-right: 22px;">অ্যাকশন</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(u in users)
+                <tr>
+                    <td style="padding-left: 22px; color: var(--tx-3); font-weight: 600; font-size: 12px;">#{{ u.get('id') }}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 11px;">
+                            <div class="tbl-avatar">{{ u.get('name')[0].upper() }}</div>
+                            <div>
+                                <div style="font-weight: 700; font-size: 14px; color: var(--tx-1);">{{ u.get('name') }}</div>
+                                <div style="font-size: 11px; color: var(--tx-3);">id:{{ u.get('id') }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="font-family: 'Inter', monospace; font-size: 13px; color: var(--tx-2);">{{ u.get('email') }}</td>
+                    <td>
+                        @if(u.get('role') == 'admin')
+                        <span class="pm-badge admin"><i class="fas fa-shield-halved" style="font-size: 9px;"></i> অ্যাডমিন</span>
+                        @else
+                        <span class="pm-badge user"><i class="fas fa-user" style="font-size: 9px;"></i> ব্যবহারকারী</span>
+                        @endif
+                    </td>
+                    <td style="text-align: right; padding-right: 22px;">
+                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+                            <a href="/users/{{ u.get('id') }}/edit" class="tbl-action edit" title="সম্পাদনা করুন">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/users/{{ u.get('id') }}" style="display:inline;" onsubmit="return confirm('এই ব্যবহারকারীকে মুছে ফেলতে চান?');">
+                                @csrf
+                                <input type="hidden" name="_method" value="DELETE">
+                                <button type="submit" class="tbl-action delete" title="মুছে ফেলুন">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        @if(not users)
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-users-slash"></i>
+            </div>
+            <h6 style="font-weight: 700; color: var(--tx-2); margin-bottom: 6px;">কোনো ব্যবহারকারী পাওয়া যায়নি</h6>
+            <p style="font-size: 13px; color: var(--tx-3);">প্রথম ব্যবহারকারী যোগ করতে উপরের বাটনে ক্লিক করুন।</p>
+        </div>
+        @endif
+    </div>
+</div>
+
+@endsection
