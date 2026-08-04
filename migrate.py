@@ -137,7 +137,7 @@ def _ensure_mysql_database(config: dict):
     """
     try:
         import pymysql
-        db_name = config.get("DB_NAME", "pymvc_db")
+        db_name = config.get("DB_NAME", "pyflow_db")
         conn = pymysql.connect(
             host=config.get("DB_HOST", "127.0.0.1"),
             port=int(config.get("DB_PORT", 3306)),

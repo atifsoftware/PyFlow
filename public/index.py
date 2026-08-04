@@ -4,7 +4,7 @@ public/index.py
 প্রোডাকশন WSGI এন্ট্রি পয়েন্ট। gunicorn / uWSGI / mod_wsgi যেকোনো WSGI সার্ভার
 এই ফাইলের 'application' অবজেক্টকে টার্গেট করবে।
 
-    gunicorn --chdir /path/to/pymvc public.index:application
+    gunicorn --chdir /path/to/pyflow public.index:application
 
 ডেভেলপমেন্টে সরাসরি চালাতে চাইলে প্রজেক্ট রুট থেকে: python run.py
 """

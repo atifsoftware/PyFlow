@@ -1,4 +1,4 @@
-# PyMVC Framework Dependencies
+# PyFlow Framework Dependencies
 # ================================
 # Python 3.9+ প্রয়োজন
 
@@ -10,7 +10,7 @@ pymysql==1.1.1
 # REST API + Swagger UI + OpenAPI — একই পোর্টে /api/* path-এ
 fastapi>=0.100.0
 uvicorn[standard]>=0.23.0   # ASGI server (FastAPI চালাতে)
-a2wsgi>=1.10.0              # WSGI→ASGI bridge (PyMVC wrap করতে)
+a2wsgi>=1.10.0              # WSGI→ASGI bridge (PyFlow wrap করতে)
 
 # ─── Production WSGI Server ────────────────────────────────────────────────
 # ডেভেলপমেন্টে uvicorn (run.py) যথেষ্ট।

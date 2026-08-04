@@ -27,7 +27,7 @@ def load_env(path=".env") -> dict:
 def get_config() -> dict:
     env = load_env()
     return {
-        "APP_NAME": env.get("APP_NAME", "PyMVC App"),
+        "APP_NAME": env.get("APP_NAME", "PyFlow App"),
         "APP_DEBUG": env.get("APP_DEBUG", "true").lower() == "true",
         "APP_URL": env.get("APP_URL", "http://localhost:8000"),
         "SECRET_KEY": env.get("SECRET_KEY", ""),

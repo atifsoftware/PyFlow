@@ -1,16 +1,16 @@
-# PyMVC — Premium Custom Python MVC & FastAPI Framework 🚀
+# PyFlow — Premium Custom Python MVC & FastAPI Framework 🚀
 
 [বাংলা বিবরণ নিচে দেওয়া হয়েছে]
 
-**PyMVC** is a lightweight, highly secure, and performance-optimized Python MVC framework built from scratch using Python's standard libraries, now featuring a seamless side-by-side **FastAPI** integration via a custom ASGI bridge. 
+**PyFlow** is a lightweight, highly secure, and performance-optimized Python MVC framework built from scratch using Python's standard libraries, now featuring a seamless side-by-side **FastAPI** integration via a custom ASGI bridge. 
 
-PyMVC brings the elegance of modern PHP MVC frameworks (like Laravel) to Python, combined with the high-performance async API capabilities of FastAPI.
+PyFlow brings the elegance of modern PHP MVC frameworks (like Laravel) to Python, combined with the high-performance async API capabilities of FastAPI.
 
 ---
 
 ## 🌟 Key Features (মূল সুবিধাসমূহ)
 
-### 1. Core PyMVC Features
+### 1. Core PyFlow Features
 - **Custom Template Engine:** Jinja/Blade-inspired template system supporting layout inheritance (`@extends`, `@section`, `@yield`), `@include`, conditional loops, and auto-XSS escaping.
 - **Chained Query Builder & ORM:** SQL injection-proof active-record ORM supporting SQLite and MySQL with fluent syntax.
 - **Robust Security Shield:** Features built-in CSRF protection, rate limiting (brute-force defense), PBKDF2-SHA256 password hashing, and session fixation defense.
@@ -28,7 +28,7 @@ PyMVC brings the elegance of modern PHP MVC frameworks (like Laravel) to Python,
 
 ## 📂 Folder Structure (ফোল্ডার আর্কিটেকচার)
 ```
-pymvc/
+pyflow/
 ├── app/
 │   ├── api/             # FastAPI sub-application routes & schemas
 │   ├── controllers/     # AuthController, UserController, SettingController...
@@ -36,7 +36,7 @@ pymvc/
 │   └── views/           # .html View templates (admin, settings, api_keys, logs)
 ├── config/
 │   ├── config.py        # .env configuration loader
-│   └── routes.py        # Main PyMVC web routes configuration
+│   └── routes.py        # Main PyFlow web routes configuration
 ├── core/                # Core engines (router, ORM, validator, database, bridge)
 ├── public/
 │   ├── index.py         # WSGI production entry point
@@ -53,8 +53,8 @@ pymvc/
 
 ### 1. Clone the Project
 ```bash
-git clone https://github.com/your-username/pymvc.git
-cd pymvc
+git clone https://github.com/your-username/pyflow.git
+cd pyflow
 ```
 
 ### 2. Install Dependencies
@@ -88,14 +88,14 @@ Open **`http://127.0.0.1:8000`** in your browser.
 
 ---
 
-# PyMVC — প্রিমিয়াম কাস্টম পাইথন এমভিসি ও ফাস্ট-এপিআই ফ্রেমওয়ার্ক 🇧🇩
+# PyFlow — প্রিমিয়াম কাস্টম পাইথন এমভিসি ও ফাস্ট-এপিআই ফ্রেমওয়ার্ক 🇧🇩
 
-**PyMVC** হলো কোনো অতিরিক্ত ভারী লাইব্রেরি ছাড়া, পাইথনের নিজস্ব স্ট্যান্ডার্ড মডিউলের ওপর ভিত্তি করে তৈরি একটি অত্যন্ত গতিশীল ও নিরাপদ MVC ফ্রেমওয়ার্ক। এতে কাস্টম এএসজিআই ব্রিজের (ASGI Bridge) মাধ্যমে একই পোর্টে **FastAPI** যুক্ত করা হয়েছে।
+**PyFlow** হলো কোনো অতিরিক্ত ভারী লাইব্রেরি ছাড়া, পাইথনের নিজস্ব স্ট্যান্ডার্ড মডিউলের ওপর ভিত্তি করে তৈরি একটি অত্যন্ত গতিশীল ও নিরাপদ MVC ফ্রেমওয়ার্ক। এতে কাস্টম এএসজিআই ব্রিজের (ASGI Bridge) মাধ্যমে একই পোর্টে **FastAPI** যুক্ত করা হয়েছে।
 
 ## 🌟 কাস্টম এবং অ্যাডভান্সড ফিচারসমূহ
 
 ### ১. ফাস্ট-এপিআই (FastAPI) ইন্টিগ্রেশন
-একটি রেডিমেড WSGI-to-ASGI ব্রিজের মাধ্যমে PyMVC এবং FastAPI একই পোর্টে (৮০০০) পাশাপাশি রান করে। সব API রিকোয়েস্ট `/api/*` পাথে FastAPI হ্যান্ডেল করে এবং ইন্টারেক্টিভ Swagger ডক্স পাওয়া যায় `/api/docs`-এ।
+একটি রেডিমেড WSGI-to-ASGI ব্রিজের মাধ্যমে PyFlow এবং FastAPI একই পোর্টে (৮০০০) পাশাপাশি রান করে। সব API রিকোয়েস্ট `/api/*` পাথে FastAPI হ্যান্ডেল করে এবং ইন্টারেক্টিভ Swagger ডক্স পাওয়া যায় `/api/docs`-এ।
 
 ### ২. ফর্ম ভ্যালিডেটর ইঞ্জিন (Request Validator)
 ইনপুট স্যানিটাইজেশন ও ডেটা ভ্যালিডেশনের জন্য `Validator` ক্লাস রয়েছে। এটি `required`, `email`, `numeric`, `min`, `max`, এবং ডাটাবেস চেক করার জন্য `unique:table,column` রুলস সাপোর্ট করে।
@@ -103,7 +103,7 @@ Open **`http://127.0.0.1:8000`** in your browser.
 ### ৩. নেস্টেড ডাটাবেস ট্রানজেকশন (Nested Transactions)
 ডাটাবেস লেভেলে জটিল কোয়েরি অপারেশনের জন্য nested transaction বা SQL `SAVEPOINT` ইমপ্লিমেন্ট করা হয়েছে। এর ফলে আংশিক কুয়েরি এরর হলে সম্পূর্ণ ট্রানজেকশন রোলব্যাক না করে নির্দিষ্ট সেভপয়েন্টে ফেরত যাওয়া যায়।
 
-### ৪. এপিআই কি ম্যানেজমেন্ট (API Key Management)
+### ৪. এপিআই কী ও অডিট লগ (API Key Management)
 ব্যবহারকারীরা সরাসরি ড্যাশবোর্ড থেকে এপিআই কী (`pm_sk_...`) তৈরি এবং বাতিল করতে পারেন। এটি ডাটাবেসে SHA-256 হ্যাশ করা থাকে। এই কী দিয়ে FastAPI এন্ডপয়েন্টগুলোতে `X-API-Key` হেডারের মাধ্যমে অথেন্টিকেট করা যায়।
 
 ### ৫. অ্যাক্টিভিটি লগ (Audit Trail)

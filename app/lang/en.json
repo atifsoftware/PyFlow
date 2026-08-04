@@ -1,14 +1,14 @@
 {
   "version": "Version 1.0.0",
-  "welcome_title": "Welcome to PyMVC Framework",
+  "welcome_title": "Welcome to PyFlow Framework",
   "welcome_subtitle": "A premium lightweight Python MVC framework built from scratch using Python's standard library, now featuring a seamless side-by-side FastAPI integration and a custom ASGI gateway!",
   "get_started": "Get Started",
   "login": "Login",
   "register": "Register",
   "dashboard": "Dashboard",
   "logout": "Logout",
-  "features_title": "Powerful Features of PyMVC",
-  "features_subtitle": "PyMVC comes packed with robust and ready-made solutions to facilitate quick and professional web development in Python.",
+  "features_title": "Powerful Features of PyFlow",
+  "features_subtitle": "PyFlow comes packed with robust and ready-made solutions to facilitate quick and professional web development in Python.",
   
   "routing_title": "Dynamic Routing System",
   "routing_desc": "Supports custom middleware grouping, dynamic path parameter binding (e.g. {id:int}), and RESTful resource routes.",
@@ -46,7 +46,7 @@
   "rate_limit_title": "Brute-Force Protection",
   "rate_limit_desc": "Dynamic IP and session-based rate limiter to protect authentication paths from spamming.",
 
-  "why_pymvc": "Why Choose PyMVC?",
+  "why_pyflow": "Why Choose PyFlow?",
   "why_desc_1_title": "Lightweight & Ultra-Fast",
   "why_desc_1_body": "Delivers maximum execution speed and low memory usage without any framework overhead.",
   

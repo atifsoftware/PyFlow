@@ -53,7 +53,7 @@ class Application:
             level=logging.INFO,
             format="%(asctime)s [%(levelname)s] %(message)s",
         )
-        self.logger = logging.getLogger("pymvc")
+        self.logger = logging.getLogger("pyflow")
         
         # প্রফাইলার হ্যান্ডলার যোগ করা
         self.logger.addHandler(ProfilerLogHandler())
@@ -144,12 +144,12 @@ class Application:
         
         # HTML template of the debug bar
         debug_html = f"""
-<!-- PyMVC Debug Bar -->
-<div id="pymvc-debugbar" style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(20, 20, 25, 0.95); border-top: 2px solid #5a32a8; color: #e1e1e6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; z-index: 999999; box-shadow: 0 -4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(8px);">
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; cursor: pointer; border-bottom: 1px solid #333;" onclick="togglePyMvCDebugbar()">
+<!-- PyFlow Debug Bar -->
+<div id="pyflow-debugbar" style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(20, 20, 25, 0.95); border-top: 2px solid #5a32a8; color: #e1e1e6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; z-index: 999999; box-shadow: 0 -4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(8px);">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; cursor: pointer; border-bottom: 1px solid #333;" onclick="togglePyFlowDebugbar()">
         <div style="display: flex; align-items: center; gap: 16px;">
             <span style="font-weight: bold; color: #9d4edd; display: flex; align-items: center; gap: 4px;">
-                ⚡ PyMVC Debugbar
+                ⚡ PyFlow Debugbar
             </span>
             <span title="Request Method & Path" style="background: #24242e; padding: 2px 6px; border-radius: 4px; font-size: 11px; border: 1px solid #3c3c4e;">
                 {request.method} {request.path}
@@ -170,12 +170,12 @@ class Application:
         <div style="color: #888;">[Click to Toggle]</div>
     </div>
     
-    <div id="pymvc-debugbar-content" style="display: none; max-height: 350px; overflow-y: auto; padding: 16px; border-top: 1px solid #222;">
+    <div id="pyflow-debugbar-content" style="display: none; max-height: 350px; overflow-y: auto; padding: 16px; border-top: 1px solid #222;">
         <!-- Tabs -->
         <div style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #333; padding-bottom: 8px;">
-            <button onclick="switchPyMvCTab('queries')" class="pm-tab-btn pm-tab-active" style="background: none; border: none; color: #fff; cursor: pointer; padding: 6px 12px; font-weight: bold;">Queries ({len(queries)})</button>
-            <button onclick="switchPyMvCTab('session')" class="pm-tab-btn" style="background: none; border: none; color: #aaa; cursor: pointer; padding: 6px 12px; font-weight: bold;">Session</button>
-            <button onclick="switchPyMvCTab('logs')" class="pm-tab-btn" style="background: none; border: none; color: #aaa; cursor: pointer; padding: 6px 12px; font-weight: bold;">Logs ({len(logs)})</button>
+            <button onclick="switchPyFlowTab('queries')" class="pm-tab-btn pm-tab-active" style="background: none; border: none; color: #fff; cursor: pointer; padding: 6px 12px; font-weight: bold;">Queries ({len(queries)})</button>
+            <button onclick="switchPyFlowTab('session')" class="pm-tab-btn" style="background: none; border: none; color: #aaa; cursor: pointer; padding: 6px 12px; font-weight: bold;">Session</button>
+            <button onclick="switchPyFlowTab('logs')" class="pm-tab-btn" style="background: none; border: none; color: #aaa; cursor: pointer; padding: 6px 12px; font-weight: bold;">Logs ({len(logs)})</button>
         </div>
         
         <!-- Queries Tab -->
@@ -223,23 +223,23 @@ class Application:
 </div>
 
 <script>
-function togglePyMvCDebugbar() {{
-    var content = document.getElementById('pymvc-debugbar-content');
+function togglePyFlowDebugbar() {{
+    var content = document.getElementById('pyflow-debugbar-content');
     if (content.style.display === 'none') {{
         content.style.display = 'block';
-        localStorage.setItem('pymvc_debugbar_open', 'true');
+        localStorage.setItem('pyflow_debugbar_open', 'true');
     }} else {{
         content.style.display = 'none';
-        localStorage.setItem('pymvc_debugbar_open', 'false');
+        localStorage.setItem('pyflow_debugbar_open', 'false');
     }}
 }}
 
 // পেজ লোডের সময় পূর্ববর্তী অবস্থা বজায় রাখা
-if (localStorage.getItem('pymvc_debugbar_open') === 'true') {{
-    document.getElementById('pymvc-debugbar-content').style.display = 'block';
+if (localStorage.getItem('pyflow_debugbar_open') === 'true') {{
+    document.getElementById('pyflow-debugbar-content').style.display = 'block';
 }}
 
-function switchPyMvCTab(tabName) {{
+function switchPyFlowTab(tabName) {{
     // সব ট্যাব কনটেন্ট হাইড করা
     var contents = document.getElementsByClassName('pm-tab-content');
     for (var i = 0; i < contents.length; i++) {{

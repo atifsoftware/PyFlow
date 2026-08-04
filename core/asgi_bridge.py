@@ -1,11 +1,11 @@
 """
 core/asgi_bridge.py
 ====================
-ASGI/WSGI Bridge — PyMVC এবং FastAPI একই পোর্টে চালায়।
+ASGI/WSGI Bridge — PyFlow এবং FastAPI একই পোর্টে চালায়।
 
 কীভাবে কাজ করে:
   - path /api/* হলে → FastAPI (ASGI) হ্যান্ডেল করে
-  - বাকি সব path → PyMVC WSGI অ্যাপ (a2wsgi.WsgiToAsgi দিয়ে ASGI-তে রূপান্তরিত)
+  - বাকি সব path → PyFlow WSGI অ্যাপ (a2wsgi.WsgiToAsgi দিয়ে ASGI-তে রূপান্তরিত)
 
 ব্যবহার:
   uvicorn core.asgi_bridge:application --host 0.0.0.0 --port 8000 --reload
@@ -25,8 +25,8 @@ from config.config import get_config
 from config.routes import build_router
 
 
-def _build_pymvc_wsgi():
-    """PyMVC WSGI অ্যাপ তৈরি করা"""
+def _build_pyflow_wsgi():
+    """PyFlow WSGI অ্যাপ তৈরি করা"""
     config = get_config()
     router = build_router()
 
@@ -36,16 +36,16 @@ def _build_pymvc_wsgi():
     return Application(router, config)
 
 
-# PyMVC WSGI → ASGI-তে রূপান্তর
-_pymvc_wsgi = _build_pymvc_wsgi()
-_pymvc_asgi = WSGIMiddleware(_pymvc_wsgi)
+# PyFlow WSGI → ASGI-তে রূপান্তর
+_pyflow_wsgi = _build_pyflow_wsgi()
+_pyflow_asgi = WSGIMiddleware(_pyflow_wsgi)
 
 
 async def application(scope, receive, send):
     """
     মূল ASGI callable:
     - /api/* এবং /openapi.json → FastAPI
-    - বাকি সব → PyMVC
+    - বাকি সব → PyFlow
     """
     path = scope.get("path", "/")
 
@@ -53,4 +53,4 @@ async def application(scope, receive, send):
     if path == "/api" or path.startswith("/api/"):
         await fastapi_app(scope, receive, send)
     else:
-        await _pymvc_asgi(scope, receive, send)
+        await _pyflow_asgi(scope, receive, send)

@@ -212,11 +212,11 @@
         <section id="docs-intro" class="docs-section active">
             <h1 class="docs-h1">{{ "ভূমিকা" if current_lang == 'bn' else "Introduction" }}</h1>
             <p class="docs-lead">
-                {{ "PyMVC একটি অত্যন্ত হালকা এবং সিকিউর পাইথন এমভিসি ফ্রেমওয়ার্ক। এটি পাইথনের স্ট্যান্ডার্ড লাইব্রেরি ব্যবহার করে তৈরি করা হয়েছে। একই সাথে এটিASGI গেটওয়ের সাহায্যে FastAPI ইন্টিগ্রেশন সমর্থন করে।" if current_lang == 'bn' else "PyMVC is a lightweight, secure Python MVC framework written from scratch using Python's standard library. It natively supports FastAPI side-by-side integration using an ASGI-to-WSGI bridge." }}
+                {{ "PyFlow একটি অত্যন্ত হালকা এবং সিকিউর পাইথন এমভিসি ফ্রেমওয়ার্ক। এটি পাইথনের স্ট্যান্ডার্ড লাইব্রেরি ব্যবহার করে তৈরি করা হয়েছে। একই সাথে এটিASGI গেটওয়ের সাহায্যে FastAPI ইন্টিগ্রেশন সমর্থন করে।" if current_lang == 'bn' else "PyFlow is a lightweight, secure Python MVC framework written from scratch using Python's standard library. It natively supports FastAPI side-by-side integration using an ASGI-to-WSGI bridge." }}
             </p>
             <div class="alert-info">
                 <strong>{{ "নোট:" if current_lang == 'bn' else "Note:" }}</strong>
-                {{ "এই ডক পেজটি PyMVC-র মূল সুবিধা ও কাজ করার ধারণাকে সহজে ব্যখ্যা করার জন্য ডিজাইন করা হয়েছে।" if current_lang == 'bn' else "This documentation is designed to guide developers through the advanced architectures of PyMVC." }}
+                {{ "এই ডক পেজটি PyFlow-র মূল সুবিধা ও কাজ করার ধারণাকে সহজে ব্যখ্যা করার জন্য ডিজাইন করা হয়েছে।" if current_lang == 'bn' else "This documentation is designed to guide developers through the advanced architectures of PyFlow." }}
             </div>
             <h2 class="docs-h2">{{ "কোর বৈশিষ্ঠসমূহ" if current_lang == 'bn' else "Core Strengths" }}</h2>
             <ul>
@@ -230,7 +230,7 @@
         <section id="docs-setup" class="docs-section">
             <h1 class="docs-h1">{{ "সেটআপ ও রান" if current_lang == 'bn' else "Setup & Installation" }}</h1>
             <p class="docs-lead">
-                {{ "PyMVC চালানোর জন্য Python >= 3.10 প্রয়োজন।" if current_lang == 'bn' else "PyMVC requires Python >= 3.10 to run." }}
+                {{ "PyFlow চালানোর জন্য Python >= 3.10 প্রয়োজন।" if current_lang == 'bn' else "PyFlow requires Python >= 3.10 to run." }}
             </p>
             
             <h2 class="docs-h2">১. {{ "ডিপেন্ডেন্সি ইনস্টল করা" if current_lang == 'bn' else "Install Dependencies" }}</h2>
@@ -335,7 +335,7 @@ Product.create({"name": "Mobile", "price": 12000, "stock": 10})</code></pre>
         <section id="docs-fastapi" class="docs-section">
             <h1 class="docs-h1">{{ "FastAPI ও সোয়াগার এপিআই" if current_lang == 'bn' else "FastAPI & Swagger UI" }}</h1>
             <p class="docs-lead">
-                {{ "PyMVC-তে FastAPI-কে সাইড-বাই-সাইড ইন্টিগ্রেট করা হয়েছে।" if current_lang == 'bn' else "PyMVC hosts FastAPI side-by-side using an ASGI bridge." }}
+                {{ "PyFlow-তে FastAPI-কে সাইড-বাই-সাইড ইন্টিগ্রেট করা হয়েছে।" if current_lang == 'bn' else "PyFlow hosts FastAPI side-by-side using an ASGI bridge." }}
             </p>
             
             <h2 class="docs-h2">{{ "এপিআই রুট" if current_lang == 'bn' else "API URLs" }}</h2>
@@ -355,7 +355,7 @@ Product.create({"name": "Mobile", "price": 12000, "stock": 10})</code></pre>
         <section id="docs-api-keys" class="docs-section">
             <h1 class="docs-h1">{{ "API কী ও অ্যাক্টিভিটি লগ" if current_lang == 'bn' else "API Keys & Activity Logs" }}</h1>
             <p class="docs-lead">
-                {{ "নিরাপত্তা ও অ্যাপ্লিকেশনের গতিবিধি ট্র্যাকিংয়ের জন্য PyMVC-তে এপিআই কী ও অ্যাক্টিভিটি লগ যুক্ত করা হয়েছে।" if current_lang == 'bn' else "Advanced keys management and system audits trail built into the core." }}
+                {{ "নিরাপত্তা ও অ্যাপ্লিকেশনের গতিবিধি ট্র্যাকিংয়ের জন্য PyFlow-তে এপিআই কী ও অ্যাক্টিভিটি লগ যুক্ত করা হয়েছে।" if current_lang == 'bn' else "Advanced keys management and system audits trail built into the core." }}
             </p>
             
             <h2 class="docs-h2">{{ "এপিআই কী রিকোয়েস্ট হেডার" if current_lang == 'bn' else "API Key Request Header" }}</h2>
@@ -418,7 +418,7 @@ function switchSection(sectionId) {
 
 <footer style="text-align: center; padding: 40px 20px; color: #a4b0be; font-size: 13px; margin-top: 50px; border-top: 1px solid #f1f2f6;">
     <p style="margin-bottom: 6px;">{{ __('footer_text') }}</p>
-    <p>&copy; {{ date('Y') if hasattr(date, 'Y') else '2026' }} PyMVC Framework. All rights reserved.</p>
+    <p>&copy; {{ date('Y') if hasattr(date, 'Y') else '2026' }} PyFlow Framework. All rights reserved.</p>
 </footer>
 
 @endsection
