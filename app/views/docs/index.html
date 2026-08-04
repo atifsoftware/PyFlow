@@ -7,17 +7,21 @@
         gap: 30px;
         margin-top: 30px;
         min-height: 70vh;
+        align-items: flex-start;
     }
     .docs-sidebar {
-        width: 280px;
+        width: 300px;
         flex-shrink: 0;
         background: #ffffff;
-        border-right: 1px solid rgba(0, 0, 0, 0.05);
-        padding-right: 20px;
-    }
-    .docs-menu {
+        padding: 24px;
+        border-radius: 24px;
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
         position: sticky;
         top: 100px;
+        height: auto;
+    }
+    .docs-menu {
         list-style: none;
         padding: 0;
         margin: 0;
@@ -58,7 +62,10 @@
     .docs-content {
         flex: 1;
         background: #ffffff;
-        padding: 10px 10px 40px 10px;
+        padding: 40px;
+        border-radius: 24px;
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
     }
     .docs-section {
         display: none;

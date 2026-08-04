@@ -18,8 +18,27 @@
 body {
     background: var(--bg-base);
     color: var(--text-main);
-    line-height: 1.6;
+    line-height: 1.7;
+    font-size: 16px;
     overflow-x: hidden;
+}
+
+/* Typography elements */
+p {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+ul, ol {
+    margin-bottom: 20px;
+    padding-left: 20px;
+}
+
+li {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
 }
 
 /* Navbar */
@@ -59,7 +78,7 @@ body {
     color: #94a3b8;
     text-decoration: none;
     font-weight: 600;
-    font-size: 14.5px;
+    font-size: 15px;
     transition: all 0.25s ease;
     padding: 6px 12px;
     border-radius: 8px;
@@ -72,7 +91,7 @@ body {
 
 /* Container */
 .container {
-    max-width: 1200px;
+    max-width: 1300px;
     margin: 40px auto;
     padding: 0 24px;
 }
@@ -100,6 +119,7 @@ h1, h2, h3, h4, h5 {
     color: #0f172a;
     font-weight: 800;
     letter-spacing: -0.5px;
+    margin-bottom: 15px;
 }
 
 form label {
