@@ -61,6 +61,7 @@ SQLITE_MIGRATIONS = [
             user_id      INTEGER NOT NULL,
             name         TEXT NOT NULL,
             key          TEXT NOT NULL UNIQUE,
+            rate_limit   INTEGER NOT NULL DEFAULT 100,
             last_used_at TEXT,
             created_at   TEXT,
             updated_at   TEXT
@@ -132,6 +133,7 @@ MYSQL_MIGRATIONS = [
             user_id      INT UNSIGNED NOT NULL,
             name         VARCHAR(100) NOT NULL,
             `key`        VARCHAR(64)  NOT NULL UNIQUE,
+            rate_limit   INT UNSIGNED NOT NULL DEFAULT 100,
             last_used_at DATETIME     NULL,
             created_at   DATETIME     NULL,
             updated_at   DATETIME     NULL,
@@ -225,6 +227,7 @@ POSTGRESQL_MIGRATIONS = [
             user_id      INTEGER         NOT NULL,
             name         VARCHAR(100)    NOT NULL,
             key          VARCHAR(64)     NOT NULL UNIQUE,
+            rate_limit   INTEGER         NOT NULL DEFAULT 100,
             last_used_at TIMESTAMPTZ     NULL,
             created_at   TIMESTAMPTZ     NULL,
             updated_at   TIMESTAMPTZ     NULL
