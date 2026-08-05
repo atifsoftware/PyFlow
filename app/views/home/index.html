@@ -266,10 +266,36 @@
         </div>
 
         <!-- Feature 6: Transactions -->
-        <div class="feature-card" style="--hover-border: rgba(108, 117, 125, 0.4); --hover-shadow: rgba(108, 117, 125, 0.15);">
-            <div class="feat-icon" style="background: rgba(108, 117, 125, 0.08); color: #6c757d;"><i class="fas fa-shield-halved"></i></div>
-            <h4 style="font-weight: 700; margin-bottom: 10px; color: #1e293b;">{{ __('transactions_title') }}</h4>
-            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0;">{{ __('transactions_desc') }}</p>
+        <div class="feature-card" style="--hover-border: rgba(224, 86, 253, 0.4); --hover-shadow: rgba(224, 86, 253, 0.15);">
+            <div class="feat-icon" style="background: rgba(224, 86, 253, 0.08); color: #be2edd;"><i class="fas fa-shield-halved"></i></div>
+            <h4 style="font-weight: 700; margin-bottom: 10px; color: #1e293b;">
+                {{ "অ্যাটমিক ট্রানজেকশন ম্যানেজার" if current_lang == 'bn' else "Atomic Transactions Manager" }}
+            </h4>
+            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0;">
+                {{ "context manager ও @atomic ডেকোরেটর দিয়ে ট্রানজেকশন নিরাপদ করা, SAVEPOINT দিয়ে আংশিক রোলব্যাক এবং on_commit হুক।" if current_lang == 'bn' else "Ensure strict data integrity using transactional context blocks, @atomic decorators, savepoints, and commit hooks." }}
+            </p>
+        </div>
+
+        <!-- Feature 6.5: Multi-driver Pool -->
+        <div class="feature-card" style="--hover-border: rgba(13, 110, 253, 0.4); --hover-shadow: rgba(13, 110, 253, 0.15);">
+            <div class="feat-icon" style="background: rgba(13, 110, 253, 0.08); color: #0d6efd;"><i class="fas fa-network-wired"></i></div>
+            <h4 style="font-weight: 700; margin-bottom: 10px; color: #1e293b;">
+                {{ "মাল্টি-ড্রাইভার কানেকশন পুল" if current_lang == 'bn' else "Multi-Driver Connection Pool" }}
+            </h4>
+            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0;">
+                {{ "SQLite-এর পাশাপাশি প্রোডাকশন-রেডি MySQL এবং PostgreSQL ডাটাবেজ থ্রেড-সেফ কানেকশন পুলিং ও অটো-রিকানেক্ট সাপোর্ট।" if current_lang == 'bn' else "Seamlessly switch between SQLite, MySQL, and PostgreSQL with robust thread-safe connection pooling." }}
+            </p>
+        </div>
+
+        <!-- Feature 6.6: Decimal Math & Money -->
+        <div class="feature-card" style="--hover-border: rgba(25, 135, 84, 0.4); --hover-shadow: rgba(25, 135, 84, 0.15);">
+            <div class="feat-icon" style="background: rgba(25, 135, 84, 0.08); color: #198754;"><i class="fas fa-coins"></i></div>
+            <h4 style="font-weight: 700; margin-bottom: 10px; color: #1e293b;">
+                {{ "নির্ভুল আর্থিক ক্যালকুলেশন" if current_lang == 'bn' else "Precision Financial Math" }}
+            </h4>
+            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0;">
+                {{ "Money ক্লাসের মাধ্যমে ফ্লোটিং পয়েন্টমুক্ত নিখুঁত হিসাবকাল এবং বাংলা ও ইংরেজি ভাষায় সংখ্যা থেকে কথায় রূপান্তর।" if current_lang == 'bn' else "Floating-point free money calculations with automated Bangla & English number-to-words conversion." }}
+            </p>
         </div>
 
         <!-- Feature 7: FastAPI Bridge -->

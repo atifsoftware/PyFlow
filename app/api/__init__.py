@@ -36,9 +36,11 @@ api.add_middleware(
 # Routes রেজিস্টার
 from app.api.routes import auth as auth_routes
 from app.api.routes import users as user_routes
+from app.api.routes import features as feature_routes
 
 api.include_router(auth_routes.router, prefix="/api/auth", tags=["Authentication"])
 api.include_router(user_routes.router, prefix="/api/users", tags=["Users"])
+api.include_router(feature_routes.router, prefix="/api/features", tags=["Interactive Features v3.0"])
 
 
 @api.get("/api", tags=["Root"])

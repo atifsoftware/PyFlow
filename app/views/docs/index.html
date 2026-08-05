@@ -185,6 +185,24 @@
                 </a>
             </li>
             <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('db-pool')">
+                    <i class="fas fa-network-wired" style="width: 20px;"></i>
+                    {{ "ডাটাবেজ কানেকশন পুল" if current_lang == 'bn' else "Database Pool" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('transactions')">
+                    <i class="fas fa-shield-halved" style="width: 20px;"></i>
+                    {{ "অ্যাটমিক ট্রানজেকশন" if current_lang == 'bn' else "Atomic Transactions" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('money-math')">
+                    <i class="fas fa-coins" style="width: 20px;"></i>
+                    {{ "নির্ভুল আর্থিক গণিত" if current_lang == 'bn' else "Precision Money Math" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
                 <a class="docs-menu-link" onclick="switchSection('validator')">
                     <i class="fas fa-circle-check" style="width: 20px;"></i>
                     {{ "ইনপুট ভ্যালিডেশন" if current_lang == 'bn' else "Input Validation" }}
@@ -625,7 +643,97 @@ socket.onmessage = (event) => console.log(event.data);
 socket.send('Hello PyFlow!');</code></pre>
         </section>
 
+        <!-- SECTION: Database Pool -->
+        <section id="docs-db-pool" class="docs-section">
+            <h1 class="docs-h1">
+                {{ "ডাটাবেজ কানেকশন পুল (Database Pool)" if current_lang == 'bn' else "Multi-Driver Connection Pool" }}
+            </h1>
+            <p class="docs-lead">
+                {{ "PyFlow এখন SQLite, MySQL এবং PostgreSQL ড্রাইভার সমর্থন করে এবং প্রতি থ্রেডে আলাদা কানেকশন পুল তৈরি করে।" if current_lang == 'bn' else "PyFlow supports connection pooling for SQLite, MySQL, and PostgreSQL out of the box." }}
+            </p>
+            <h2 class="docs-h2">{{ "কিভাবে ডিক্লেয়ার করবেন? (.env)" if current_lang == 'bn' else "Configuration in .env" }}</h2>
+            <pre><code># PostgreSQL Example
+DB_DRIVER=postgresql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_NAME=pyflow_db
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_SCHEMA=public
+DB_POOL_SIZE=5</code></pre>
+        </section>
+
+        <!-- SECTION: Atomic Transactions -->
+        <section id="docs-transactions" class="docs-section">
+            <h1 class="docs-h1">
+                {{ "অ্যাটমিক ট্রানজেকশন (Atomic Transactions)" if current_lang == 'bn' else "Atomic Transactions & Savepoints" }}
+            </h1>
+            <p class="docs-lead">
+                {{ "ডাটাবেজে ভুল বা আংশিক এন্ট্রি রোধ করতে PyFlow-তে রয়েছে নেস্টেড সেভপয়েন্ট ট্রানজেকশন ম্যানেজার।" if current_lang == 'bn' else "Ensure absolute transactional security using decorators, nested blocks, and savepoints." }}
+            </p>
+            <h2 class="docs-h2">{{ "কন্ট্রোলারে ট্রানজেকশন ও ইমেইল হুকস" if current_lang == 'bn' else "Controller Context Manager & Hooks" }}</h2>
+            <pre><code>from core.database import Database
+
+def place_order(self):
+    try:
+        with Database.transaction():
+            order = Order.create({...})
+            OrderItem.create({...})
+            
+            # ট্রানজেকশন সফলভাবে কমিট হওয়ার পর ইমেইল যাবে (rollback হলে যাবে না)
+            Database.on_commit(lambda: Mailer.send("order_confirm", order))
+            
+    except Exception as exc:
+        # স্বয়ংক্রিয় রোলব্যাক সম্পন্ন
+        return self.json({"error": str(exc)})</code></pre>
+            
+            <h2 class="docs-h2">{{ "@atomic ডেকোরেটর ও সেভপয়েন্ট" if current_lang == 'bn' else "@atomic Decorator & Named Savepoints" }}</h2>
+            <pre><code>from core.database import atomic, Database
+
+@atomic
+def post_journal(entries):
+    # আংশিক রোলব্যাকের জন্য named savepoint
+    with Database.savepoint("journal_header"):
+        Journal.create({...})
+        
+    for entry in entries:
+        JournalLine.create(entry)</code></pre>
+        </section>
+
+        <!-- SECTION: Precision Money Math -->
+        <section id="docs-money-math" class="docs-section">
+            <h1 class="docs-h1">
+                {{ "নির্ভুল আর্থিক গণিত (Precision Money Math)" if current_lang == 'bn' else "Precision Money Math & Numbers to Words" }}
+            </h1>
+            <p class="docs-lead">
+                {{ "float ডাটা ব্যবহারের কারণে কোনো পয়সার অমিল এড়াতে PyFlow-তে রয়েছে Decimal-ভিত্তিক Money লাইব্রেরি।" if current_lang == 'bn' else "Prevent floating point rounding errors in invoices and accounts using BDT/USD Money math." }}
+            </p>
+            <h2 class="docs-h2">{{ "Money ক্লাসের ব্যবহার" if current_lang == 'bn' else "Basic Money Operations" }}</h2>
+            <pre><code>from core.decimal_math import Money, percent_of, split_amount
+
+price = Money("1500.50", "BDT")
+tax = percent_of(price, 15)           # ১৫% ভ্যাট
+total = price + tax                   # Money('1725.58 BDT')
+
+# ৩ কিস্তিতে কিস্তি বন্টন (পেনি ডিস্ট্রিবিউশন সহ নির্ভুল)
+installments = split_amount(total, 3)</code></pre>
+
+            <h2 class="docs-h2">{{ "কথায় রূপান্তর (Number to Words)" if current_lang == 'bn' else "Number to Words Translation" }}</h2>
+            <pre><code># ১. সরাসরি Money ক্লাসের মাধ্যমে কথায় লেখা
+print(price.to_words("bn"))  
+# Output: "এক হাজার পাঁচশত টাকা পঞ্চাশ পয়সা মাত্র"
+
+print(price.to_words("en"))  
+# Output: "One Thousand, Five Hundred Taka and Fifty Poisha Only"
+
+# ২. গ্লোবাল হেল্পার ফাংশন
+from core.decimal_math import number_to_words
+print(number_to_words(12500000, lang="bn"))  
+# Output: "এক কোটি পঁচিশ লক্ষ"</code></pre>
+        </section>
+
     </main>
+
 </div>
 
 <script>
