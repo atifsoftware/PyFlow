@@ -64,10 +64,12 @@ def get_config() -> dict:
 
     return {
         "APP_NAME":    merged.get("APP_NAME", "PyFlow App"),
+        "APP_VERSION": merged.get("APP_VERSION", "v3.0.0"),
         "APP_ENV":     app_env,
         "APP_DEBUG":   merged.get("APP_DEBUG", "true").lower() == "true",
         "APP_URL":     merged.get("APP_URL", "http://localhost:8000"),
         "SECRET_KEY":  merged.get("SECRET_KEY", ""),
+
 
         "DB_DRIVER":    merged.get("DB_DRIVER", "sqlite"),
         "DB_HOST":      merged.get("DB_HOST", "127.0.0.1"),

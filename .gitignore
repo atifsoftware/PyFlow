@@ -10,3 +10,6 @@ storage/uploads/*
 !storage/logs/.gitkeep
 !storage/cache/.gitkeep
 !storage/uploads/.gitkeep
+stderr.log
+.git.zip
+

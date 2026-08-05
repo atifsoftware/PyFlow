@@ -62,6 +62,14 @@ class Controller:
         data.setdefault("user_role", self.session.get("role"))
         data.setdefault("current_lang", current_lang)
         data.setdefault("__", translate)
+        from config.config import get_config
+
+        config = get_config()
+        data.setdefault("app_name", config.get("APP_NAME", "PyFlow App"))
+        data.setdefault("app_version", config.get("APP_VERSION", "v3.0.0"))
+        data.setdefault("app_url", config.get("APP_URL", "http://localhost:8000"))
+
+
 
         html = self.view_engine.render(template, data)
         return Response.html(html, status=status)

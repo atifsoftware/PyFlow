@@ -308,11 +308,19 @@ function switchPyFlowTab(tabName) {{
             if result is not None:
                 return result
 
+        import inspect
         try:
+            sig = inspect.signature(route.handler)
+            has_view_engine = len(sig.parameters) >= 3 or any(p.name == 'view_engine' for p in sig.parameters.values())
+        except ValueError:
+            # Fallback if signature cannot be obtained
+            has_view_engine = True
+
+        if has_view_engine:
             controller_instance_or_result = route.handler(request, session, self.view_engine)
-        except TypeError:
-            # handler bound method হলে (self already bound), সিগনেচার আলাদা হতে পারে
+        else:
             controller_instance_or_result = route.handler(request, session)
+
 
         if isinstance(controller_instance_or_result, Response):
             return controller_instance_or_result

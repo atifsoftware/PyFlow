@@ -75,7 +75,8 @@
     <div class="ds-stat pink" style="animation-delay: 0.2s;">
         <div class="ds-stat-head">
             <div class="ds-stat-icon pink"><i class="fas fa-bug"></i></div>
-            <span class="ds-stat-trend red"><i class="fas fa-triangle-exclamation" style="font-size:9px;"></i> Dev</span>
+            <span class="ds-stat-trend red"><i class="fas fa-triangle-exclamation" style="font-size:9px;"></i>
+                Dev</span>
         </div>
         <div class="ds-stat-label">সিস্টেম মোড</div>
         <div class="ds-stat-value" style="font-size: 22px; padding-top: 5px;">DEBUG</div>
@@ -138,15 +139,18 @@
             <!-- Summary stats under chart -->
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px;">
                 <div style="text-align:center; padding: 14px; background: rgba(99,102,241,0.05); border-radius: 12px;">
-                    <div style="font-size:20px; font-weight:800; color:#6366f1; font-family:'Inter',sans-serif;">{{ total_users }}</div>
+                    <div style="font-size:20px; font-weight:800; color:#6366f1; font-family:'Inter',sans-serif;">{{
+                        total_users }}</div>
                     <div style="font-size:11px; color:#9ca3af; margin-top:3px; font-weight:600;">মোট ইউজার</div>
                 </div>
                 <div style="text-align:center; padding: 14px; background: rgba(52,211,153,0.06); border-radius: 12px;">
-                    <div style="font-size:20px; font-weight:800; color:#059669; font-family:'Inter',sans-serif;">100%</div>
+                    <div style="font-size:20px; font-weight:800; color:#059669; font-family:'Inter',sans-serif;">100%
+                    </div>
                     <div style="font-size:11px; color:#9ca3af; margin-top:3px; font-weight:600;">আপটাইম</div>
                 </div>
                 <div style="text-align:center; padding: 14px; background: rgba(251,191,36,0.07); border-radius: 12px;">
-                    <div style="font-size:20px; font-weight:800; color:#d97706; font-family:'Inter',sans-serif;">8000</div>
+                    <div style="font-size:20px; font-weight:800; color:#d97706; font-family:'Inter',sans-serif;">8000
+                    </div>
                     <div style="font-size:11px; color:#9ca3af; margin-top:3px; font-weight:600;">পোর্ট</div>
                 </div>
             </div>
@@ -173,32 +177,43 @@
         <div class="info-row">
             <span class="info-row-label"><i class="fab fa-python"></i> ফ্রেমওয়ার্ক</span>
             <span class="info-row-value" style="font-size:12px;">
-                <span style="background:rgba(99,102,241,0.1);color:#6366f1;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">Python WSGI</span>
+                <span
+                    style="background:rgba(99,102,241,0.1);color:#6366f1;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">PyFlow</span>
             </span>
         </div>
         <div class="info-row">
             <span class="info-row-label"><i class="fas fa-database"></i> ডাটাবেস</span>
             <span class="info-row-value">
-                <span style="background:rgba(79,172,254,0.1);color:#0ea5e9;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">{{ db_driver }}</span>
+                <span
+                    style="background:rgba(79,172,254,0.1);color:#0ea5e9;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">{{
+                    db_driver }}</span>
             </span>
         </div>
         <div class="info-row">
             <span class="info-row-label"><i class="fas fa-robot"></i> Gemini AI</span>
             @if(gemini_active)
-            <span style="background:rgba(52,211,153,0.1);color:#059669;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">Active ✓</span>
+            <span
+                style="background:rgba(52,211,153,0.1);color:#059669;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">Active
+                ✓</span>
             @else
-            <span style="background:rgba(239,68,68,0.1);color:#dc2626;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">No API Key</span>
+            <span
+                style="background:rgba(239,68,68,0.1);color:#dc2626;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">No
+                API Key</span>
             @endif
         </div>
         <div class="info-row">
             <span class="info-row-label"><i class="fas fa-code-branch"></i> ভার্সন</span>
-            <span style="background:rgba(124,58,237,0.1);color:#7c3aed;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">v2.0 Beta</span>
+            <span
+                style="background:rgba(124,58,237,0.1);color:#7c3aed;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">v2.0
+                Beta</span>
         </div>
 
         <!-- Framework intro -->
-        <div style="padding: 16px 20px; background: linear-gradient(135deg, rgba(99,102,241,0.05), rgba(124,58,237,0.05)); border-top: 1px solid rgba(99,102,241,0.06);">
+        <div
+            style="padding: 16px 20px; background: linear-gradient(135deg, rgba(99,102,241,0.05), rgba(124,58,237,0.05)); border-top: 1px solid rgba(99,102,241,0.06);">
             <p style="font-size: 12px; color: #9ca3af; line-height: 1.7; margin: 0;">
-                <strong style="color:#6366f1;">PyFlow</strong> হলো একটি কাস্টম Python MVC ফ্রেমওয়ার্ক যা WSGI প্রোটোকল ব্যবহার করে। MySQL PDO-স্টাইল, JWT, ORM রিলেশন এবং Debug Bar সহ বিল্ট।
+                <strong style="color:#6366f1;">PyFlow</strong> হলো একটি কাস্টম Python MVC ফ্রেমওয়ার্ক যা WSGI প্রোটোকল
+                ব্যবহার করে। MySQL PDO-স্টাইল, JWT, ORM রিলেশন এবং Debug Bar সহ বিল্ট।
             </p>
         </div>
     </div>

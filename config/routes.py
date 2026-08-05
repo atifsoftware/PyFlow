@@ -69,7 +69,14 @@ def build_router() -> Router:
     router.post("/api/login", action(AuthController, "api_login"), name="api.login")
     router.get("/api/version", lambda req, sess: __import__("core.response", fromlist=["Response"]).Response.json({"version": "v1", "framework": "PyFlow", "status": "ok"}), name="api.version")
 
+    # Interactive Features (WSGI routes)
+    from app.controllers.feature_controller import FeatureController
+    router.get("/api/features/db-status", action(FeatureController, "db_status"), name="api.features.db_status")
+    router.post("/api/features/money-convert", action(FeatureController, "money_convert"), name="api.features.money_convert")
+    router.post("/api/features/transaction-test", action(FeatureController, "transaction_test"), name="api.features.transaction_test")
+
     # ── API v1 — Protected (JWT) ───────────────────────────────────────────
+
     from core.middleware import api_auth_middleware
     from core.controller import action as act
     from app.api.v1.user_controller import UserApiV1Controller

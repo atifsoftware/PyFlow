@@ -26,7 +26,7 @@ class User(Model):
     def check_password(self, plain_password) -> bool:
         return Hash.check(plain_password, self._attributes.get("password", ""))
 
-    def role(self):
+    def get_role(self):
         """User-এর Role অবজেক্ট রিটার্ন করে"""
         from app.models.role_model import Role
         role_name = self._attributes.get("role", "user")
@@ -43,8 +43,9 @@ class User(Model):
         """
         if self._attributes.get("role") == "admin":
             return True  # admin সবকিছু করতে পারে
-        role_obj = self.role()
+        role_obj = self.get_role()
         if not role_obj:
             return False
         return role_obj.has_permission(permission_name)
+
 
