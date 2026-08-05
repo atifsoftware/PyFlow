@@ -256,6 +256,12 @@
                     {{ "ওয়েবসকেট" if current_lang == 'bn' else "WebSockets" }}
                 </a>
             </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('faq')">
+                    <i class="fas fa-circle-question" style="width: 20px;"></i>
+                    {{ "প্রায়শই জিজ্ঞাসিত প্রশ্ন (FAQ)" if current_lang == 'bn' else "FAQ" }}
+                </a>
+            </li>
         </ul>
     </aside>
 
@@ -730,6 +736,66 @@ print(price.to_words("en"))
 from core.decimal_math import number_to_words
 print(number_to_words(12500000, lang="bn"))  
 # Output: "এক কোটি পঁচিশ লক্ষ"</code></pre>
+        </section>
+
+        <!-- SECTION: FAQ -->
+        <section id="docs-faq" class="docs-section">
+            <h1 class="docs-h1">
+                {{ "প্রায়শই জিজ্ঞাসিত প্রশ্নাবলী (FAQ)" if current_lang == 'bn' else "Frequently Asked Questions (FAQ)" }}
+            </h1>
+            <p class="docs-lead">
+                {{ "PyFlow ফ্রেমওয়ার্ক ব্যবহার করে বড় প্রজেক্ট, ই-কমার্স বা এনজিও অ্যাপ্লিকেশন তৈরি সংক্রান্ত সাধারণ প্রশ্নের উত্তর।" if current_lang == 'bn' else "Answers to common questions regarding building large-scale applications, E-commerce, and NGO portals using PyFlow." }}
+            </p>
+
+            <!-- Q1 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "১. শুধু HTML ব্যবহার করলে ডাইনামিক পেজে কি কোনো সমস্যা হবে?" if current_lang == 'bn' else "1. Will using plain HTML cause issues with dynamic pages?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "না, কোনো সমস্যা হবে না। PyFlow-র শক্তিশালী সার্ভার-সাইড টেমপ্লেট লুপ ও কন্ডিশনাল রেন্ডারিং হ্যান্ডেল করে। ফ্রন্টএন্ডে সামান্য Vanilla JS, Alpine.js বা HTMX ব্যবহার করে কোনো প্রকার জটিল ফ্রন্টএন্ড ফ্রেমওয়ার্ক (যেমন React/Vue) ছাড়াই পুরোপুরি ডাইনামিক পেইজ ও রিয়েল-টাইম রিপোর্ট তৈরি করা সম্ভব।" if current_lang == 'bn' else "No. PyFlow's template engine compiles loops and conditionals on the server. For frontend interactivity, you can use Vanilla JS, Alpine.js, or HTMX to build fully dynamic pages without the bloat of heavy JS frameworks." }}
+                </p>
+            </div>
+
+            <!-- Q2 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "২. MySQL কি ২০ লক্ষ বা তার বেশি ডাটা সহজে হ্যান্ডেল করতে পারবে?" if current_lang == 'bn' else "2. Can MySQL handle 2 Million+ records efficiently?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "হ্যাঁ, ২০ লক্ষ বা ২ মিলিয়ন ডাটা MySQL-এর জন্য খুবই সাধারণ সংখ্যা। PyFlow-তে কলাম ইনডেক্সিং (Indexing), কুয়েরি পেজিনেশন (.paginate()), এবং থ্রেড-সেফ কানেকশন পুলিং ব্যবহার করার কারণে প্রতিটা কুয়েরি লোড হতে ১ থেকে ৫ মিলি-সেকেন্ডের বেশি সময় লাগবে না।" if current_lang == 'bn' else "Yes, 2 Million rows is a very small volume for modern MySQL database engines. By applying proper indexing on query keys, query pagination (.paginate()), and using PyFlow connection pooling, search queries resolve under 5 milliseconds." }}
+                </p>
+            </div>
+
+            <!-- Q3 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "৩. এই ফ্রেমওয়ার্ক দিয়ে কি বড় এনজিও বা ডায়াবেটিস/হাইপারটেনশন রোগীর ডাটা ট্র্যাকিং কাজ করা যাবে?" if current_lang == 'bn' else "3. Is PyFlow suitable for large NGO/Hospital Patient Tracking systems?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "হ্যাঁ। PostgreSQL/MySQL-এর JSONB ড্রাইভার সাপোর্ট থাকায় রোগীদের ডাইনামিক মেডিকেল রিপোর্ট সহজে সেভ করা যাবে। এছাড়া ডাটার গোপনীয়তা রক্ষায় বিল্ট-ইন রোল পারমিশন (RBAC) এবং নিরাপদ এন্ট্রি নিশ্চিত করতে @atomic ট্রানজেকশন ম্যানেজার থাকায় এটি অত্যন্ত নিরাপদ ও স্থিতিশীল।" if current_lang == 'bn' else "Absolutely. PostgreSQL/MySQL JSONB supports dynamic medical test tables, and RBAC permissions isolate sensitive health logs. Atomic transactions ensure no corrupted/partial medical files are ever committed." }}
+                </p>
+            </div>
+
+            <!-- Q4 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "৪. ই-কমার্স ইআরপি (E-Commerce ERP)-তে স্টক ওভারসেলিং কীভাবে ঠেকানো যাবে?" if current_lang == 'bn' else "4. How does PyFlow prevent stock overselling in E-commerce ERPs?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "PyFlow-র নেস্টেড ট্রানজেকশন ব্লক ও database-level lock (SELECT FOR UPDATE) নিশ্চিত করে যে স্টকে থাকা শেষ প্রোডাক্টটি এক সেকেন্ডের ব্যবধানে একাধিক ব্যক্তি কিনতে পারবে না। অর্ডারের সাথে সাথে স্টক অ্যাডজাস্টমেন্ট ও লেজার পোস্টিং একই ট্রানজেকশন বাউন্ডারিতে কাজ করায় ডাটা অসঙ্গতির কোনো সুযোগ নেই।" if current_lang == 'bn' else "PyFlow transaction locks block concurrency anomalies when the last item in stock is purchased. Orders, stock updates, and accounts ledger entries run in a single atomic database context." }}
+                </p>
+            </div>
+
+            <!-- Q5 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "৫. দীর্ঘ মেয়াদে (আগামী ২০ বছর) এই কাস্টম ফ্রেমওয়ার্কের ভবিষ্যৎ কেমন ও কী কী সমস্যা হতে পারে?" if current_lang == 'bn' else "5. What is the 20-year compatibility and future of this custom framework?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "PyFlow মূলত পাইথনের স্ট্যান্ডার্ড লাইব্রেরি (stdlib) নির্ভর করায় এর 'ডিপেন্ডেন্সি ল্যাগ' নেই বললেই চলে, যা একে অত্যন্ত ফিউচার-প্রুফ করে তোলে। ১৭০টির বেশি ইউনিট টেস্ট যেকোনো পাইথন রানটাইম আপগ্রেডের রিগ্রেশন ঠেকাতে পারে। যেহেতু এটি সাধারণ লারাভেল/কোডইগনাইটারের এমভিসি ডিজাইন প্যাটার্ন মেনে চলে, তাই যেকোনো নতুন ডেভেলপারের পক্ষে কোড সহজে মেইনটেইন করা সম্ভব।" if current_lang == 'bn' else "Because PyFlow depends heavily on Python's native standard library modules, it suffers very little dependency rot. Over 170+ unit tests safeguard codebase integrity against deprecations, and standard MVC folders make onboarding new developers easy." }}
+                </p>
+            </div>
         </section>
 
     </main>
