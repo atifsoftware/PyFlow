@@ -1,6 +1,9 @@
 # PyFlow — Premium Custom Python MVC & FastAPI Framework 🚀
 ### Version 3.0.0 (Latest Release)
 
+*   **📖 Read the [PyFlow Q&A FAQ (২২টি প্রশ্নোত্তর)](FAQ.md) for quick architecture, database pool, dynamic html, and scaling answers.**
+*   **📖 বাংলা এবং ইংরেজি বিস্তারিত প্রশ্নোত্তর দেখতে পড়ুন [PyFlow FAQ (২২টি প্রশ্নোত্তর)](FAQ.md)।**
+
 [বাংলা বিবরণ নিচে দেওয়া হয়েছে]
 
 **PyFlow** is a lightweight, highly secure, and performance-optimized Python MVC framework built from scratch using Python's standard libraries, now featuring a seamless side-by-side **FastAPI** integration via a custom ASGI bridge.
