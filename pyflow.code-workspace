@@ -4,10 +4,7 @@
 			"path": "."
 		},
 		{
-			"path": "../../xamp-8.2/htdocs/NovaFlow"
-		},
-		{
-			"path": "../../xamp-8.2/htdocs/db-sync-tool"
+			"path": "../../xamp-8.2/htdocs/NextERP.bd"
 		}
 	],
 	"settings": {}

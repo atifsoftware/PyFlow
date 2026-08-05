@@ -81,3 +81,92 @@ def api_auth_middleware(request, session):
     
     return None
 
+
+def permission_middleware(permission_name: str):
+    """
+    RBAC Permission Middleware — নির্দিষ্ট permission আছে কিনা চেক করে।
+    auth_middleware-এর পরে চেইন করে ব্যবহার করুন।
+
+    ব্যবহার:
+        router.delete("/users/{id:int}", handler,
+            middleware=[auth_middleware, permission_middleware("users.delete")])
+    """
+    def middleware(request, session):
+        user_id = session.get("user_id")
+        if not user_id:
+            return Response.redirect("/login")
+        from app.models.user_model import User
+        user = User.find(user_id)
+        if not user:
+            return Response.redirect("/login")
+        if not user.has_permission(permission_name):
+            return Response.forbidden(f"403 - আপনার '{permission_name}' করার অনুমতি নেই।")
+        return None
+    middleware.__name__ = f"permission:{permission_name}"
+    return middleware
+
+
+def api_key_rate_middleware():
+    """
+    API Key-ভিত্তিক Rate Limiting Middleware।
+    API Key-এর `rate_limit` কলামে সেট করা সীমা অনুযায়ী throttle করে।
+    api_auth_middleware বা api_key_middleware-এর পরে চেইন করুন।
+    """
+    def middleware(request, session):
+        from app.models.api_key_model import ApiKey
+        from core.security import RateLimiter
+        import time
+
+        auth_header = request.header("X-API-Key") or request.header("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header.partition("Bearer ")[2].strip()
+        else:
+            token = auth_header
+
+        if not token:
+            return None  # token নেই, অন্য middleware handle করবে
+
+        import hashlib
+        hashed = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        from core.database import Database
+        cursor = Database.execute(
+            f"SELECT id, rate_limit FROM api_keys WHERE key = {Database.placeholder()}",
+            (hashed,)
+        )
+        row = cursor.fetchone() if cursor else None
+        if not row:
+            return None  # invalid key, অন্য middleware handle করবে
+
+        row = dict(row) if not isinstance(row, dict) else row
+        api_key_id = row.get("id")
+        rate_limit = int(row.get("rate_limit") or 1000)
+
+        window_key = f"api_key_rl:{api_key_id}:hour"
+        if RateLimiter.too_many_attempts(window_key, rate_limit, 3600):
+            return Response.json({
+                "error": "Rate limit exceeded",
+                "limit": rate_limit,
+                "retry_after": 3600
+            }, status=429)
+        RateLimiter.hit(window_key)
+        return None
+    return middleware
+
+
+def gzip_middleware(min_size: int = 1024):
+    """
+    Gzip Response Compression Middleware.
+    min_size bytes-এর বেশি HTML/JSON response গুলো compress করে।
+    Accept-Encoding: gzip header না থাকলে compress করে না।
+
+    ব্যবহার (global middleware হিসেবে application.py-তে):
+        app = Application(..., global_middleware=[gzip_middleware()])
+    """
+    def middleware(request, session):
+        # এটি pre-handler middleware, response compress করার কাজটি
+        # after-handler stage-এ করতে হয়। আপাতত signal সেট করুন।
+        accept_encoding = request.header("Accept-Encoding", "")
+        if "gzip" in accept_encoding:
+            request._gzip_requested = True
+        return None
+    return middleware

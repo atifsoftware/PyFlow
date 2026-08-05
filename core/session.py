@@ -116,11 +116,12 @@ class Session:
 
     def get_flash(self, key, default=None):
         flashes = self._data.get("_flash", {})
-        value = flashes.pop(key, default)
-        if key in self._data.get("_flash", {}):
+        if key in flashes:
+            value = flashes.pop(key)
             self._dirty = True
             self.save()
-        return value
+            return value
+        return default
 
     def all_flash(self) -> dict:
         """সব flash মেসেজ একবারে পড়ে মুছে ফেলে"""

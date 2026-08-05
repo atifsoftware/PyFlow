@@ -1,8 +1,152 @@
-@extends('layout.master')
-@section('content')
-<div class="card narrow center">
-    <h1>500</h1>
-    <p>সার্ভারে একটা সমস্যা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।</p>
-    <a class="btn" href="/">হোমে ফিরে যান</a>
-</div>
-@endsection
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 — সার্ভার সমস্যা | {{ app_name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { min-height: 100vh; background: #0f172a; font-family: 'Inter', sans-serif; color: #e2e8f0; }
+        .bg-grid {
+            position: fixed; inset: 0;
+            background-image: linear-gradient(rgba(239,68,68,0.04) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(239,68,68,0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .container { position: relative; max-width: 900px; margin: 0 auto; padding: 60px 24px; }
+        .header { text-align: center; margin-bottom: 48px; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }
+        .error-code {
+            font-size: 7rem; font-weight: 900; line-height: 1;
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .icon { font-size: 2.5rem; margin: 12px 0; }
+        h1 { font-size: 1.8rem; font-weight: 700; color: #f1f5f9; margin-bottom: 10px; }
+        .subtitle { color: #64748b; font-size: 1rem; }
+
+        /* Exception Card */
+        .exception-card {
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.25);
+            border-radius: 20px; padding: 28px 32px; margin-bottom: 24px;
+            animation: fadeIn 0.5s ease 0.1s both;
+        }
+        .exception-type {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem; color: #f87171;
+            background: rgba(239,68,68,0.1);
+            padding: 4px 12px; border-radius: 6px;
+            display: inline-block; margin-bottom: 12px;
+        }
+        .exception-message {
+            font-size: 1.1rem; font-weight: 600; color: #fca5a5; line-height: 1.5;
+        }
+
+        /* Stack Trace */
+        .trace-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px; overflow: hidden;
+            animation: fadeIn 0.5s ease 0.2s both;
+        }
+        .trace-header {
+            padding: 16px 24px;
+            background: rgba(15,23,42,0.5);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex; align-items: center; gap: 10px;
+            font-size: 0.85rem; font-weight: 600; color: #94a3b8;
+        }
+        .trace-body {
+            padding: 0;
+            max-height: 420px; overflow-y: auto;
+        }
+        .trace-frame {
+            padding: 14px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            transition: background 0.15s;
+        }
+        .trace-frame:hover { background: rgba(255,255,255,0.02); }
+        .trace-frame.app-frame { border-left: 3px solid rgba(99,102,241,0.6); }
+        .trace-frame.lib-frame { opacity: 0.5; }
+        .frame-location {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem; color: #64748b; margin-bottom: 4px;
+        }
+        .frame-func {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem; color: #818cf8; font-weight: 500;
+        }
+        .frame-line { color: #f59e0b; }
+
+        /* Production Mode */
+        .prod-card {
+            text-align: center; padding: 48px;
+            background: rgba(30,41,59,0.5);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 20px; animation: fadeIn 0.5s ease both;
+        }
+        .prod-icon { font-size: 4rem; margin-bottom: 16px; }
+
+        .btn-home {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff; padding: 12px 28px; border-radius: 50px;
+            text-decoration: none; font-weight: 600; margin-top: 24px;
+            transition: transform 0.2s;
+        }
+        .btn-home:hover { transform: translateY(-2px); }
+
+        /* Scrollbar */
+        .trace-body::-webkit-scrollbar { width: 4px; }
+        .trace-body::-webkit-scrollbar-track { background: transparent; }
+        .trace-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="container">
+        <div class="header">
+            <div class="error-code">500</div>
+            <div class="icon">💥</div>
+            <h1>সার্ভার সমস্যা হয়েছে</h1>
+            <p class="subtitle">অনুগ্রহ করে লগ ফাইল চেক করুন।</p>
+        </div>
+
+        {% if debug_mode %}
+        <!-- Debug Mode: বিস্তারিত error দেখানো -->
+        <div class="exception-card">
+            <div class="exception-type">{{ exception_type }}</div>
+            <div class="exception-message">{{ exception_message }}</div>
+        </div>
+
+        <div class="trace-card">
+            <div class="trace-header">
+                <span>🔍</span> Stack Trace
+            </div>
+            <div class="trace-body">
+                {% for frame in stack_frames %}
+                <div class="trace-frame {{ 'app-frame' if frame.is_app else 'lib-frame' }}">
+                    <div class="frame-location">{{ frame.file }} <span class="frame-line">:{{ frame.line }}</span></div>
+                    <div class="frame-func">{{ frame.function }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Production Mode: সাধারণ বার্তা -->
+        <div class="prod-card">
+            <div class="prod-icon">🔧</div>
+            <h2 style="color:#e2e8f0; margin-bottom:10px;">আমরা এটি ঠিক করছি</h2>
+            <p style="color:#64748b; line-height:1.7;">
+                সার্ভারে একটি অপ্রত্যাশিত সমস্যা হয়েছে।<br>
+                আমাদের টিম অবহিত করা হয়েছে। অনুগ্রহ করে কিছুক্ষণ পরে আবার চেষ্টা করুন।
+            </p>
+            <a href="/" class="btn-home">🏠 হোম পেজে যান</a>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

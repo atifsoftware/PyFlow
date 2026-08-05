@@ -20,7 +20,7 @@
                     <div class="pm-card-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
                         <i class="fas fa-history"></i>
                     </div>
-                    লগ রেকর্ডসমূহ (মোট: {{ total_logs }})
+                    লগ রেকর্ডসমূহ (মোট: {{ logs.total }})
                 </div>
             </div>
             <div class="pm-card-body" style="padding: 0;">
@@ -73,25 +73,7 @@
                 </div>
 
                 <!-- Pagination -->
-                @if(total_pages > 1)
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-top: 1px solid var(--bd);">
-                    <div style="font-size: 13px; color: var(--tx-3);">
-                        পেজ <strong>{{ current_page }}</strong> / <strong>{{ total_pages }}</strong>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        @if(current_page > 1)
-                        <a href="/logs?page={{ current_page - 1 }}" class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px;">
-                            <i class="fas fa-chevron-left" style="font-size: 10px;"></i> পূর্ববর্তী
-                        </a>
-                        @endif
-                        @if(current_page < total_pages)
-                        <a href="/logs?page={{ current_page + 1 }}" class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px;">
-                            পরবর্তী <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
-                        </a>
-                        @endif
-                    </div>
-                </div>
-                @endif
+                {!! logs.links() !!}
             </div>
         </div>
     </div>

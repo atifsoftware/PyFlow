@@ -1,0 +1,170 @@
+@extends('layout.admin')
+@section('content')
+
+<div class="row g-4">
+    <!-- Breadcrumb -->
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-1" style="font-weight: 700; color: var(--text-color);">ড্যাশবোর্ড</h4>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;">স্বাগতম, <strong>{{ user_name }}</strong>! এখানে আপনার সিস্টেমের সারসংক্ষেপ।</p>
+        </div>
+        <div>
+            <span id="live-clock" class="badge" style="background: rgba(99,102,241,0.15); color: #818cf8; font-size: 0.85rem; padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(99,102,241,0.3);"></span>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card h-100 border-0 shadow-sm stat-card" style="background: linear-gradient(135deg, rgba(99,102,241,0.25) 0%, rgba(30,41,59,0.8) 100%); border-radius: 20px; border: 1px solid rgba(99,102,241,0.3);">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="stat-icon" style="width:56px; height:56px; border-radius:16px; background:rgba(99,102,241,0.2); display:flex; align-items:center; justify-content:center;">
+                    <i class="fas fa-users" style="font-size:1.5rem; color:#818cf8;"></i>
+                </div>
+                <div>
+                    <p class="mb-0 text-muted" style="font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em;">মোট ব্যবহারকারী</p>
+                    <h3 class="mb-0 fw-bold" style="color:#e2e8f0;">{{ stats.total_users }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card h-100 border-0 shadow-sm stat-card" style="background: linear-gradient(135deg, rgba(16,185,129,0.25) 0%, rgba(30,41,59,0.8) 100%); border-radius: 20px; border: 1px solid rgba(16,185,129,0.3);">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="stat-icon" style="width:56px; height:56px; border-radius:16px; background:rgba(16,185,129,0.2); display:flex; align-items:center; justify-content:center;">
+                    <i class="fas fa-sign-in-alt" style="font-size:1.5rem; color:#34d399;"></i>
+                </div>
+                <div>
+                    <p class="mb-0 text-muted" style="font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em;">আজকের লগইন</p>
+                    <h3 class="mb-0 fw-bold" style="color:#e2e8f0;">{{ stats.today_logins }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card h-100 border-0 shadow-sm stat-card" style="background: linear-gradient(135deg, rgba(245,158,11,0.25) 0%, rgba(30,41,59,0.8) 100%); border-radius: 20px; border: 1px solid rgba(245,158,11,0.3);">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="stat-icon" style="width:56px; height:56px; border-radius:16px; background:rgba(245,158,11,0.2); display:flex; align-items:center; justify-content:center;">
+                    <i class="fas fa-tasks" style="font-size:1.5rem; color:#fbbf24;"></i>
+                </div>
+                <div>
+                    <p class="mb-0 text-muted" style="font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em;">পেন্ডিং জব</p>
+                    <h3 class="mb-0 fw-bold" style="color:#e2e8f0;">{{ stats.pending_jobs }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card h-100 border-0 shadow-sm stat-card" style="background: linear-gradient(135deg, rgba(239,68,68,0.25) 0%, rgba(30,41,59,0.8) 100%); border-radius: 20px; border: 1px solid rgba(239,68,68,0.3);">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="stat-icon" style="width:56px; height:56px; border-radius:16px; background:rgba(239,68,68,0.2); display:flex; align-items:center; justify-content:center;">
+                    <i class="fas fa-list-alt" style="font-size:1.5rem; color:#f87171;"></i>
+                </div>
+                <div>
+                    <p class="mb-0 text-muted" style="font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em;">মোট লগ এন্ট্রি</p>
+                    <h3 class="mb-0 fw-bold" style="color:#e2e8f0;">{{ stats.total_logs }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Logs -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm" style="background: rgba(30,41,59,0.6); border-radius: 20px; border: 1px solid rgba(255,255,255,0.07);">
+            <div class="card-header border-0 d-flex justify-content-between align-items-center p-4" style="border-bottom: 1px solid rgba(255,255,255,0.07);">
+                <h6 class="mb-0 fw-bold" style="color:#e2e8f0;"><i class="fas fa-history me-2 text-primary"></i>সাম্প্রতিক কার্যক্রম</h6>
+                <a href="/logs" class="btn btn-sm" style="background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); border-radius: 8px; font-size: 0.8rem;">সব দেখুন</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0" style="color: #94a3b8;">
+                        <thead style="background: rgba(15,23,42,0.5);">
+                            <tr>
+                                <th class="ps-4 py-3" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b;">ব্যবহারকারী</th>
+                                <th class="py-3" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b;">কার্যক্রম</th>
+                                <th class="py-3 pe-4 text-end" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b;">সময়</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach(recent_logs as log)
+                            <tr style="border-top: 1px solid rgba(255,255,255,0.04);">
+                                <td class="ps-4 py-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width:32px; height:32px; border-radius:10px; background:rgba(99,102,241,0.2); display:flex; align-items:center; justify-content:center;">
+                                            <i class="fas fa-user" style="font-size:0.75rem; color:#818cf8;"></i>
+                                        </div>
+                                        <span style="font-weight:500; color:#e2e8f0;">{{ log.user_name }}</span>
+                                    </div>
+                                </td>
+                                <td class="py-3">
+                                    <span class="badge" style="background:rgba(99,102,241,0.15); color:#818cf8; border-radius:6px; font-weight:500;">{{ log.action }}</span>
+                                    <span class="ms-2 text-muted" style="font-size:0.85rem;">{{ log.description }}</span>
+                                </td>
+                                <td class="py-3 pe-4 text-end" style="font-size:0.82rem; color:#64748b; white-space:nowrap;">
+                                    {{ log.created_at }}
+                                </td>
+                            </tr>
+                            @endforeach
+                            @if(not recent_logs)
+                            <tr>
+                                <td colspan="3" class="text-center py-5 text-muted">
+                                    <i class="fas fa-inbox fa-2x mb-3 d-block" style="opacity:0.3;"></i>
+                                    কোনো activity log নেই
+                                </td>
+                            </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links Panel -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100" style="background: rgba(30,41,59,0.6); border-radius: 20px; border: 1px solid rgba(255,255,255,0.07);">
+            <div class="card-header border-0 p-4" style="border-bottom: 1px solid rgba(255,255,255,0.07);">
+                <h6 class="mb-0 fw-bold" style="color:#e2e8f0;"><i class="fas fa-bolt me-2 text-warning"></i>দ্রুত অ্যাক্সেস</h6>
+            </div>
+            <div class="card-body p-3">
+                <div class="d-grid gap-2">
+                    <a href="/users" class="btn text-start d-flex align-items-center gap-3 p-3" style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); border-radius: 12px; color: #c7d2fe; text-decoration: none;">
+                        <i class="fas fa-users-cog" style="color:#818cf8;"></i> ব্যবহারকারী ম্যানেজমেন্ট
+                    </a>
+                    <a href="/logs" class="btn text-start d-flex align-items-center gap-3 p-3" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: 12px; color: #fca5a5; text-decoration: none;">
+                        <i class="fas fa-list" style="color:#f87171;"></i> Activity Logs
+                    </a>
+                    <a href="/api-keys" class="btn text-start d-flex align-items-center gap-3 p-3" style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); border-radius: 12px; color: #fde68a; text-decoration: none;">
+                        <i class="fas fa-key" style="color:#fbbf24;"></i> API Key ম্যানেজমেন্ট
+                    </a>
+                    <a href="/admin/db-sync" class="btn text-start d-flex align-items-center gap-3 p-3" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); border-radius: 12px; color: #a7f3d0; text-decoration: none;">
+                        <i class="fas fa-database" style="color:#34d399;"></i> DB Schema Sync
+                    </a>
+                    <a href="/settings" class="btn text-start d-flex align-items-center gap-3 p-3" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); border-radius: 12px; color: #ddd6fe; text-decoration: none;">
+                        <i class="fas fa-cog" style="color:#a78bfa;"></i> সিস্টেম সেটিংস
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card { transition: transform 0.2s, box-shadow 0.2s; }
+.stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,0.3) !important; }
+</style>
+
+<script>
+// Live clock
+function updateClock() {
+    const now = new Date();
+    const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Dhaka' };
+    document.getElementById('live-clock').textContent = now.toLocaleString('bn-BD', opts);
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+
+@endsection

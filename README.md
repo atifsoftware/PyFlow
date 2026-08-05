@@ -1,19 +1,23 @@
 # PyFlow — Premium Custom Python MVC & FastAPI Framework 🚀
+### Version 3.0.0 (Latest Release)
 
 [বাংলা বিবরণ নিচে দেওয়া হয়েছে]
 
-**PyFlow** is a lightweight, highly secure, and performance-optimized Python MVC framework built from scratch using Python's standard libraries, now featuring a seamless side-by-side **FastAPI** integration via a custom ASGI bridge. 
+**PyFlow** is a lightweight, highly secure, and performance-optimized Python MVC framework built from scratch using Python's standard libraries, now featuring a seamless side-by-side **FastAPI** integration via a custom ASGI bridge.
 
 PyFlow brings the elegance of modern PHP MVC frameworks (like Laravel) to Python, combined with the high-performance async API capabilities of FastAPI.
 
 ---
 
 ## 🌟 Key Features (মূল সুবিধাসমূহ)
-
-### 1. Core PyFlow Features
-- **Custom Template Engine:** Jinja/Blade-inspired template system supporting layout inheritance (`@extends`, `@section`, `@yield`), `@include`, conditional loops, and auto-XSS escaping.
-- **Chained Query Builder & ORM:** SQL injection-proof active-record ORM supporting SQLite and MySQL with fluent syntax.
-- **Robust Security Shield:** Features built-in CSRF protection, rate limiting (brute-force defense), PBKDF2-SHA256 password hashing, and session fixation defense.
+- **Multi-Driver Database Pool (New in v3.0):** Native connection pool support for SQLite, MySQL, and **PostgreSQL** configured easily via `.env`.
+- **Atomic Transactions Manager (New in v3.0):** Database transactions block with context manager (`with Database.transaction()`), `@atomic` decorator, partial rollback using named `SAVEPOINT`, and mail/notify-safe hooks (`on_commit` / `on_rollback`).
+- **Precision Financial Math (New in v3.0):** Floating-point free exact calculations with `Money` class and automated Number-to-Words translation helpers in both Bangla and English.
+- **Jinja/Blade-inspired Template Engine:** Supports layout inheritance (`@extends`, `@section`, `@yield`), `@include`, conditional loops, and auto-XSS escaping.
+- **Custom ORM & Query Builder:** Fluent, SQL injection-proof database wrapper.
+- **FastAPI Integration:** Mounted on the same port (8000) under `/api/*` with Swagger docs at `/api/docs`.
+- **Secure Security Shield:** Features built-in CSRF protection, rate limiting, PBKDF2-SHA256 password hashing, and session fixation defense.
+- **Exhaustive Unit Tests:** Over 170+ rigorous unit tests cover router, validation, transactions, database pool, and math classes.
 - **Debug Bar:** Developer diagnostics bar displaying execution times, active database queries, and session logs.
 
 ### 2. Newly Integrated Advanced Features 🚀

@@ -89,9 +89,52 @@ class TemplateEngine:
 
         return re.sub(r"@include\(['\"]([\w./]+)['\"]\)", include_replace, source)
 
+    # -------------------------------------------------------------- @component
+    def _resolve_components(self, source: str, data: dict) -> str:
+        """
+        @component('name', {'key': 'value'}) → component template render করে।
+
+        ব্যবহার (যেকোনো view-এ):
+            @component('alert', {'type': 'success', 'message': 'সফল!'})
+            @component('card', {'title': 'User Info'})
+
+        Component templates: app/views/components/{name}.html
+        """
+        import ast
+
+        def component_replace(m):
+            comp_name = m.group(1)
+            raw_data = m.group(2).strip() if m.group(2) else None
+
+            # component-এর নিজস্ব data dict parse করা
+            comp_data = dict(data)
+            if raw_data:
+                try:
+                    extra = ast.literal_eval(raw_data)
+                    if isinstance(extra, dict):
+                        comp_data.update(extra)
+                except Exception:
+                    pass
+
+            try:
+                template_path = comp_name.replace(".", "/")
+                comp_source = self._read_template(f"components.{comp_name}")
+                comp_source = self._resolve_includes(comp_source, comp_data)
+                comp_source = self._resolve_components(comp_source, comp_data)
+                return self._compile_and_run(comp_source, comp_data)
+            except Exception:
+                return f"<!-- component '{comp_name}' not found -->"
+
+        return re.sub(
+            r"@component\(['\"]([^'\"]+)['\"](?:,\s*(\{[^}]*\}))?\)",
+            component_replace,
+            source,
+        )
+
     # --------------------------------------------------------------- compile
     def _compile_and_run(self, source: str, data: dict) -> str:
         source = self._resolve_includes(source, data)
+        source = self._resolve_components(source, data)
 
         # @csrf -> hidden input (data-এ 'csrf_token' পাস করা থাকবে কন্ট্রোলার থেকে)
         source = source.replace(

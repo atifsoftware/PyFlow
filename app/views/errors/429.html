@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>429 — অনেক বেশি Request | {{ app_name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { min-height:100vh; background:#0f172a; font-family:'Inter',sans-serif; display:flex; align-items:center; justify-content:center; }
+        .bg-grid { position:fixed; inset:0; background-image:linear-gradient(rgba(139,92,246,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,0.04) 1px,transparent 1px); background-size:40px 40px; }
+        .card { position:relative; text-align:center; padding:64px 80px; background:rgba(30,41,59,0.6); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.07); border-radius:32px; max-width:520px; width:90%; animation:fadeIn 0.6s ease; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .error-code { font-size:8rem; font-weight:900; background:linear-gradient(135deg,#8b5cf6,#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; line-height:1; margin-bottom:8px; }
+        .icon { font-size:3rem; margin-bottom:16px; }
+        h1 { color:#e2e8f0; font-size:1.6rem; font-weight:700; margin-bottom:12px; }
+        p { color:#64748b; font-size:1rem; line-height:1.7; margin-bottom:32px; }
+        .countdown { display:inline-block; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); border-radius:12px; padding:12px 24px; color:#818cf8; font-size:1.1rem; font-weight:600; margin-bottom:28px; }
+        .btn-home { display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg,#8b5cf6,#6366f1); color:#fff; padding:14px 32px; border-radius:50px; text-decoration:none; font-weight:600; transition:transform 0.2s; }
+        .btn-home:hover { transform:translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="card">
+        <div class="error-code">429</div>
+        <div class="icon">⏳</div>
+        <h1>অনেক বেশি Request</h1>
+        <p>আপনি অল্প সময়ে অনেক বেশি অনুরোধ পাঠিয়েছেন।<br>অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করুন।</p>
+        <div class="countdown" id="countdown">{{ retry_after }} সেকেন্ড অপেক্ষা করুন</div><br>
+        <a href="/" class="btn-home">🏠 হোম পেজে যান</a>
+    </div>
+    <script>
+        let secs = parseInt("{{ retry_after }}") || 60;
+        const el = document.getElementById('countdown');
+        if (secs > 0) {
+            const timer = setInterval(() => {
+                secs--;
+                el.textContent = secs + ' সেকেন্ড অপেক্ষা করুন';
+                if (secs <= 0) { clearInterval(timer); window.location.reload(); }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

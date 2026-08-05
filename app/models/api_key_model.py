@@ -12,16 +12,24 @@ from core.model import Model
 
 class ApiKey(Model):
     table = "api_keys"
-    fillable = ["user_id", "name", "key", "last_used_at"]
+    fillable = ["user_id", "name", "key", "last_used_at", "rate_limit"]
+
+    # Rate limit tiers (requests per hour)
+    TIER_FREE = 100
+    TIER_PRO = 10000
+    TIER_UNLIMITED = 0  # 0 = no limit
 
     @classmethod
-    def generate(cls, user_id: int, name: str):
+    def generate(cls, user_id: int, name: str, rate_limit: int = None):
         """নতুন একটি API Key তৈরি করে এবং ডাটাবেসে সেভ করে। (প্লেইনটেক্সট কি, মডেল অবজেক্ট) রিটার্ন করে"""
+        if rate_limit is None:
+            rate_limit = cls.TIER_FREE
         token = "pm_sk_" + secrets.token_hex(24)  # pm_sk_ + 48 hex chars = 54 chars total
         hashed = hashlib.sha256(token.encode("utf-8")).hexdigest()
 
-        key_instance = cls.create({"user_id": user_id, "name": name, "key": hashed})
+        key_instance = cls.create({"user_id": user_id, "name": name, "key": hashed, "rate_limit": rate_limit})
         return token, key_instance
+
 
     @classmethod
     def authenticate(cls, token: str):

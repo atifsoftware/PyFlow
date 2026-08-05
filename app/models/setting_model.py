@@ -12,15 +12,9 @@ class Setting(Model):
     table = "settings"
     fillable = ["key", "value"]
 
-    # Cache locally to avoid multiple queries in single request
-    _cache = {}
-
     @classmethod
     def get(cls, key: str, default=None):
         """ডাটাবেস থেকে একটি নির্দিষ্ট সেটিংস ভ্যালু রিট্রিভ করে"""
-        if key in cls._cache:
-            return cls._cache[key]
-
         row = cls.find_by("key", key)
         if row:
             val = row._attributes.get("value")
@@ -31,7 +25,6 @@ class Setting(Model):
                         val = json.loads(val)
                 except Exception:
                     pass
-            cls._cache[key] = val
             return val
 
         return default
@@ -43,9 +36,6 @@ class Setting(Model):
             db_value = json.dumps(value)
         else:
             db_value = str(value) if value is not None else ""
-
-        # Update cache
-        cls._cache[key] = value
 
         row = cls.find_by("key", key)
         if row:

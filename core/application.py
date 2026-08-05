@@ -105,7 +105,7 @@ class Application:
         route, params = self.router.resolve(request.method, request.path)
 
         if route is None:
-            response = self._render_error_page(404)
+            response = self._render_error_page(404, request_path=request.path)
         elif route == "METHOD_NOT_ALLOWED":
             response = Response("405 Method Not Allowed", status=405)
         else:
@@ -127,7 +127,37 @@ class Application:
         if self.debug and response.headers.get("Content-Type", "").startswith("text/html"):
             response = self._inject_debug_bar(response, request, session)
 
+        # Gzip compression — client Accept-Encoding: gzip চাইলে compress করা হবে
+        if getattr(request, "_gzip_requested", False):
+            response = self._compress_response(response)
+
         return response
+
+    def _compress_response(self, response: Response) -> Response:
+        """gzip দিয়ে response body compress করে"""
+        import gzip
+        compressible = ("text/html", "text/css", "text/javascript",
+                        "application/json", "application/javascript", "text/plain")
+        content_type = response.headers.get("Content-Type", "")
+        is_compressible = any(ct in content_type for ct in compressible)
+        if not is_compressible:
+            return response
+        try:
+            body_bytes = b"".join(response.wsgi_body())
+            if len(body_bytes) < 1024:
+                # ছোট response compress করা লাভজনক নয়
+                response._body = body_bytes
+                return response
+            compressed = gzip.compress(body_bytes, compresslevel=6)
+            response._body = compressed
+            response.headers["Content-Encoding"] = "gzip"
+            response.headers["Content-Length"] = str(len(compressed))
+            response.headers["Vary"] = "Accept-Encoding"
+        except Exception:
+            pass
+        return response
+
+
 
     def _inject_debug_bar(self, response: Response, request: Request, session: Session) -> Response:
         """রেসপন্স এইচটিএমএল-এ একটি কাস্টম ডিবাগ বার যুক্ত করে"""
@@ -292,17 +322,65 @@ function switchPyFlowTab(tabName) {{
             return Response.json(controller_instance_or_result)
         return Response.server_error("Handler থেকে অবৈধ রিটার্ন টাইপ")
 
-    def _render_error_page(self, status: int) -> Response:
+    def _render_error_page(self, status: int, request_path: str = "", extra: dict = None) -> Response:
+        """Error template render করে। না পেলে fallback plain HTML দেয়।"""
+        context = {
+            "app_name": self.config.get("APP_NAME", "PyFlow"),
+            "request_path": request_path,
+            "status": status,
+        }
+        if extra:
+            context.update(extra)
         try:
-            html = self.view_engine.render(f"errors.{status}", {})
-            return Response(html, status=status)
-        except ViewError:
-            return Response(f"{status} Error", status=status)
+            html = self.view_engine.render(f"errors.{status}", context)
+            return Response(html.encode("utf-8") if isinstance(html, str) else html,
+                           status=status,
+                           headers={"Content-Type": "text/html; charset=utf-8"})
+        except Exception:
+            # Template না থাকলে minimal HTML
+            messages = {
+                404: "পাতা পাওয়া যায়নি",
+                403: "অনুমতি নেই",
+                429: "অনেক বেশি Request",
+                500: "সার্ভার সমস্যা হয়েছে",
+            }
+            msg = messages.get(status, "Error")
+            html = f"""<!DOCTYPE html><html lang='bn'><head>
+<meta charset='UTF-8'><title>{status} {msg}</title>
+<style>body{{background:#0f172a;color:#e2e8f0;font-family:sans-serif;
+  display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;}}
+.box{{padding:48px;}} .code{{font-size:6rem;font-weight:900;color:#6366f1;line-height:1;}}
+</style></head><body><div class='box'>
+<div class='code'>{status}</div><h1>{msg}</h1>
+<p><a href='/' style='color:#818cf8;'>← হোমে ফিরুন</a></p>
+</div></body></html>"""
+            return Response(html.encode("utf-8"), status=status,
+                           headers={"Content-Type": "text/html; charset=utf-8"})
 
     def _handle_exception(self, exc: Exception) -> Response:
         self.logger.error("Unhandled exception: %s\n%s", exc, traceback.format_exc())
         if self.debug:
-            from core.error_handler import IntelligentErrorHandler
-            html_body = IntelligentErrorHandler.render(exc)
-            return Response.html(html_body, status=500)
-        return self._render_error_page(500)
+            # Debug mode: Stack trace সহ 500 page
+            try:
+                import traceback as tb
+                frames_raw = tb.extract_tb(exc.__traceback__)
+                stack_frames = []
+                for frame in reversed(frames_raw):
+                    stack_frames.append({
+                        "file": frame.filename,
+                        "line": frame.lineno,
+                        "function": frame.name,
+                        "is_app": "PyFlow" in frame.filename or "app" in frame.filename.lower(),
+                    })
+                context = {
+                    "debug_mode": True,
+                    "exception_type": type(exc).__name__,
+                    "exception_message": str(exc),
+                    "stack_frames": stack_frames,
+                }
+                return self._render_error_page(500, extra=context)
+            except Exception:
+                from core.error_handler import IntelligentErrorHandler
+                html_body = IntelligentErrorHandler.render(exc)
+                return Response.html(html_body, status=500)
+        return self._render_error_page(500, extra={"debug_mode": False})

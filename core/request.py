@@ -181,7 +181,11 @@ class Request:
         return key in self._files
 
     def header(self, name, default=None):
-        key = "HTTP_" + name.upper().replace("-", "_")
+        name_upper = name.upper().replace("-", "_")
+        if name_upper in ("CONTENT_TYPE", "CONTENT_LENGTH"):
+            key = name_upper
+        else:
+            key = "HTTP_" + name_upper
         return self.environ.get(key, default)
 
     def cookie(self, name, default=None):

@@ -51,10 +51,6 @@ def start_worker(queue="default", sleep_seconds=1):
     
     try:
         while True:
-            # Reconnect database to keep connection fresh and avoid pool timeouts
-            Database.close() 
-            Database.init(config)
-            
             job = Queue.pop(queue)
             if job:
                 execute_job(job)

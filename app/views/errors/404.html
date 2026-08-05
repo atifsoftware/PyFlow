@@ -1,8 +1,103 @@
-@extends('layout.master')
+@extends('layout.base')
 @section('content')
-<div class="card narrow center">
-    <h1>404</h1>
-    <p>পেজটি খুঁজে পাওয়া যায়নি।</p>
-    <a class="btn" href="/">হোমে ফিরে যান</a>
-</div>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 — পাতা পাওয়া যায়নি | {{ app_name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            background: #0f172a;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .bg-grid {
+            position: fixed; inset: 0;
+            background-image: linear-gradient(rgba(99,102,241,0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(99,102,241,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .glow {
+            position: fixed; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .card {
+            position: relative;
+            text-align: center;
+            padding: 64px 80px;
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 32px;
+            max-width: 540px;
+            width: 90%;
+            animation: fadeIn 0.6s ease;
+        }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+        .error-code {
+            font-size: 8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        .icon { font-size: 3rem; margin-bottom: 16px; }
+        h1 { color: #e2e8f0; font-size: 1.6rem; font-weight: 700; margin-bottom: 12px; }
+        p { color: #64748b; font-size: 1rem; line-height: 1.7; margin-bottom: 32px; }
+        .btn-home {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff; padding: 14px 32px;
+            border-radius: 50px; text-decoration: none;
+            font-weight: 600; font-size: 0.95rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(99,102,241,0.35);
+        }
+        .btn-home:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(99,102,241,0.5); }
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: #64748b; text-decoration: none;
+            font-size: 0.9rem; margin-left: 16px;
+            transition: color 0.2s;
+        }
+        .btn-back:hover { color: #94a3b8; }
+        .path-info {
+            margin-top: 24px;
+            background: rgba(15,23,42,0.5);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-family: monospace;
+            font-size: 0.82rem;
+            color: #475569;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="glow"></div>
+    <div class="card">
+        <div class="error-code">404</div>
+        <div class="icon">🔍</div>
+        <h1>পাতা পাওয়া যায়নি</h1>
+        <p>আপনি যে পাতাটি খুঁজছেন সেটি সরানো হয়েছে, নাম পরিবর্তন করা হয়েছে,<br>অথবা কখনো ছিলই না।</p>
+        <div>
+            <a href="/" class="btn-home">🏠 হোম পেজে যান</a>
+            <a href="javascript:history.back()" class="btn-back">← আগে ফিরুন</a>
+        </div>
+        <div class="path-info">{{ request_path }}</div>
+    </div>
+</body>
+</html>
 @endsection

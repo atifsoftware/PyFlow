@@ -68,6 +68,13 @@ class PyFlowCLI:
             print(f"10. {color('Run Queue Worker', C_MAGENTA)}")
             print(f"11. {color('Run Task Scheduler', C_CYAN)}")
             print(f"12. {color('Database Schema Sync Tool', C_MAGENTA)}")
+            print(color("--- Code Generators ---", C_YELLOW))
+            print(f"13. {color('make:migration — New Migration File', C_GREEN)}")
+            print(f"14. {color('make:job — New Background Job', C_GREEN)}")
+            print(f"15. {color('make:middleware — New Middleware', C_GREEN)}")
+            print(f"16. {color('make:seeder — New Database Seeder', C_GREEN)}")
+            print(f"17. {color('Run Tests — Unit Test Suite', C_CYAN)}")
+            print(f"18. {color('Flush Cache — Clear All Cached Data', C_RED)}")
             print(f"0. {color('Exit', C_RED)}")
             print()
 
@@ -97,6 +104,18 @@ class PyFlowCLI:
                 self.run_scheduler()
             elif choice == "12":
                 self.run_db_sync()
+            elif choice == "13":
+                self.make_migration()
+            elif choice == "14":
+                self.make_job()
+            elif choice == "15":
+                self.make_middleware()
+            elif choice == "16":
+                self.make_seeder()
+            elif choice == "17":
+                self.run_tests()
+            elif choice == "18":
+                self.flush_cache()
             elif choice == "0":
                 print(color("\n✓ Goodbye from PyFlow!\n", C_GREEN))
                 break
@@ -388,10 +407,209 @@ class {controller_name}(Controller):
             except Exception as e:
                 print(f"Failed to delete {file_path}. Reason: {e}")
 
+    # ─── make: Code Generators ─────────────────────────────────────────────
+
+    def make_migration(self):
+        print(color("\nmake:migration — New Migration File\n", C_BOLD))
+        name = input(color("Migration name (e.g. create_products_table): ", C_YELLOW)).strip()
+        if not name:
+            print("Name required!"); pause(); return
+
+        import time
+        stubs_dir = os.path.join(PROJECT_ROOT, "stubs")
+        stub_path = os.path.join(stubs_dir, "migration.stub")
+        timestamp = time.strftime("%Y%m%d%H%M%S")
+        file_name = f"{timestamp}_{name}.py"
+        out_dir = os.path.join(PROJECT_ROOT, "database", "migrations")
+        os.makedirs(out_dir, exist_ok=True)
+        out_path = os.path.join(out_dir, file_name)
+
+        if os.path.exists(stub_path):
+            with open(stub_path, "r", encoding="utf-8") as f:
+                content = f.read().replace("{{name}}", name).replace("{{class_name}}", "".join(w.capitalize() for w in name.split("_")))
+        else:
+            table = name.replace("create_", "").replace("_table", "")
+            class_name = "".join(w.capitalize() for w in name.split("_"))
+            content = f'''# database/migrations/{file_name}
+
+
+class {class_name}:
+    def up(self, cursor, driver):
+        """Migration: {name}"""
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS `{table}` (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                created_at DATETIME,
+                updated_at DATETIME
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """)
+
+    def down(self, cursor, driver):
+        """Rollback"""
+        cursor.execute("DROP TABLE IF EXISTS `{table}`")
+'''
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        print(color(f"✅ তৈরি হয়েছে: database/migrations/{file_name}", C_GREEN))
+        pause()
+
+    def make_job(self):
+        print(color("\nmake:job — New Background Job\n", C_BOLD))
+        name = input(color("Job class name (e.g. SendEmailJob): ", C_YELLOW)).strip()
+        if not name:
+            print("Name required!"); pause(); return
+
+        file_name = f"{name[0].lower()}{name[1:]}.py"
+        out_dir = os.path.join(PROJECT_ROOT, "app", "jobs")
+        os.makedirs(out_dir, exist_ok=True)
+        out_path = os.path.join(out_dir, file_name)
+        if os.path.exists(out_path):
+            print(color(f"✗ File already exists: {file_name}", C_RED)); pause(); return
+
+        content = f'''"""app/jobs/{file_name}"""
+
+
+class {name}:
+    """{name} — Background Job"""
+
+    def handle(self, data: dict):
+        """
+        Job-এর মূল কাজ এখানে লিখুন।
+        Queue থেকে call করলে `data` dict হিসেবে পাবেন।
+        """
+        pass
+'''
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        print(color(f"✅ তৈরি হয়েছে: app/jobs/{file_name}", C_GREEN))
+        pause()
+
+    def make_middleware(self):
+        print(color("\nmake:middleware — New Middleware\n", C_BOLD))
+        name = input(color("Middleware function name (e.g. subscription_middleware): ", C_YELLOW)).strip()
+        if not name:
+            print("Name required!"); pause(); return
+
+        file_name = f"{name}.py"
+        out_dir = os.path.join(PROJECT_ROOT, "app", "middleware")
+        os.makedirs(out_dir, exist_ok=True)
+        out_path = os.path.join(out_dir, file_name)
+        if os.path.exists(out_path):
+            print(color(f"✗ File already exists: {file_name}", C_RED)); pause(); return
+
+        content = f'''"""app/middleware/{file_name}"""
+from core.response import Response
+
+
+def {name}(request, session):
+    """
+    Custom Middleware: {name}
+    None রিটার্ন করলে পরবর্তী middleware/handler-এ যাবে।
+    Response রিটার্ন করলে chain বন্ধ হবে।
+    """
+    # আপনার middleware logic এখানে লিখুন
+    return None
+'''
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        print(color(f"✅ তৈরি হয়েছে: app/middleware/{file_name}", C_GREEN))
+        pause()
+
+    def make_seeder(self):
+        print(color("\nmake:seeder — New Database Seeder\n", C_BOLD))
+        name = input(color("Seeder class name (e.g. ProductSeeder): ", C_YELLOW)).strip()
+        if not name:
+            print("Name required!"); pause(); return
+
+        file_name = f"{name[0].lower()}{name[1:]}.py"
+        out_dir = os.path.join(PROJECT_ROOT, "database", "seeders")
+        os.makedirs(out_dir, exist_ok=True)
+        out_path = os.path.join(out_dir, file_name)
+        if os.path.exists(out_path):
+            print(color(f"✗ File already exists: {file_name}", C_RED)); pause(); return
+
+        content = f'''"""database/seeders/{file_name}"""
+
+
+class {name}:
+    """Database Seeder: {name}"""
+
+    def run(self):
+        """এখানে seed data insert করুন"""
+        pass
+
+
+if __name__ == "__main__":
+    import sys, os
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    from config.config import get_config
+    from core.database import Database
+    Database.init(get_config())
+    {name}().run()
+    Database.close()
+    print("{name} seed সম্পন্ন!")
+'''
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        print(color(f"✅ তৈরি হয়েছে: database/seeders/{file_name}", C_GREEN))
+        pause()
+
+    def run_tests(self):
+        print(color("\nUnit Test Suite\n", C_BOLD))
+        tests_dir = os.path.join(PROJECT_ROOT, "tests")
+        if not os.path.exists(tests_dir):
+            print(color("tests/ ফোল্ডার পাওয়া যায়নি। প্রথমে tests/ তৈরি করুন।", C_RED))
+            pause(); return
+        result = subprocess.run(
+            [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py", "-v"],
+            cwd=PROJECT_ROOT
+        )
+        print()
+        if result.returncode == 0:
+            print(color("✅ সব টেস্ট পাস হয়েছে!", C_GREEN))
+        else:
+            print(color("✗ কিছু টেস্ট ব্যর্থ হয়েছে।", C_RED))
+        pause()
+
+    def flush_cache(self):
+        print(color("\nFlush Cache\n", C_BOLD))
+        confirm = input(color("সব cache মুছে দিবেন? (yes): ", C_YELLOW)).strip()
+        if confirm.lower() != "yes":
+            print("বাতিল।"); pause(); return
+        from core.cache import Cache
+        count = Cache.flush()
+        print(color(f"✅ {count}টি cache ফাইল মুছে দেওয়া হয়েছে।", C_GREEN))
+        pause()
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        # CLI command line arguments parsing can be added here if needed
-        pass
+        # Non-interactive CLI mode: python cli.py make:migration create_users
+        command = sys.argv[1]
+        arg = sys.argv[2] if len(sys.argv) > 2 else ""
+        cli = PyFlowCLI()
+        if command == "make:migration":
+            if not arg: print("Usage: python cli.py make:migration <name>"); sys.exit(1)
+            # Direct call with arg
+            import time
+            out_dir = os.path.join(PROJECT_ROOT, "database", "migrations")
+            os.makedirs(out_dir, exist_ok=True)
+            table = arg.replace("create_", "").replace("_table", "")
+            class_name = "".join(w.capitalize() for w in arg.split("_"))
+            timestamp = time.strftime("%Y%m%d%H%M%S")
+            file_name = f"{timestamp}_{arg}.py"
+            content = f'class {class_name}:\n    def up(self, cursor, driver): pass\n    def down(self, cursor, driver): cursor.execute("DROP TABLE IF EXISTS `{table}`")\n'
+            with open(os.path.join(out_dir, file_name), "w") as f: f.write(content)
+            print(color(f"✅ Created: database/migrations/{file_name}", C_GREEN))
+        elif command == "test":
+            tests_dir = os.path.join(PROJECT_ROOT, "tests")
+            subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py", "-v"], cwd=PROJECT_ROOT)
+        elif command == "cache:flush":
+            from core.cache import Cache
+            count = Cache.flush()
+            print(color(f"✅ {count} cache files cleared.", C_GREEN))
+        else:
+            print(color(f"Unknown command: {command}", C_RED))
     else:
         cli = PyFlowCLI()
         cli.run()

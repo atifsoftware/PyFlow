@@ -2,37 +2,56 @@
 core/query_builder.py
 ======================
 Laravel/PHP Eloquent স্টাইলের ফ্লুয়েন্ট Query Builder। ইউজার ইনপুট কখনোই
-সরাসরি SQL স্ট্রিং-এ বসে না - সবকিছু placeholder (? বা %s) আর bound
+সরাসরি SQL স্ট্রিং-এর ভেতরে বসে না — সবকিছু placeholder (? বা %s) আর bound
 parameter দিয়ে পাঠানো হয় Database.execute()-এ। এটাই SQL Injection ঠেকানোর
 মূল প্রতিরক্ষা।
 
 কলাম/টেবিলের নাম (identifier) হোয়াইটলিস্ট রেজেক্স দিয়ে ভ্যালিডেট করা হয়,
 কারণ identifier bind করা যায় না (placeholder শুধু ভ্যালুর জন্য কাজ করে)।
+
+Driver-aware quoting:
+  - MySQL:           `table`, `column`  (backtick)
+  - PostgreSQL:      "table", "column"  (double-quote)
+  - SQLite:          "table", "column"  (double-quote)
 """
 
 import re
 from core.database import Database, QueryError
 
-_IDENTIFIER_RE = re.compile(r"^`?[a-zA-Z_][a-zA-Z0-9_]*`?(\.`?[a-zA-Z_][a-zA-Z0-9_]*`?)?$")
+# Identifier validation — backtick অথবা double-quote অথবা সাদা সব গ্রাহ্য
+_IDENTIFIER_RE = re.compile(
+    r'^[`"]?[a-zA-Z_][a-zA-Z0-9_]*[`"]?(\.[`"]?[a-zA-Z_][a-zA-Z0-9_]*[`"]?)?$'
+)
 
 
 def _safe_identifier(name: str) -> str:
-    """টেবিল/কলামের নাম শুধু চেনা প্যাটার্নের হলেই পাস করে, ব্যাকটিক্স যোগ করে"""
+    """
+    টেবিল/কলামের নাম ভ্যালিডেট করে driver-অনুযায়ী quote যোগ করে।
+
+    - MySQL:      `column`   (ব্যাকটিক)
+    - PostgreSQL: "column"   (ডাবল-কোট)
+    - SQLite:     "column"   (ডাবল-কোট)
+    """
     if name == "*":
         return name
+
     base = name.split(" ")[0]  # "users u" এর মতো alias হলে base অংশ চেক করে
-    if not _IDENTIFIER_RE.match(base):
+    # Quote সরিয়ে raw name validate করা
+    raw_base = base.strip("`\"\'")
+    raw_re   = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$')
+    if not raw_re.match(raw_base):
         raise QueryError(f"অবৈধ কলাম/টেবিল নাম: {name!r}")
-    
-    # Auto quote if not already quoted
-    if not base.startswith("`"):
-        parts = base.split(".")
-        quoted = ".".join(f"`{p}`" for p in parts)
-        if " " in name:
-            alias = name.split(" ", 1)[1]
-            return f"{quoted} {alias}"
-        return quoted
-    return name
+
+    # Driver অনুযায়ী quote character
+    q = "`" if Database.driver == "mysql" else '"'
+
+    parts  = raw_base.split(".")
+    quoted = ".".join(f"{q}{p}{q}" for p in parts)
+
+    if " " in name:
+        alias = name.split(" ", 1)[1]
+        return f"{quoted} {alias}"
+    return quoted
 
 
 class QueryBuilder:
@@ -47,6 +66,7 @@ class QueryBuilder:
         self._limit = None
         self._offset = None
         self._params = []
+        self._cache_ttl = None  # None = no cache; int = cache TTL seconds
 
     # ---------------------------------------------------------------- SELECT
     def select(self, *columns):
@@ -155,11 +175,30 @@ class QueryBuilder:
         self._offset = int(n)
         return self
 
-    def paginate(self, page: int, per_page: int = 15):
-        page = max(1, int(page))
-        self._limit = per_page
-        self._offset = (page - 1) * per_page
-        return self
+    def paginate(self, request_or_page, per_page: int = 15):
+        from core.request import Request
+        if isinstance(request_or_page, Request):
+            request = request_or_page
+            try:
+                page = int(request.input("page", 1))
+            except (ValueError, TypeError):
+                page = 1
+            page = max(1, page)
+
+            # Count total matching query before modifying limit/offset
+            total = self.count()
+
+            self._limit = per_page
+            self._offset = (page - 1) * per_page
+            rows = self.get()
+
+            from core.pagination import Paginator
+            return Paginator(rows, total, per_page, page, request.path, request.query)
+        else:
+            page = max(1, int(request_or_page))
+            self._limit = per_page
+            self._offset = (page - 1) * per_page
+            return self
 
     def having(self, column, operator, value):
         """GROUP BY-এর পরে ফিল্টার করার জন্য HAVING clause — aggregate ফাংশনে ব্যবহার করুন"""
@@ -215,12 +254,46 @@ class QueryBuilder:
         return sql, tuple(self._params) + having_params
 
     # ------------------------------------------------------------- EXECUTE
+    def cache(self, seconds: int = 60):
+        """
+        Query result caching সক্রিয় করে।
+        পরবর্তী .get() call-এ result Cache-এ রাখা হবে।
+
+        ব্যবহার:
+            users = User.where("active", 1).cache(seconds=300).get()
+        """
+        self._cache_ttl = seconds
+        return self
+
     def get(self):
-        """সব রো রিটার্ন করে (list of dict)"""
+        """সব রো রিটার্ন করে (list of dict)। cache() চেইন করলে cached result দেয়।"""
         sql, params = self.to_sql()
+
+        if self._cache_ttl is not None:
+            # Cache key: SQL fingerprint + params hash
+            import hashlib, json
+            try:
+                key_source = sql + "|" + json.dumps(params, default=str, sort_keys=True)
+            except Exception:
+                key_source = sql + "|" + str(params)
+            cache_key = "qb:" + hashlib.md5(key_source.encode("utf-8")).hexdigest()
+
+            try:
+                from core.cache import Cache
+                cached = Cache.get(cache_key)
+                if cached is not None:
+                    return cached
+                cursor = Database.execute(sql, params)
+                rows = [dict(r) for r in cursor.fetchall()]
+                Cache.put(cache_key, rows, ttl=self._cache_ttl)
+                return rows
+            except Exception:
+                pass  # cache ব্যর্থ হলে normally execute করা
+
         cursor = Database.execute(sql, params)
         rows = cursor.fetchall()
         return [dict(r) for r in rows]
+
 
     def first(self):
         self._limit = 1

@@ -36,7 +36,7 @@ class Route:
                 name, typ = raw.split(":", 1)
             else:
                 name, typ = raw, "str"
-            param_names.append(name)
+            param_names.append((name, typ))  # (name, type) tuple
             tpl = type_map.get(typ, type_map["str"])
             return tpl.format(name=name)
 
@@ -48,7 +48,18 @@ class Route:
         m = self.regex.match(path)
         if not m:
             return None
-        return m.groupdict()
+        raw_params = m.groupdict()
+        # int param গুলো cast করা
+        result = {}
+        for name, typ in self.param_names:
+            val = raw_params.get(name)
+            if val is not None and typ == "int":
+                try:
+                    val = int(val)
+                except (ValueError, TypeError):
+                    pass
+            result[name] = val
+        return result
 
     def url(self, **kwargs) -> str:
         url = self.raw_pattern

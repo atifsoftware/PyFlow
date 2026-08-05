@@ -57,7 +57,7 @@ def build_router() -> Router:
         from app.controllers.api_key_controller import ApiKeyController
         router.get("/api-keys", action(ApiKeyController, "index"), name="api_keys")
         router.post("/api-keys", action(ApiKeyController, "store"), name="api_keys.store")
-        router.delete("/api-keys/:id", action(ApiKeyController, "destroy"), name="api_keys.destroy")
+        router.delete("/api-keys/{id:int}", action(ApiKeyController, "destroy"), name="api_keys.destroy")
 
         # ডাটাবেস সিঙ্ক ও কম্পারিজন টুল
         from app.controllers.db_sync_controller import DBSyncController
@@ -67,10 +67,19 @@ def build_router() -> Router:
     # ----------------------------------------------------------------- API
     # Public API Routes
     router.post("/api/login", action(AuthController, "api_login"), name="api.login")
+    router.get("/api/version", lambda req, sess: __import__("core.response", fromlist=["Response"]).Response.json({"version": "v1", "framework": "PyFlow", "status": "ok"}), name="api.version")
 
-    # Protected API Routes (JWT Authenticated)
+    # ── API v1 — Protected (JWT) ───────────────────────────────────────────
     from core.middleware import api_auth_middleware
-    with router.group(prefix="/api", middleware=[api_auth_middleware]):
-        router.get("/profile", action(AuthController, "api_profile"), name="api.profile")
+    from core.controller import action as act
+    from app.api.v1.user_controller import UserApiV1Controller
+
+    with router.group(prefix="/api/v1", middleware=[api_auth_middleware]):
+        router.get("/profile",      action(AuthController, "api_profile"),      name="api.v1.profile")
+        router.get("/users",        act(UserApiV1Controller, "index"),           name="api.v1.users.index")
+        router.get("/users/{id:int}", act(UserApiV1Controller, "show"),          name="api.v1.users.show")
+        router.post("/users",       act(UserApiV1Controller, "store"),           name="api.v1.users.store")
+        router.put("/users/{id:int}", act(UserApiV1Controller, "update"),        name="api.v1.users.update")
+        router.delete("/users/{id:int}", act(UserApiV1Controller, "destroy"),    name="api.v1.users.destroy")
 
     return router

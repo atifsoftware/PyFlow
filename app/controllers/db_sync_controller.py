@@ -13,6 +13,9 @@ class DBSyncController(Controller):
         if self.session.get("role") != "admin":
             return self.json({"status": "error", "message": "আপনার এই অ্যাকশন করার অনুমতি নেই।"}, status=403)
             
+        if not self.verify_csrf():
+            return self.json({"status": "error", "message": "সেশন মেয়াদোত্তীর্ণ, আবার চেষ্টা করুন।"}, status=419)
+            
         driver = self.request.input("driver", "mysql")
         
         try:

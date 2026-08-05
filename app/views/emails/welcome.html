@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>স্বাগতম — {{ app_name }}</title>
+    <style>
+        body { margin: 0; padding: 0; background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        .wrapper { max-width: 600px; margin: 40px auto; }
+        .header { background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 20px 20px 0 0; padding: 40px 48px; text-align: center; }
+        .header h1 { color: #fff; font-size: 2rem; margin: 0; font-weight: 700; }
+        .header p { color: rgba(255,255,255,0.8); margin: 8px 0 0; font-size: 1rem; }
+        .body { background: #1e293b; padding: 48px; color: #cbd5e1; line-height: 1.7; }
+        .body h2 { color: #e2e8f0; font-size: 1.4rem; margin-top: 0; }
+        .highlight { background: rgba(99,102,241,0.1); border-left: 4px solid #6366f1; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 24px 0; color: #a5b4fc; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff !important; padding: 14px 32px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 1rem; margin: 24px 0; }
+        .footer { background: #0f172a; border-radius: 0 0 20px 20px; padding: 24px 48px; text-align: center; color: #475569; font-size: 0.85rem; }
+        .divider { height: 1px; background: rgba(255,255,255,0.05); margin: 24px 0; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="header">
+            <h1>⚡ {{ app_name }}</h1>
+            <p>আপনাকে স্বাগতম!</p>
+        </div>
+        <div class="body">
+            <h2>হ্যালো, {{ user.name }}!</h2>
+            <p>আমরা আনন্দিত যে আপনি <strong>{{ app_name }}</strong>-এ যোগ দিয়েছেন। আপনার অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে।</p>
+
+            <div class="highlight">
+                📧 আপনার ইমেইল: <strong>{{ user.email }}</strong><br>
+                🗓️ নিবন্ধন তারিখ: <strong>{{ registered_at }}</strong>
+            </div>
+
+            <p>এখনই লগইন করে শুরু করুন:</p>
+            <a href="{{ login_url }}" class="btn">🚀 লগইন করুন</a>
+
+            <div class="divider"></div>
+            <p style="font-size:0.9rem; color: #64748b;">যদি আপনি এই অ্যাকাউন্ট তৈরি না করে থাকেন, অনুগ্রহ করে এই ইমেইলটি উপেক্ষা করুন।</p>
+        </div>
+        <div class="footer">
+            © {{ year }} {{ app_name }}। সর্বস্বত্ব সংরক্ষিত।<br>
+            এটি একটি স্বয়ংক্রিয় ইমেইল। অনুগ্রহ করে reply করবেন না।
+        </div>
+    </div>
+</body>
+</html>

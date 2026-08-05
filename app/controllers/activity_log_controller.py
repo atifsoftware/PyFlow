@@ -14,27 +14,18 @@ class ActivityLogController(Controller):
         if self.session.get("role") != "admin":
             return self.back_with_errors({"error": ["আপনার এই পেজে ঢোকার অনুমতি নেই।"]})
 
-        # Pagination
-        try:
-            page = int(self.request.input("page", 1))
-        except ValueError:
-            page = 1
-
-        per_page = 20
-        total_logs = ActivityLog.query().count()
-
-        # Fetch logs ordered by created_at DESC
-        logs_rows = ActivityLog.query().order_by("created_at", "DESC").paginate(page, per_page).get()
+        # Fetch logs ordered by created_at DESC using unified paginator
+        paginator = ActivityLog.query().order_by("created_at", "DESC").paginate(self.request, 20)
 
         # Hydrate user details to avoid N+1 query problem
-        user_ids = {row.get("user_id") for row in logs_rows if row.get("user_id") is not None}
+        user_ids = {row.get("user_id") for row in paginator.items if row.get("user_id") is not None}
         users_map = {}
         if user_ids:
             users = User.query().where_in("id", list(user_ids)).get()
             users_map = {u.get("id"): u.get("name") for u in users}
 
         formatted_logs = []
-        for row in logs_rows:
+        for row in paginator.items:
             user_id = row.get("user_id")
             formatted_logs.append({
                 "id": row.get("id"),
@@ -46,14 +37,12 @@ class ActivityLogController(Controller):
                 "created_at": row.get("created_at"),
             })
 
-        total_pages = max(1, (total_logs + per_page - 1) // per_page)
+        # Replace paginator items with formatted list
+        paginator.items = formatted_logs
 
         return self.view(
             "logs.index",
             {
-                "logs": formatted_logs,
-                "current_page": page,
-                "total_pages": total_pages,
-                "total_logs": total_logs,
+                "logs": paginator,
             },
         )

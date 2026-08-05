@@ -2,9 +2,14 @@
 # ================================
 # Python 3.9+ প্রয়োজন
 
-# ─── Core: MySQL ড্রাইভার (PHP-এর PDO-র মতো কাজ করে) ─────────────────────
+# ─── Core: MySQL ড্রাইভার (PHP-এর PDO-র মতো কাজ করে) ───────────────────
 # Pure Python MySQL client — কোনো C extension লাগে না
 pymysql==1.1.1
+
+# ─── Core: PostgreSQL ড্রাইভার ───────────────────────────────────────────
+# DB_DRIVER=postgresql ব্যবহার করলে এটা দরকার
+# binary version — Linux/Mac/Windows সবায় সহজে ইনস্টল হয়
+psycopg2-binary==2.9.10
 
 # ─── FastAPI Integration ────────────────────────────────────────────────────
 # REST API + Swagger UI + OpenAPI — একই পোর্টে /api/* path-এ
