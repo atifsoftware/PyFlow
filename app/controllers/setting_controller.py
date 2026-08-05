@@ -16,7 +16,7 @@ class SettingController(Controller):
             return self.back_with_errors({"error": ["আপনার এই পেজে ঢোকার অনুমতি নেই।"]})
 
         settings = {
-            "site_name": Setting.get("site_name", "PyMVC App"),
+            "site_name": Setting.get("site_name", "PyFlow App"),
             "site_email": Setting.get("site_email", "admin@example.com"),
             "allow_registration": Setting.get("allow_registration", "1"),
             "maintenance_mode": Setting.get("maintenance_mode", "0"),

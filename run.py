@@ -5,9 +5,9 @@ run.py
 
 মোড ১ — FastAPI সহ (Recommended):
     python run.py
-    → uvicorn দিয়ে চলে, /api/* FastAPI, বাকি সব PyMVC
+    → uvicorn দিয়ে চলে, /api/* FastAPI, বাকি সব PyFlow
 
-মোড ২ — শুধু PyMVC (Legacy):
+মোড ২ — শুধু PyFlow (Legacy):
     python run.py --wsgi
     → wsgiref দিয়ে চলে, FastAPI ছাড়া
 
@@ -26,7 +26,7 @@ from config.config import get_config
 
 
 def run_wsgi(port: int):
-    """Legacy: শুধু PyMVC WSGI মোড (wsgiref)"""
+    """Legacy: শুধু PyFlow WSGI মোড (wsgiref)"""
     from wsgiref.simple_server import make_server
     from core.application import Application
     from config.routes import build_router
@@ -51,19 +51,19 @@ def run_wsgi(port: int):
 
 
 def run_asgi(port: int):
-    """FastAPI + PyMVC একসাথে (uvicorn ASGI)"""
+    """FastAPI + PyFlow একসাথে (uvicorn ASGI)"""
     try:
         import uvicorn
     except ImportError:
         print("❌ uvicorn ইনস্টল নেই। চালান: python -m pip install uvicorn[standard]")
-        print("   অথবা: python run.py --wsgi (শুধু PyMVC মোড)")
+        print("   অথবা: python run.py --wsgi (শুধু PyFlow মোড)")
         sys.exit(1)
 
     config = get_config()
     os.makedirs("storage/logs", exist_ok=True)
     os.makedirs("storage/sessions", exist_ok=True)
 
-    print(f"🚀 {config['APP_NAME']} চলছে (FastAPI + PyMVC): http://127.0.0.1:{port}")
+    print(f"🚀 {config['APP_NAME']} চলছে (FastAPI + PyFlow): http://127.0.0.1:{port}")
     print(f"   DB Driver: {config['DB_DRIVER']}  |  Debug: {config['APP_DEBUG']}")
     print(f"   📖 Swagger UI:  http://127.0.0.1:{port}/api/docs")
     print(f"   📋 ReDoc:       http://127.0.0.1:{port}/api/redoc")

@@ -1,11 +1,11 @@
 @echo off
-title PyMVC Server Runner
+title PyFlow Server Runner
 color 0A
 set PYTHONPATH=.
 set PYTHONIOENCODING=utf-8
 
 echo ===================================================
-echo   🚀 PyMVC Server Start Up
+echo   🚀 PyFlow Server Start Up
 echo   Running on: http://127.0.0.1:8000
 echo ===================================================
 echo.

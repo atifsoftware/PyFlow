@@ -196,6 +196,9 @@
         flex-shrink: 0;
         font-size: 16px;
     }
+    @keyframes blink {
+        50% { opacity: 0; }
+    }
 </style>
 
 <!-- Hero Section -->
@@ -309,6 +312,107 @@
             <div class="feat-icon" style="background: rgba(239, 68, 68, 0.08); color: #ef4444;"><i class="fas fa-clock-rotate-left"></i></div>
             <h4 style="font-weight: 700; margin-bottom: 10px; color: #1e293b;">{{ __('rate_limit_title') }}</h4>
             <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0;">{{ __('rate_limit_desc') }}</p>
+        </div>
+
+        <!-- Feature 13: Queue & Background Jobs -->
+        <div class="feature-card" style="--hover-border: rgba(224, 86, 253, 0.4); --hover-shadow: rgba(224, 86, 253, 0.15);">
+            <div class="feat-icon" style="background: rgba(224, 86, 253, 0.08); color: #be2edd;"><i class="fas fa-tasks"></i></div>
+            <h4 style="font-weight: 700; margin-bottom: 10px; color: #1e293b;">
+                {{ "ব্যাকগ্রাউন্ড কিউ ও জবস" if current_lang == 'bn' else "Queue & Background Jobs" }}
+            </h4>
+            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0;">
+                {{ "ভারী বা দীর্ঘস্থায়ী প্রসেস ব্যাকগ্রাউন্ডে চালানোর জন্য ডাটাবেস-ব্যাকড কিউ এবং থ্রেডেড ওয়ার্কার।" if current_lang == 'bn' else "Reliable database-backed queueing system with concurrent workers for background tasks." }}
+            </p>
+        </div>
+
+        <!-- Feature 14: Task Scheduler -->
+        <div class="feature-card" style="--hover-border: rgba(13, 110, 253, 0.4); --hover-shadow: rgba(13, 110, 253, 0.15);">
+            <div class="feat-icon" style="background: rgba(13, 110, 253, 0.08); color: #0d6efd;"><i class="fas fa-clock"></i></div>
+            <h4 style="font-weight: 700; margin-bottom: 10px; color: #1e293b;">
+                {{ "টাস্ক সিডিউলার" if current_lang == 'bn' else "Task Scheduler" }}
+            </h4>
+            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0;">
+                {{ "নির্ধারিত সময় অন্তর অন্তর (যেমন প্রতি মিনিটে বা প্রতিদিন) ব্যাকগ্রাউন্ড টাস্ক রান করানোর জন্য শিডিউলার ইঞ্জিন।" if current_lang == 'bn' else "Run recurring cron tasks at specific time intervals or times of day." }}
+            </p>
+        </div>
+
+        <!-- Feature 15: Database Seeders -->
+        <div class="feature-card" style="--hover-border: rgba(25, 135, 84, 0.4); --hover-shadow: rgba(25, 135, 84, 0.15);">
+            <div class="feat-icon" style="background: rgba(25, 135, 84, 0.08); color: #198754;"><i class="fas fa-seedling"></i></div>
+            <h4 style="font-weight: 700; margin-bottom: 10px; color: #1e293b;">
+                {{ "ডাটাবেস সিডার ও ফ্যাক্টরি" if current_lang == 'bn' else "Database Seeders & Factories" }}
+            </h4>
+            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0;">
+                {{ "সহজে ডাটাবেস টেস্ট করতে ডাইনামিক সিডার ও মডেল ফ্যাক্টরি দিয়ে ডামি ডেটা তৈরি করার ফ্রেমওয়ার্ক।" if current_lang == 'bn' else "Scaffold dummy database data dynamically for testing using seeders and factories." }}
+            </p>
+        </div>
+
+        <!-- Feature 16: Advanced Logging -->
+        <div class="feature-card" style="--hover-border: rgba(13, 202, 240, 0.4); --hover-shadow: rgba(13, 202, 240, 0.15);">
+            <div class="feat-icon" style="background: rgba(13, 202, 240, 0.08); color: #0dcaf0;"><i class="fas fa-file-invoice"></i></div>
+            <h4 style="font-weight: 700; margin-bottom: 10px; color: #1e293b;">
+                {{ "উন্নত লগিং লাইব্রেরি" if current_lang == 'bn' else "Advanced Logging Library" }}
+            </h4>
+            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0;">
+                {{ "আইপি, সেশন আইডি এবং ইউজার এজেন্ট সহ সব স্ট্যান্ডার্ড লেভেলে লগ তৈরি করে যা ফুটবার ডিবাগ বারেও দেখা যায়।" if current_lang == 'bn' else "Adapted PHP logger tracking request IPs, sessions, and warnings into storage/logs and debug bar." }}
+            </p>
+        </div>
+
+        <!-- Feature 17: WebSockets -->
+        <div class="feature-card" style="--hover-border: rgba(255, 193, 7, 0.5); --hover-shadow: rgba(255, 193, 7, 0.15);">
+            <div class="feat-icon" style="background: rgba(255, 193, 7, 0.08); color: #ffc107;"><i class="fas fa-comments"></i></div>
+            <h4 style="font-weight: 700; margin-bottom: 10px; color: #1e293b;">
+                {{ "রিয়েল-টাইম ওয়েবসকেট" if current_lang == 'bn' else "Real-Time WebSockets" }}
+            </h4>
+            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0;">
+                {{ "ASGI ব্রিজের সাহায্যে সরাসরি ফাস্ট-এপিআই-এর সাথে রিয়েল-টাইম বাই-ডিরেকショナル ওয়েবসকেট গেটওয়ে সংযোগ।" if current_lang == 'bn' else "Full WebSocket support routed via ASGI bridge directly to FastAPI endpoints." }}
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- CLI Section -->
+<div class="cli-section" style="margin-top: 60px; margin-bottom: 70px; padding: 40px; background: #1e272e; border-radius: 30px; color: #f1f2f6; border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 20px 45px rgba(0,0,0,0.15); position: relative; overflow: hidden;">
+    <div style="position: absolute; width: 350px; height: 350px; background: rgba(224, 86, 253, 0.04); border-radius: 50%; top: -120px; left: -120px; filter: blur(90px); z-index: 0; pointer-events: none;"></div>
+    <div style="display: flex; flex-direction: row; gap: 40px; align-items: center; justify-content: space-between; flex-wrap: wrap; position: relative; z-index: 1;">
+        <div style="flex: 1; min-width: 300px; text-align: left;">
+            <span class="badge-ver" style="background: rgba(224, 86, 253, 0.2); color: #e056fd; border: 1px solid rgba(224, 86, 253, 0.4); margin-bottom: 15px;">CLI TOOL</span>
+            <h2 style="font-size: 32px; font-weight: 800; color: #ffffff; margin-bottom: 15px; letter-spacing: -0.5px;">
+                {{ "ইন্টারেক্টিভ সিএলআই অ্যাসিস্ট্যান্ট" if current_lang == 'bn' else "Interactive CLI Assistant" }}
+            </h2>
+            <p style="color: #cbd5e1; font-size: 15px; line-height: 1.6; margin-bottom: 25px;">
+                {{ "Laravel Artisan-এর মতো PyFlow-তে রয়েছে অত্যন্ত শক্তিশালী টার্মিনাল ড্যাশবোর্ড। যা দিয়ে এক ক্লিকে ওআরএম মডেল, কন্ট্রোলার জেনারেট করা, রাউট লিস্ট দেখা, ডাটাবেস মাইগ্রেশন চালানো এবং সিস্টেমের স্বাস্থ্য পরীক্ষা করা যায়।" if current_lang == 'bn' else "Manage your framework effortlessly using a built-in terminal menu assistant. Generate ORM models, scaffold controllers, run database migrations, view registered routes, and perform system health diagnostics with a single command." }}
+            </p>
+            <a href="/docs" class="btn-premium btn-primary" style="padding: 10px 25px; font-size: 14px; text-decoration: none;">
+                {{ "সিএলআই ডকুমেন্টেশন" if current_lang == 'bn' else "Explore CLI Docs" }}
+            </a>
+        </div>
+        <div style="flex: 1.2; min-width: 320px; background: #0f172a; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); padding: 20px; font-family: monospace; font-size: 13.5px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); color: #38bdf8; text-align: left;">
+            <div style="display: flex; gap: 6px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+                <span style="width: 10px; height: 10px; background: #ef4444; border-radius: 50%;"></span>
+                <span style="width: 10px; height: 10px; background: #eab308; border-radius: 50%;"></span>
+                <span style="width: 10px; height: 10px; background: #22c55e; border-radius: 50%;"></span>
+                <span style="margin-left: auto; color: #64748b; font-size: 11px;">cli.py - interactive menu</span>
+            </div>
+            <div style="color: #94a3b8;">$ python cli.py</div>
+            <div style="color: #22c55e; font-weight: bold; margin-top: 8px;">╔════════════════════════════════════════════╗</div>
+            <div style="color: #22c55e; font-weight: bold;">║       ⚡ PYFLOW CORE CLI ASSISTANT ⚡       ║</div>
+            <div style="color: #22c55e; font-weight: bold;">║       Framework Development Kit            ║</div>
+            <div style="color: #22c55e; font-weight: bold;">╚════════════════════════════════════════════╝</div>
+            <div style="color: #e2e8f0; margin-top: 10px; font-weight: bold;">=== MAIN MENU ===</div>
+            <div style="color: #38bdf8; margin-left: 10px;">1. View Registered Routes</div>
+            <div style="color: #f8fafc; margin-left: 10px;">2. View Database Tables</div>
+            <div style="color: #fbbf24; margin-left: 10px;">3. Database Summary Report</div>
+            <div style="color: #4ade80; margin-left: 10px;">4. Generate Model File</div>
+            <div style="color: #4ade80; margin-left: 10px;">5. Generate Controller File</div>
+            <div style="color: #f8fafc; margin-left: 10px; font-weight: bold;">6. System Health Check</div>
+            <div style="color: #f87171; margin-left: 10px;">7. Clear Logs & Temp Sessions</div>
+            <div style="color: #c084fc; margin-left: 10px;">8. Run Database Migrations</div>
+            <div style="color: #38bdf8; margin-left: 10px;">9. Run Database Seeders</div>
+            <div style="color: #c084fc; margin-left: 10px;">10. Run Queue Worker</div>
+            <div style="color: #38bdf8; margin-left: 10px;">11. Run Task Scheduler</div>
+            <div style="color: #f87171; margin-left: 10px;">0. Exit</div>
+            <div style="color: #fbbf24; margin-top: 12px;">Select option: <span style="animation: blink 1s step-end infinite; color: #ffffff;">_</span></div>
         </div>
     </div>
 </div>

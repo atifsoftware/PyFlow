@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PyMVC — Admin Panel</title>
+    <title>PyFlow — Admin Panel</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +23,7 @@
         (function () {
             var saved = 'dark';
             try {
-                saved = localStorage.getItem('pymvc_theme') || 'dark';
+                saved = localStorage.getItem('pyflow_theme') || 'dark';
             } catch (e) {}
             document.documentElement.setAttribute('data-theme', saved);
         })();
@@ -47,8 +47,8 @@
             <a href="/dashboard">
                 <div class="sb-brand-icon"><i class="fas fa-bolt"></i></div>
                 <div>
-                    <div class="sb-brand-name">Py<span>MVC</span></div>
-                    <span class="sb-brand-tag">v2.0 BETA</span>
+                    <div class="sb-brand-name">Py<span>Flow</span></div>
+                    <span class="sb-brand-tag">v2.1-BETA</span>
                 </div>
             </a>
         </div>
@@ -114,6 +114,12 @@
                 <a href="/logs" class="sb-link" id="menu-logs">
                     <span class="sb-icon"><i class="fas fa-list-check"></i></span>
                     <span class="sb-text">অ্যাক্টিভিটি লগ</span>
+                </a>
+            </div>
+            <div class="sb-item-wrap">
+                <a href="/admin/db-sync" class="sb-link" id="menu-db-sync">
+                    <span class="sb-icon"><i class="fas fa-database"></i></span>
+                    <span class="sb-text">ডাটাবেস সিঙ্ক</span>
                 </a>
             </div>
             @endif
@@ -232,7 +238,7 @@
             var next = current === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
             try {
-                localStorage.setItem('pymvc_theme', next);
+                localStorage.setItem('pyflow_theme', next);
             } catch (e) {}
 
             var icon = document.getElementById('themeKnobIcon');
@@ -243,7 +249,7 @@
         (function () {
             var t = 'dark';
             try {
-                t = localStorage.getItem('pymvc_theme') || 'dark';
+                t = localStorage.getItem('pyflow_theme') || 'dark';
             } catch (e) {}
             var icon = document.getElementById('themeKnobIcon');
             if (icon) icon.className = t === 'dark' ? 'fas fa-moon' : 'fas fa-sun';

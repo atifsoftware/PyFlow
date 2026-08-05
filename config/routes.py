@@ -59,6 +59,11 @@ def build_router() -> Router:
         router.post("/api-keys", action(ApiKeyController, "store"), name="api_keys.store")
         router.delete("/api-keys/:id", action(ApiKeyController, "destroy"), name="api_keys.destroy")
 
+        # ডাটাবেস সিঙ্ক ও কম্পারিজন টুল
+        from app.controllers.db_sync_controller import DBSyncController
+        router.get("/admin/db-sync", action(DBSyncController, "index"), name="db_sync")
+        router.post("/admin/db-sync/compare", action(DBSyncController, "compare"), name="db_sync.compare")
+
     # ----------------------------------------------------------------- API
     # Public API Routes
     router.post("/api/login", action(AuthController, "api_login"), name="api.login")

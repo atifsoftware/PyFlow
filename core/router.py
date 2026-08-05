@@ -112,6 +112,9 @@ class Router:
     def delete(self, pattern, handler, name=None, middleware=None):
         return self._add("DELETE", pattern, handler, name, middleware)
 
+    def websocket(self, pattern, handler, name=None, middleware=None):
+        return self._add("WEBSOCKET", pattern, handler, name, middleware)
+
     def resource(self, base_path, controller_cls, name=None, middleware=None):
         """
         RESTful resource route একসাথে বানিয়ে দেয় (index/show/create/store/edit/update/destroy)

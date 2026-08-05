@@ -64,6 +64,10 @@ class PyFlowCLI:
             print(f"6. {color('System Health Check', C_BOLD)}")
             print(f"7. {color('Clear Logs & Temp Sessions', C_RED)}")
             print(f"8. {color('Run Database Migrations', C_MAGENTA)}")
+            print(f"9. {color('Run Database Seeders', C_CYAN)}")
+            print(f"10. {color('Run Queue Worker', C_MAGENTA)}")
+            print(f"11. {color('Run Task Scheduler', C_CYAN)}")
+            print(f"12. {color('Database Schema Sync Tool', C_MAGENTA)}")
             print(f"0. {color('Exit', C_RED)}")
             print()
 
@@ -85,6 +89,14 @@ class PyFlowCLI:
                 self.clear_logs()
             elif choice == "8":
                 self.run_migrations()
+            elif choice == "9":
+                self.run_seeders()
+            elif choice == "10":
+                self.run_queue_worker()
+            elif choice == "11":
+                self.run_scheduler()
+            elif choice == "12":
+                self.run_db_sync()
             elif choice == "0":
                 print(color("\n✓ Goodbye from PyFlow!\n", C_GREEN))
                 break
@@ -275,6 +287,76 @@ class {controller_name}(Controller):
             print(color("✓ Migrations executed successfully!", C_GREEN))
         except subprocess.CalledProcessError as e:
             print(color(f"✗ Migration failed:\n{e.stderr}", C_RED))
+        pause()
+
+    def run_seeders(self):
+        print(color("\nRunning Database Seeders:\n", C_BOLD))
+        try:
+            from core.seeder import Seeder
+            Seeder.run_all()
+            print(color("\n✓ Seeders executed successfully!", C_GREEN))
+        except Exception as e:
+            print(color(f"\n✗ Seeding failed: {e}", C_RED))
+        pause()
+
+    def run_queue_worker(self):
+        print(color("\nRunning Queue Worker (Press Ctrl+C to stop):\n", C_BOLD))
+        try:
+            # Run the queue worker script using current python executable
+            subprocess.run([sys.executable, "queue_worker.py"])
+        except KeyboardInterrupt:
+            print(color("\nQueue worker stopped.", C_YELLOW))
+        except Exception as e:
+            print(color(f"\n✗ Worker crashed: {e}", C_RED))
+        pause()
+
+    def run_scheduler(self):
+        print(color("\nRunning Task Scheduler (Press Ctrl+C to stop):\n", C_BOLD))
+        try:
+            # Run the scheduler runner script using current python executable
+            subprocess.run([sys.executable, "scheduler_runner.py"])
+        except KeyboardInterrupt:
+            print(color("\nScheduler stopped.", C_YELLOW))
+        except Exception as e:
+            print(color(f"\n✗ Scheduler crashed: {e}", C_RED))
+        pause()
+
+    def run_db_sync(self):
+        print(color("\nDatabase Schema Sync Tool:\n", C_BOLD))
+        driver = input("Select Driver (1. MySQL, 2. SQLite) [default: 1]: ").strip()
+        driver = "sqlite" if driver == "2" else "mysql"
+
+        try:
+            from core.db_sync import DBSchemaComparer
+            if driver == "sqlite":
+                src = input("Source SQLite Path [default: storage/database.sqlite]: ").strip() or "storage/database.sqlite"
+                tgt = input("Target SQLite Path [default: storage/database_prod.sqlite]: ").strip() or "storage/database_prod.sqlite"
+                res = DBSchemaComparer.compare_sqlite(src, tgt)
+            else:
+                host = input("MySQL Host [default: 127.0.0.1]: ").strip() or "127.0.0.1"
+                port = input("MySQL Port [default: 3306]: ").strip() or "3306"
+                user = input("MySQL User [default: root]: ").strip() or "root"
+                password = input("MySQL Password [default: None]: ").strip() or ""
+                src = input("Source DB [default: pyflow_db]: ").strip() or "pyflow_db"
+                tgt = input("Target DB: ").strip()
+                if not tgt:
+                    print(color("Target DB is required!", C_RED))
+                    pause()
+                    return
+                res = DBSchemaComparer.compare_mysql(host, user, password, src, tgt, port)
+
+            print(color("\nComparison Result Summary:\n", C_BOLD))
+            print(f"Total Tables Compared    : {res['summary']['total_tables']}")
+            print(f"Missing Tables in Target : {res['summary']['missing_tables_count']}")
+            print(f"Mismatched Columns       : {res['summary']['mismatched_columns_count']}")
+
+            if res["generated_sql"]:
+                print(color("\nGenerated SQL Upgrade Script:\n", C_GREEN))
+                print(res["generated_sql"])
+            else:
+                print(color("\n✓ Database schemas are completely in sync!", C_GREEN))
+        except Exception as e:
+            print(color(f"\n✗ Error: {e}", C_RED))
         pause()
 
     def _get_tables(self):

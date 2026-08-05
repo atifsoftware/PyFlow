@@ -63,6 +63,17 @@ SQLITE_MIGRATIONS = [
             updated_at   TEXT
         )
     """),
+    ("jobs", """
+        CREATE TABLE IF NOT EXISTS jobs (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            queue        TEXT NOT NULL,
+            payload      TEXT NOT NULL,
+            attempts     INTEGER NOT NULL DEFAULT 0,
+            reserved_at  INTEGER NULL,
+            available_at INTEGER NOT NULL,
+            created_at   INTEGER NOT NULL
+        )
+    """),
 ]
 
 # ─────────────────────────────────────────────────────────────── MySQL Schema
@@ -123,6 +134,20 @@ MYSQL_MIGRATIONS = [
             updated_at   DATETIME     NULL,
             INDEX idx_user_id (user_id),
             INDEX idx_key (`key`)
+        ) ENGINE=InnoDB
+          DEFAULT CHARSET=utf8mb4
+          COLLATE=utf8mb4_unicode_ci
+    """),
+    ("jobs", """
+        CREATE TABLE IF NOT EXISTS jobs (
+            id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            queue        VARCHAR(100) NOT NULL,
+            payload      LONGTEXT     NOT NULL,
+            attempts     TINYINT UNSIGNED NOT NULL DEFAULT 0,
+            reserved_at  INT UNSIGNED NULL,
+            available_at INT UNSIGNED NOT NULL,
+            created_at   INT UNSIGNED NOT NULL,
+            INDEX idx_queue_reserved_available (queue, reserved_at, available_at)
         ) ENGINE=InnoDB
           DEFAULT CHARSET=utf8mb4
           COLLATE=utf8mb4_unicode_ci

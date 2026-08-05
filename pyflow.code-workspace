@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../xamp-8.2/htdocs/NovaFlow"
+		},
+		{
+			"path": "../../xamp-8.2/htdocs/db-sync-tool"
+		}
+	],
+	"settings": {}
+}

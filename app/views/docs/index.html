@@ -202,6 +202,42 @@
                     {{ "API কী ও অডিট লগ" if current_lang == 'bn' else "API Keys & Audits" }}
                 </a>
             </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('cli')">
+                    <i class="fas fa-terminal" style="width: 20px;"></i>
+                    {{ "সিএলআই অ্যাসিস্ট্যান্ট" if current_lang == 'bn' else "CLI Assistant" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('queue')">
+                    <i class="fas fa-tasks" style="width: 20px;"></i>
+                    {{ "ব্যাকগ্রাউন্ড কিউ ও জব" if current_lang == 'bn' else "Queue & Jobs" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('scheduler')">
+                    <i class="fas fa-clock" style="width: 20px;"></i>
+                    {{ "টাস্ক সিডিউলার" if current_lang == 'bn' else "Task Scheduler" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('seeders')">
+                    <i class="fas fa-seedling" style="width: 20px;"></i>
+                    {{ "ডাটাবেস সিডার" if current_lang == 'bn' else "Database Seeders" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('logging')">
+                    <i class="fas fa-file-invoice" style="width: 20px;"></i>
+                    {{ "উন্নত লগিং সিস্টেম" if current_lang == 'bn' else "Advanced Logging" }}
+                </a>
+            </li>
+            <li class="docs-menu-item">
+                <a class="docs-menu-link" onclick="switchSection('websockets')">
+                    <i class="fas fa-comments" style="width: 20px;"></i>
+                    {{ "ওয়েবসকেট" if current_lang == 'bn' else "WebSockets" }}
+                </a>
+            </li>
         </ul>
     </aside>
 
@@ -224,6 +260,100 @@
                 <li>{{ "SQL Injection ও CSRF ভ্যালিডেশন শিল্ড" if current_lang == 'bn' else "Full SQL injection defense and CSRF automatic validation middleware." }}</li>
                 <li>{{ "FastAPI দিয়ে এপিআই তৈরি ও সোয়াগার ডক্স" if current_lang == 'bn' else "Create async APIs using FastAPI with Swagger UI integration." }}</li>
             </ul>
+        </section>
+
+        <!-- SECTION: Queue & Jobs -->
+        <section id="docs-queue" class="docs-section">
+            <h1 class="docs-h1">{{ "ব্যাকগ্রাউন্ড কিউ ও জবস (Queue & Background Jobs)" if current_lang == 'bn' else "Queue & Background Jobs" }}</h1>
+            <p class="docs-lead">
+                {{ "PyFlow-তে কোনো বাহ্যিক ব্রোকার (যেমন Redis বা Celery) ছাড়াই পাইথনের মাল্টিথ্রেডিং ও ডাটাবেস-ব্যাকড কিউ ম্যানেজার তৈরি করা হয়েছে।" if current_lang == 'bn' else "PyFlow features a built-in database-backed queueing system with concurrent thread workers, eliminating the need for external brokers like Redis or Celery." }}
+            </p>
+            
+            <h2 class="docs-h2">{{ "কিউতে জব যুক্ত করা" if current_lang == 'bn' else "Pushing a Job" }}</h2>
+            <p>{{ "প্রথমে app/jobs ফোল্ডারে একটি জব ক্লাস তৈরি করুন এবং এরপর Queue.push() ব্যবহার করুন:" if current_lang == 'bn' else "Define a job class with a handle method, then push it to the queue:" }}</p>
+            <pre><code>from core.queue import Queue
+from app.jobs.send_email_job import SendEmailJob
+
+Queue.push(SendEmailJob, {"email": "user@example.com", "subject": "Welcome!"})</code></pre>
+            
+            <h2 class="docs-h2">{{ "কিউ ওয়ার্কার চালু করা" if current_lang == 'bn' else "Running the Queue Worker" }}</h2>
+            <pre><code>python queue_worker.py --queue default --sleep 1</code></pre>
+        </section>
+
+        <!-- SECTION: Task Scheduler -->
+        <section id="docs-scheduler" class="docs-section">
+            <h1 class="docs-h1">{{ "টাস্ক সিডিউলার (Cron Jobs)" if current_lang == 'bn' else "Task Scheduler (Cron Jobs)" }}</h1>
+            <p class="docs-lead">
+                {{ "PyFlow টাস্ক সিডিউলার নির্দিষ্ট সময় অন্তর ব্যাকগ্রাউন্ডে কোড বা মেথড রান করার সুবিধা দেয়।" if current_lang == 'bn' else "PyFlow Scheduler allows registering recurring routines that execute at predefined intervals or exact times daily." }}
+            </p>
+            
+            <h2 class="docs-h2">{{ "টাস্ক কনফিগার করা (app/scheduler.py)" if current_lang == 'bn' else "Configuring Scheduled Tasks (app/scheduler.py)" }}</h2>
+            <pre><code>from core.scheduler import Scheduler
+
+def backup_db():
+    print("Database backed up!")
+
+# Registering tasks
+Scheduler.call(backup_db).every_minute()
+Scheduler.call(backup_db).daily("02:00")</code></pre>
+            
+            <h2 class="docs-h2">{{ "সিডিউলার ড্যামন চালু করা" if current_lang == 'bn' else "Running the Scheduler Daemon" }}</h2>
+            <pre><code>python scheduler_runner.py</code></pre>
+        </section>
+
+        <!-- SECTION: Database Seeders -->
+        <section id="docs-seeders" class="docs-section">
+            <h1 class="docs-h1">{{ "ডাটাবেস সিডার ও ফ্যাক্টরি (Database Seeders & Factories)" if current_lang == 'bn' else "Database Seeders & Factories" }}</h1>
+            <p class="docs-lead">
+                {{ "লোকাল বা স্টেজিং এনভায়রনমেন্ট টেস্টিংয়ের জন্য ডামি ডেটা তৈরি ও ডাটাবেস পপুলেট করতে সিডার ও ফ্যাক্টরি ব্যবহার করা হয়।" if current_lang == 'bn' else "Seeders and Factories make it easy to quickly populate your database tables with dummy data for staging and testing." }}
+            </p>
+            
+            <h2 class="docs-h2">{{ "ফ্যাক্টরি ডিক্লেয়ার করা" if current_lang == 'bn' else "Defining a Factory" }}</h2>
+            <pre><code>from core.factory import Factory
+from app.models.user_model import User
+
+def user_blueprint():
+    return {
+        "name": "Test User",
+        "email": "test@example.com",
+        "role": "user"
+    }
+
+Factory.define(User, user_blueprint)</code></pre>
+            
+            <h2 class="docs-h2">{{ "সিডার রান করা" if current_lang == 'bn' else "Running Seeders" }}</h2>
+            <pre><code># Generate 5 records in database
+Factory.create(User, count=5)</code></pre>
+        </section>
+
+        <!-- SECTION: Advanced Logging -->
+        <section id="docs-logging" class="docs-section">
+            <h1 class="docs-h1">{{ "উন্নত লগিং সিস্টেম (Advanced Logging)" if current_lang == 'bn' else "Advanced Logging System" }}</h1>
+            <p class="docs-lead">
+                {{ "NovaFlow-এর Logger.php-র অনুরূপ কাস্টম পাইথন লগার তৈরি করা হয়েছে যা অটোমেটিক সেশন ও আইপি ট্র্যাকিং করে।" if current_lang == 'bn' else "Adapts NovaFlow's advanced logging framework to track active requests, IPs, and user sessions dynamically." }}
+            </p>
+            
+            <h2 class="docs-h2">{{ "লগ রাইটিং উদাহরণ" if current_lang == 'bn' else "Writing Logs" }}</h2>
+            <pre><code>from core.logger import Logger
+
+Logger.info("This is an info log message")
+Logger.error("Database connection failed!", {"error_code": 1045})</code></pre>
+            <p>{{ "লগগুলো storage/logs/app.log এবং error.log ফাইলে সেভ হয় এবং ব্রাউজারের ফুটবার ডেবাগ বারে ভেসে উঠে।" if current_lang == 'bn' else "Logs are recorded into storage/logs/ and are dynamically displayed on the web footer debug bar." }}</p>
+        </section>
+
+        <!-- SECTION: WebSockets -->
+        <section id="docs-websockets" class="docs-section">
+            <h1 class="docs-h1">{{ "রিয়েল-টাইম ওয়েবসকেট (WebSockets)" if current_lang == 'bn' else "Real-Time WebSockets" }}</h1>
+            <p class="docs-lead">
+                {{ "ASGI গেটওয়ের মাধ্যমে PyFlow-তে FastAPI-র রিয়েল-টাইম বাই-ডিরেকショナル ওয়েবসকেট ইন্টিগ্রেশন সচল করা হয়েছে।" if current_lang == 'bn' else "Websocket routes are routed directly to FastAPI endpoints via our custom ASGI bridge, enabling real-time bidirection communication." }}
+            </p>
+            
+            <h2 class="docs-h2">{{ "ওয়েবসকেট কানেকশন" if current_lang == 'bn' else "Connecting to WebSockets" }}</h2>
+            <p>{{ "সার্ভার রানিং থাকা অবস্থায় ws://127.0.0.1:8000/ws ঠিকানায় কানেক্ট করুন।" if current_lang == 'bn' else "Connect a WebSocket client to ws://127.0.0.1:8000/ws when the server is running." }}</p>
+            <pre><code>// Client-side JS connection
+const socket = new WebSocket('ws://127.0.0.1:8000/ws');
+socket.onmessage = (event) => console.log(event.data);
+socket.send('Hello PyFlow!');</code></pre>
         </section>
 
         <!-- SECTION: Setup -->
@@ -372,6 +502,127 @@ ActivityLog.log(
     description="ব্যবহারকারী একটি ফাইল ডাউনলোড করেছেন।",
     user_id=self.session.get("user_id")
 )</code></pre>
+        </section>
+
+        <!-- SECTION: CLI Assistant -->
+        <section id="docs-cli" class="docs-section">
+            <h1 class="docs-h1">{{ "সিএলআই অ্যাসিস্ট্যান্ট (cli.py)" if current_lang == 'bn' else "CLI Assistant (cli.py)" }}</h1>
+            <p class="docs-lead">
+                {{ "Laravel Artisan-এর মতো PyFlow-তে রয়েছে একটি ইন্টারঅ্যাক্টিভ ও ডাইনামিক কমান্ড লাইন ইন্টারফেস (CLI) অ্যাসিস্ট্যান্ট।" if current_lang == 'bn' else "PyFlow comes with a colorful, interactive, and menu-driven Command Line Interface (CLI) assistant similar to Laravel's Artisan." }}
+            </p>
+            
+            <h2 class="docs-h2">{{ "কিভাবে রান করবেন?" if current_lang == 'bn' else "How to Run?" }}</h2>
+            <pre><code>python cli.py</code></pre>
+            <p>{{ "এটি রান করার পর একটি সুন্দর মেনু দেখতে পাবেন, যেখান থেকে নম্বর সিলেক্ট করে আপনি বিভিন্ন কাজ সম্পন্ন করতে পারবেন।" if current_lang == 'bn' else "Running this command opens an interactive terminal menu where you can choose options by entering their numbers." }}</p>
+
+            <h2 class="docs-h2">{{ "ফিচারসমূহের বিবরণ" if current_lang == 'bn' else "CLI Commands & Features" }}</h2>
+            <ul style="text-align: left;">
+                <li style="margin-bottom: 10px;"><strong>View Registered Routes (রেজিস্টার্ড রাউট তালিকা):</strong> {{ "config/routes.py ফাইলে রেজিস্টার করা সকল রাউট (Method, Path, Handler Name, Route Name, Middleware) সুন্দর চার্ট আকারে টার্মিনালে দেখায়।" if current_lang == 'bn' else "Loads all routes from config/routes.py and prints them in a clean table showing methods, paths, handlers, names, and middleware." }}</li>
+                <li style="margin-bottom: 10px;"><strong>View Database Tables (ডাটাবেস টেবিল তালিকা):</strong> {{ "ডাটাবেসে তৈরি হওয়া সকল একটিভ টেবিলের নাম তালিকা আকারে প্রিন্ট করে।" if current_lang == 'bn' else "Connects to SQLite or MySQL database and lists all existing tables." }}</li>
+                <li style="margin-bottom: 10px;"><strong>Database Summary Report (ডাটাবেস রেকর্ড সামারি):</strong> {{ "প্রতিটি ডাটাবেস টেবিলে বর্তমানে কতটি রো বা রেকর্ড সংরক্ষিত আছে তা গণনা করে লাইভ সামারি দেখায়।" if current_lang == 'bn' else "Calculates and prints the live record count for each table in your database." }}</li>
+                <li style="margin-bottom: 10px;"><strong>Generate Model File (ওআরএম মডেল জেনারেটর):</strong> {{ "নতুন ওআরএম মডেল স্বয়ংক্রিয়ভাবে scaffold বা জেনারেট করে (যেমন: Product মডেল দিলে app/models/product_model.py তৈরি করে)।" if current_lang == 'bn' else "Prompts for a model name and table name, then generates an ORM model under app/models/ inheriting core.model.Model." }}</li>
+                <li style="margin-bottom: 10px;"><strong>Generate Controller File (কন্ট্রোলার জেনারেটর):</strong> {{ "নতুন কন্ট্রোলার স্কাফোল্ড তৈরি করে (যেমন: Product কন্ট্রোলার দিলে app/controllers/product_controller.py তৈরি করে)।" if current_lang == 'bn' else "Scaffolds a new controller file under app/controllers/ inheriting core.controller.Controller." }}</li>
+                <li style="margin-bottom: 10px;"><strong>System Health Check (সিস্টেম হেলথ চেক):</strong> {{ "পাইথন রানটাইম ভার্সন, storage রাইট পারমিশন, .env ফোল্ডার উপস্থিতি এবং ডাটাবেস কানেকশন স্ট্যাটাস সফল কিনা তা ডায়াগনস্টিক ভেরিফাই করে।" if current_lang == 'bn' else "Runs diagnostics on Python version, storage write permissions, .env file, and database connection, displaying [PASS] or [FAIL]." }}</li>
+                <li style="margin-bottom: 10px;"><strong>Clear Logs & Temp Sessions (লগ ও সেশন ক্যাশ ক্লিয়ার):</strong> {{ "স্টোরেজে থাকা সাময়িক লগ ফাইল এবং একটিভ সেশন ডাটা সম্পূর্ণ ডিলিট করে ক্যাশ ক্লিয়ার করে।" if current_lang == 'bn' else "Safely purges all files inside storage/logs/ and storage/sessions/ with user confirmation." }}</li>
+                <li style="margin-bottom: 10px;"><strong>Run Database Migrations (ডাটাবেস মাইগ্রেশন রান):</strong> {{ "ডাটাবেস স্কিমা আপডেট বা সিড করতে ব্যাকগ্রাউন্ডে migrate.py স্ক্রিপ্ট রান করে।" if current_lang == 'bn' else "Runs database migrations programmatically via migrate.py." }}</li>
+                <li style="margin-bottom: 10px;"><strong>Run Database Seeders (ডাটাবেস সিডার রান):</strong> {{ "ডাটাবেসে ডামি রেকর্ড পূর্ণ করতে সিডার স্ক্রিপ্টগুলো রান করে।" if current_lang == 'bn' else "Runs database seeders to populate mock data." }}</li>
+                <li style="margin-bottom: 10px;"><strong>Run Queue Worker (কিউ ওয়ার্কার রান):</strong> {{ "ব্যাকগ্রাউন্ড প্রসেস বা কিউ প্রসেস করার জন্য ওয়ার্কার ড্যামন চালু করে।" if current_lang == 'bn' else "Starts the background queue worker process to run jobs." }}</li>
+                <li style="margin-bottom: 10px;"><strong>Run Task Scheduler (সিডিউলার রান):</strong> {{ "সময়ভিত্তিক নির্ধারিত রিকারিং বা ক্রন টাস্কগুলো ব্যাকগ্রাউন্ডে চেক করার জন্য সিডিউলার চালু করে।" if current_lang == 'bn' else "Runs the task scheduler loop to process recurring jobs." }}</li>
+            </ul>
+        </section>
+
+        <!-- SECTION: Queue & Jobs -->
+        <section id="docs-queue" class="docs-section">
+            <h1 class="docs-h1">{{ "ব্যাকগ্রাউন্ড কিউ ও জবস (Queue & Background Jobs)" if current_lang == 'bn' else "Queue & Background Jobs" }}</h1>
+            <p class="docs-lead">
+                {{ "PyFlow-তে কোনো বাহ্যিক ব্রোকার (যেমন Redis বা Celery) ছাড়াই পাইথনের মাল্টিথ্রেডিং ও ডাটাবেস-ব্যাকড কিউ ম্যানেজার তৈরি করা হয়েছে।" if current_lang == 'bn' else "PyFlow features a built-in database-backed queueing system with concurrent thread workers, eliminating the need for external brokers like Redis or Celery." }}
+            </p>
+            
+            <h2 class="docs-h2">{{ "কিউতে জব যুক্ত করা" if current_lang == 'bn' else "Pushing a Job" }}</h2>
+            <p>{{ "প্রথমে app/jobs ফোল্ডারে একটি জব ক্লাস তৈরি করুন এবং এরপর Queue.push() ব্যবহার করুন:" if current_lang == 'bn' else "Define a job class with a handle method, then push it to the queue:" }}</p>
+            <pre><code>from core.queue import Queue
+from app.jobs.send_email_job import SendEmailJob
+
+Queue.push(SendEmailJob, {"email": "user@example.com", "subject": "Welcome!"})</code></pre>
+            
+            <h2 class="docs-h2">{{ "কিউ ওয়ার্কার চালু করা" if current_lang == 'bn' else "Running the Queue Worker" }}</h2>
+            <pre><code>python queue_worker.py --queue default --sleep 1</code></pre>
+        </section>
+
+        <!-- SECTION: Task Scheduler -->
+        <section id="docs-scheduler" class="docs-section">
+            <h1 class="docs-h1">{{ "টাস্ক সিডিউলার (Cron Jobs)" if current_lang == 'bn' else "Task Scheduler (Cron Jobs)" }}</h1>
+            <p class="docs-lead">
+                {{ "PyFlow টাস্ক সিডিউলার নির্দিষ্ট সময় অন্তর ব্যাকগ্রাউন্ডে কোড বা মেথড রান করার সুবিধা দেয়।" if current_lang == 'bn' else "PyFlow Scheduler allows registering recurring routines that execute at predefined intervals or exact times daily." }}
+            </p>
+            
+            <h2 class="docs-h2">{{ "টাস্ক কনফিগার করা (app/scheduler.py)" if current_lang == 'bn' else "Configuring Scheduled Tasks (app/scheduler.py)" }}</h2>
+            <pre><code>from core.scheduler import Scheduler
+
+def backup_db():
+    print("Database backed up!")
+
+# Registering tasks
+Scheduler.call(backup_db).every_minute()
+Scheduler.call(backup_db).daily("02:00")</code></pre>
+            
+            <h2 class="docs-h2">{{ "সিডিউলার ড্যামন চালু করা" if current_lang == 'bn' else "Running the Scheduler Daemon" }}</h2>
+            <pre><code>python scheduler_runner.py</code></pre>
+        </section>
+
+        <!-- SECTION: Database Seeders -->
+        <section id="docs-seeders" class="docs-section">
+            <h1 class="docs-h1">{{ "ডাটাবেস সিডার ও ফ্যাক্টরি (Database Seeders & Factories)" if current_lang == 'bn' else "Database Seeders & Factories" }}</h1>
+            <p class="docs-lead">
+                {{ "লোকাল বা স্টেজিং এনভায়রনমেন্ট টেস্টিংয়ের জন্য ডামি ডেটা তৈরি ও ডাটাবেস পপুলেট করতে সিডার ও ফ্যাক্টরি ব্যবহার করা হয়।" if current_lang == 'bn' else "Seeders and Factories make it easy to quickly populate your database tables with dummy data for staging and testing." }}
+            </p>
+            
+            <h2 class="docs-h2">{{ "ফ্যাক্টরি ডিক্লেয়ার করা" if current_lang == 'bn' else "Defining a Factory" }}</h2>
+            <pre><code>from core.factory import Factory
+from app.models.user_model import User
+
+def user_blueprint():
+    return {
+        "name": "Test User",
+        "email": "test@example.com",
+        "role": "user"
+    }
+
+Factory.define(User, user_blueprint)</code></pre>
+            
+            <h2 class="docs-h2">{{ "সিডার রান করা" if current_lang == 'bn' else "Running Seeders" }}</h2>
+            <pre><code># Generate 5 records in database
+Factory.create(User, count=5)</code></pre>
+        </section>
+
+        <!-- SECTION: Advanced Logging -->
+        <section id="docs-logging" class="docs-section">
+            <h1 class="docs-h1">{{ "উন্নত লগিং সিস্টেম (Advanced Logging)" if current_lang == 'bn' else "Advanced Logging System" }}</h1>
+            <p class="docs-lead">
+                {{ "NovaFlow-এর Logger.php-র অনুরূপ কাস্টম পাইথন লগার তৈরি করা হয়েছে যা অটোমেটিক সেশন ও আইপি ট্র্যাকিং করে।" if current_lang == 'bn' else "Adapts NovaFlow's advanced logging framework to track active requests, IPs, and user sessions dynamically." }}
+            </p>
+            
+            <h2 class="docs-h2">{{ "লগ রাইটিং উদাহরণ" if current_lang == 'bn' else "Writing Logs" }}</h2>
+            <pre><code>from core.logger import Logger
+
+Logger.info("This is an info log message")
+Logger.error("Database connection failed!", {"error_code": 1045})</code></pre>
+            <p>{{ "লগগুলো storage/logs/app.log এবং error.log ফাইলে সেভ হয় এবং ব্রাউজারের ফুটবার ডেবাগ বারে ভেসে উঠে।" if current_lang == 'bn' else "Logs are recorded into storage/logs/ and are dynamically displayed on the web footer debug bar." }}</p>
+        </section>
+
+        <!-- SECTION: WebSockets -->
+        <section id="docs-websockets" class="docs-section">
+            <h1 class="docs-h1">{{ "রিয়েল-টাইম ওয়েবসকেট (WebSockets)" if current_lang == 'bn' else "Real-Time WebSockets" }}</h1>
+            <p class="docs-lead">
+                {{ "ASGI গেটওয়ের মাধ্যমে PyFlow-তে FastAPI-র রিয়েল-টাইম বাই-ডিরেকショナル ওয়েবসকেট ইন্টিগ্রেশন সচল করা হয়েছে।" if current_lang == 'bn' else "Websocket routes are routed directly to FastAPI endpoints via our custom ASGI bridge, enabling real-time bidirection communication." }}
+            </p>
+            
+            <h2 class="docs-h2">{{ "ওয়েবসকেট কানেকশন" if current_lang == 'bn' else "Connecting to WebSockets" }}</h2>
+            <p>{{ "সার্ভার রানিং থাকা অবস্থায় ws://127.0.0.1:8000/ws ঠিকানায় কানেক্ট করুন।" if current_lang == 'bn' else "Connect a WebSocket client to ws://127.0.0.1:8000/ws when the server is running." }}</p>
+            <pre><code>// Client-side JS connection
+const socket = new WebSocket('ws://127.0.0.1:8000/ws');
+socket.onmessage = (event) => console.log(event.data);
+socket.send('Hello PyFlow!');</code></pre>
         </section>
 
     </main>

@@ -1,7 +1,7 @@
 """
 app/api/__init__.py
 ====================
-FastAPI অ্যাপ্লিকেশন — PyMVC-র পাশে /api/* path-এ কাজ করে।
+FastAPI অ্যাপ্লিকেশন — PyFlow-র পাশে /api/* path-এ কাজ করে।
 Swagger UI: http://127.0.0.1:8000/api/docs
 OpenAPI:    http://127.0.0.1:8000/api/openapi.json
 """
@@ -11,9 +11,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # FastAPI app তৈরি — prefix /api দিয়ে
 api = FastAPI(
-    title="PyMVC REST API",
+    title="PyFlow REST API",
     description=(
-        "PyMVC ফ্রেমওয়ার্কের FastAPI ইন্টিগ্রেশন।\n\n"
+        "PyFlow ফ্রেমওয়ার্কের FastAPI ইন্টিগ্রেশন।\n\n"
         "- **JWT Authentication** সহ\n"
         "- **Users CRUD** endpoints\n"
         "- **Swagger UI** এই পেজে উপলব্ধ"
@@ -45,8 +45,24 @@ api.include_router(user_routes.router, prefix="/api/users", tags=["Users"])
 async def api_root():
     """API Root — সংযোগ যাচাই করুন"""
     return {
-        "message": "PyMVC FastAPI সফলভাবে চলছে! 🚀",
+        "message": "PyFlow FastAPI সফলভাবে চলছে! 🚀",
         "docs": "/api/docs",
         "version": "1.0.0",
-        "framework": "PyMVC + FastAPI",
+        "framework": "PyFlow + FastAPI",
     }
+
+
+from fastapi import WebSocket, WebSocketDisconnect
+
+@api.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """
+    রিয়েল-টাইম বাই-ডিরেকশনাল কমিউনিকেশনের জন্য টেস্ট WebSocket এন্ডপয়েন্ট।
+    """
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await websocket.send_text(f"PyFlow WebSocket Response: {data}")
+    except WebSocketDisconnect:
+        pass

@@ -1,0 +1,312 @@
+@extends('layout.admin')
+@section('content')
+
+<div class="row g-4">
+    <!-- Breadcrumb -->
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-1" style="font-weight: 700; color: var(--text-color);">ডাটাবেস স্কিমা সিঙ্ক টুল</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/dashboard">ড্যাশবোর্ড</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">ডাটাবেস সিঙ্ক</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main comparison tool container -->
+    <div class="col-md-4">
+        <div class="card shadow-sm p-4 border-0" style="background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px;">
+            <h5 class="mb-4" style="font-weight: 600; color: #fff;"><i class="fas fa-plug me-2 text-primary"></i>সংযোগের বিবরণ</h5>
+            
+            <form id="db-compare-form">
+                <input type="hidden" name="_token" value="{{ csrf_token }}">
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted" style="font-size: 0.85rem;">ডাটাবেস ড্রাইভার</label>
+                    <select class="form-select border-secondary text-white" style="background: #0f172a; border-color: rgba(255,255,255,0.15);" name="driver" id="driver-select">
+                        <option value="mysql">MySQL</option>
+                        <option value="sqlite">SQLite</option>
+                    </select>
+                </div>
+
+                <!-- MySQL Specific Fields -->
+                <div id="mysql-fields">
+                    <div class="mb-3">
+                        <label class="form-label text-muted" style="font-size: 0.85rem;">MySQL হোস্ট</label>
+                        <input type="text" class="form-control text-white" style="background: rgba(15, 23, 42, 0.5); border-color: rgba(255,255,255,0.15);" name="host" value="127.0.0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted" style="font-size: 0.85rem;">পোর্ট</label>
+                        <input type="text" class="form-control text-white" style="background: rgba(15, 23, 42, 0.5); border-color: rgba(255,255,255,0.15);" name="port" value="3306">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted" style="font-size: 0.85rem;">ইউজারনেম</label>
+                        <input type="text" class="form-control text-white" style="background: rgba(15, 23, 42, 0.5); border-color: rgba(255,255,255,0.15);" name="user" value="root">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted" style="font-size: 0.85rem;">পাসওয়ার্ড</label>
+                        <input type="password" class="form-control text-white" style="background: rgba(15, 23, 42, 0.5); border-color: rgba(255,255,255,0.15);" name="pass" value="">
+                    </div>
+                </div>
+
+                <!-- Database Names (SQLite/MySQL paths) -->
+                <div class="mb-3">
+                    <label class="form-label text-muted" id="src-db-label" style="font-size: 0.85rem;">Source DB (Local/Dev)</label>
+                    <input type="text" class="form-control text-white" style="background: rgba(15, 23, 42, 0.5); border-color: rgba(255,255,255,0.15);" name="src_db" id="src_db" value="pyflow_db" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-muted" id="tgt-db-label" style="font-size: 0.85rem;">Target DB (Online/Prod)</label>
+                    <input type="text" class="form-control text-white" style="background: rgba(15, 23, 42, 0.5); border-color: rgba(255,255,255,0.15);" name="tgt_db" id="tgt_db" value="" placeholder="e.g. pyflow_db_prod" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2" id="submit-btn" style="border-radius: 10px; font-weight: 600;">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;" id="btn-spinner"></span>
+                    <span>তুলনা করুন</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Comparison Results View -->
+    <div class="col-md-8">
+        <div class="card shadow-sm p-4 border-0" style="background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; min-height: 500px;">
+            <div class="alert alert-danger" id="error-box" style="display: none; border-radius: 10px;"></div>
+            
+            <!-- Tabs -->
+            <div class="d-flex border-bottom border-secondary mb-4" id="tabs-header">
+                <button class="btn btn-link text-decoration-none text-white border-bottom border-primary active px-3 py-2 fw-semibold" data-tab="tab-dashboard" style="box-shadow: none;">ড্যাশবোর্ড</button>
+                <button class="btn btn-link text-decoration-none text-muted px-3 py-2 fw-semibold" data-tab="tab-sql" style="box-shadow: none;">জেনারেটেড SQL স্ক্রিপ্ট</button>
+                <button class="btn btn-link text-decoration-none text-muted px-3 py-2 fw-semibold" data-tab="tab-details" style="box-shadow: none;">বিস্তারিত কলাম অমিল</button>
+            </div>
+
+            <!-- Empty view initially -->
+            <div class="text-center py-5 text-muted" id="empty-view">
+                <div style="font-size: 3rem; opacity: 0.3;" class="mb-3"><i class="fas fa-database"></i></div>
+                <p>ডাটাবেস তুলনা শুরু করতে বাম পাশের কানেকশন প্যারামিটার দিয়ে 'তুলনা করুন' বাটনে ক্লিক করুন।</p>
+            </div>
+
+            <!-- Content Area -->
+            <div id="results-view" style="display: none;">
+                
+                <!-- Dashboard Tab -->
+                <div class="tab-pane active" id="tab-dashboard">
+                    <div class="row g-3">
+                        <div class="col-sm-4">
+                            <div class="p-4 rounded-3 text-center" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                <h2 class="text-info fw-bold mb-1" id="stat-total-tables">0</h2>
+                                <span style="font-size: 0.85rem;" class="text-muted">মোট টেবিল</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="p-4 rounded-3 text-center" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                <h2 class="text-danger fw-bold mb-1" id="stat-missing-tables">0</h2>
+                                <span style="font-size: 0.85rem;" class="text-muted">অনুপস্থিত টেবিল</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="p-4 rounded-3 text-center" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                <h2 class="text-warning fw-bold mb-1" id="stat-mismatch-cols">0</h2>
+                                <span style="font-size: 0.85rem;" class="text-muted">কলামের অমিল</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5">
+                        <h6 class="fw-semibold text-white mb-2">তুলনা সম্পন্ন হয়েছে</h6>
+                        <p class="text-muted" style="font-size: 0.9rem; line-height: 1.6;">
+                            PyFlow DB Sync আপনার ডাটাবেসের স্কিমা সফলভাবে চেক করেছে। আপনি স্ক্রিপ্ট ট্যাবে গিয়ে স্কিমা আপগ্রেড SQL কোড পেতে পারেন, অথবা বিস্তারিত কলাম অমিল ট্যাবে প্রতিটি কলাম লেভেলে বিস্তারিত তথ্য দেখতে পারেন।
+                        </p>
+                    </div>
+                </div>
+
+                <!-- SQL Tab -->
+                <div class="tab-pane d-none" id="tab-sql">
+                    <div class="position-relative bg-black rounded-3 overflow-hidden border border-secondary" style="background: #090d16 !important;">
+                        <div class="d-flex justify-content-between align-items-center px-4 py-2 border-bottom border-secondary bg-dark-subtle">
+                            <span class="font-monospace text-muted" style="font-size: 0.75rem;">UPGRADE_SCHEMA.SQL</span>
+                            <button class="btn btn-outline-info btn-sm" id="copy-btn" onclick="copySql()" style="font-size: 0.75rem;"><i class="fas fa-copy me-1"></i>Copy Code</button>
+                        </div>
+                        <pre style="margin: 0; padding: 20px;"><code id="sql-block" class="text-info font-monospace" style="font-size: 0.85rem; line-height: 1.6;">-- SQL code...</code></pre>
+                    </div>
+                </div>
+
+                <!-- Details Tab -->
+                <div class="tab-pane d-none" id="tab-details">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover table-striped mb-0" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th>টেবিল নাম</th>
+                                    <th>কলাম নাম</th>
+                                    <th>লোকাল স্কিমা</th>
+                                    <th>টার্গেট স্কিমা</th>
+                                    <th>পার্থক্য</th>
+                                </tr>
+                            </thead>
+                            <tbody id="diff-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Driver Switch Logic
+    document.getElementById('driver-select').addEventListener('change', function(e) {
+        var isSqlite = e.target.value === 'sqlite';
+        document.getElementById('mysql-fields').style.display = isSqlite ? 'none' : 'block';
+        
+        var srcLabel = document.getElementById('src-db-label');
+        var tgtLabel = document.getElementById('tgt-db-label');
+        var srcInput = document.getElementById('src_db');
+        var tgtInput = document.getElementById('tgt_db');
+
+        if (isSqlite) {
+            srcLabel.innerText = "Source SQLite File Path";
+            tgtLabel.innerText = "Target SQLite File Path";
+            srcInput.value = "storage/database.sqlite";
+            tgtInput.value = "storage/database_prod.sqlite";
+        } else {
+            srcLabel.innerText = "Source DB (Local/Dev)";
+            tgtLabel.innerText = "Target DB (Online/Prod)";
+            srcInput.value = "pyflow_db";
+            tgtInput.value = "";
+        }
+    });
+
+    // Tab Switching
+    var tabBtns = document.querySelectorAll('#tabs-header button');
+    var tabPanes = document.querySelectorAll('.tab-pane');
+
+    tabBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            tabBtns.forEach(function(b) {
+                b.classList.remove('active', 'border-primary', 'text-white');
+                b.classList.add('text-muted');
+            });
+            tabPanes.forEach(function(p) {
+                p.classList.add('d-none');
+            });
+
+            btn.classList.remove('text-muted');
+            btn.classList.add('active', 'border-primary', 'text-white');
+            
+            var targetTab = btn.getAttribute('data-tab');
+            document.getElementById(targetTab).classList.remove('d-none');
+        });
+    });
+
+    // Form Submission
+    document.getElementById('db-compare-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        var submitBtn = document.getElementById('submit-btn');
+        var spinner = document.getElementById('btn-spinner');
+        var errorBox = document.getElementById('error-box');
+        var emptyView = document.getElementById('empty-view');
+        var resultsView = document.getElementById('results-view');
+        
+        spinner.style.display = 'inline-block';
+        submitBtn.disabled = true;
+        errorBox.style.display = 'none';
+
+        var formData = new FormData(this);
+        
+        fetch('/admin/db-sync/compare', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.status === 'success') {
+                // Populate summary stats
+                document.getElementById('stat-total-tables').innerText = data.summary.total_tables;
+                document.getElementById('stat-missing-tables').innerText = data.summary.missing_tables_count;
+                document.getElementById('stat-mismatch-cols').innerText = data.summary.mismatched_columns_count;
+
+                // Populate SQL
+                document.getElementById('sql-block').innerText = data.generated_sql || '-- schemas are identical! No migration required.';
+
+                // Populate table differences
+                var tbody = document.getElementById('diff-table-body');
+                tbody.innerHTML = '';
+
+                if (data.missing_tables.length === 0 && data.column_differences.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Schemas are fully in sync! No differences found.</td></tr>';
+                } else {
+                    data.missing_tables.forEach(function(table) {
+                        var tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="text-danger fw-semibold">${table.name}</td>
+                            <td class="text-muted">(Table missing)</td>
+                            <td>CREATE TABLE ...</td>
+                            <td class="text-muted">Missing</td>
+                            <td><span class="badge bg-danger">Missing Table</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    data.column_differences.forEach(function(diff) {
+                        var tr = document.createElement('tr');
+                        
+                        var localDef = `${diff.local_type} ${diff.local_nullable === 'YES' ? 'NULL' : 'NOT NULL'}${diff.local_default !== null ? ' DEFAULT ' + diff.local_default : ''}`;
+                        var onlineDef = diff.online_type 
+                            ? `${diff.online_type} ${diff.online_nullable === 'YES' ? 'NULL' : 'NOT NULL'}${diff.online_default !== null ? ' DEFAULT ' + diff.online_default : ''}`
+                            : 'Missing';
+                        
+                        var badgeClass = diff.DifferenceType === 'Missing Column' ? 'bg-danger' : 'bg-warning text-dark';
+                        
+                        tr.innerHTML = `
+                            <td>${diff.TABLE_NAME}</td>
+                            <td class="font-monospace">${diff.COLUMN_NAME}</td>
+                            <td class="font-monospace text-muted">${localDef}</td>
+                            <td class="font-monospace text-muted">${onlineDef}</td>
+                            <td><span class="badge ${badgeClass}">${diff.DifferenceType}</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+
+                emptyView.style.display = 'none';
+                resultsView.style.display = 'block';
+            } else {
+                errorBox.innerText = data.message;
+                errorBox.style.display = 'block';
+            }
+        })
+        .catch(function(err) {
+            errorBox.innerText = 'Network error or internal application issue occurred.';
+            errorBox.style.display = 'block';
+            console.error(err);
+        })
+        .finally(function() {
+            spinner.style.display = 'none';
+            submitBtn.disabled = false;
+        });
+    });
+
+    // Copy SQL function
+    function copySql() {
+        var sqlText = document.getElementById('sql-block').innerText;
+        navigator.clipboard.writeText(sqlText).then(function() {
+            var copyBtn = document.getElementById('copy-btn');
+            var originalHtml = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+            copyBtn.className = 'btn btn-success btn-sm';
+            
+            setTimeout(function() {
+                copyBtn.innerHTML = originalHtml;
+                copyBtn.className = 'btn btn-outline-info btn-sm';
+            }, 2000);
+        });
+    }
+</script>
+
+@endsection

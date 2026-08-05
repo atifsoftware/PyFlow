@@ -11,7 +11,7 @@ import urllib.request
 import urllib.error
 import logging
 
-logger = logging.getLogger("pymvc.gemini")
+logger = logging.getLogger("PyFlow.gemini")
 
 
 class Gemini:

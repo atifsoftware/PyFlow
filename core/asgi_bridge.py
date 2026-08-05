@@ -45,12 +45,15 @@ async def application(scope, receive, send):
     """
     মূল ASGI callable:
     - /api/* এবং /openapi.json → FastAPI
+    - WebSockets → FastAPI
     - বাকি সব → PyFlow
     """
     path = scope.get("path", "/")
+    scope_type = scope.get("type", "")
 
     # FastAPI paths: /api/*, /api/docs, /api/redoc, /api/openapi.json
-    if path == "/api" or path.startswith("/api/"):
+    # WebSockets ও FastAPI-র মাধ্যমে হ্যান্ডেল করা হবে
+    if scope_type == "websocket" or path == "/api" or path.startswith("/api/"):
         await fastapi_app(scope, receive, send)
     else:
         await _pyflow_asgi(scope, receive, send)

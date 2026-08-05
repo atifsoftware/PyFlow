@@ -20,7 +20,7 @@ import logging
 import time
 from queue import Queue, Empty
 
-logger = logging.getLogger("pymvc.db")
+logger = logging.getLogger("PyFlow.db")
 
 
 class QueryError(Exception):

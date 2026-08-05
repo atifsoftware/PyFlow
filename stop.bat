@@ -1,9 +1,9 @@
 @echo off
-title PyMVC Server Stopper
+title PyFlow Server Stopper
 color 0C
 
 echo ===================================================
-echo   🛑 Stopping PyMVC Server on Port 8000
+echo   🛑 Stopping PyFlow Server on Port 8000
 echo ===================================================
 echo.
 

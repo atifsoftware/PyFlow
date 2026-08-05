@@ -4,10 +4,10 @@
 # reverse-proxy হিসেবে gunicorn-এর সামনে থাকতে; নিচেরটা mod_wsgi সেটআপের জন্য।
 
 <IfModule mod_wsgi.c>
-    WSGIScriptAlias / /var/www/pymvc/public/index.py
-    WSGIPythonPath /var/www/pymvc
+    WSGIScriptAlias / /var/www/pyflow/public/index.py
+    WSGIPythonPath /var/www/pyflow
 
-    <Directory /var/www/pymvc/public>
+    <Directory /var/www/pyflow/public>
         Require all granted
     </Directory>
 </IfModule>

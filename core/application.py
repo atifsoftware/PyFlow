@@ -79,6 +79,8 @@ class Application:
         Profiler.start_request(environ.get("REQUEST_METHOD", "GET"), path_info)
 
         request = Request(environ)
+        from core.logger import set_current_request
+        set_current_request(request)
 
         # login-attempt spam ঠেকাতে একটা global soft-limit (per-IP)
         global_key = f"global:{request.ip()}"
@@ -91,6 +93,7 @@ class Application:
             storage_dir=self.config.get("SESSION_DIR", "storage/sessions"),
             session_id=cookie_session_id,
         )
+        request.session = session
 
         # HTML ফর্ম PUT/DELETE সরাসরি পাঠাতে পারে না, তাই hidden _method
         # ফিল্ড দিয়ে override করার সুযোগ দেওয়া হয়েছে (শুধু POST-এর ক্ষেত্রে)

@@ -18,7 +18,7 @@ import time
 
 
 class Session:
-    COOKIE_NAME = "pymvc_session"
+    COOKIE_NAME = "PyFlow_session"
     LIFETIME_SECONDS = 2 * 60 * 60  # 2 ঘণ্টা
     IDLE_TIMEOUT_SECONDS = 30 * 60  # ৩০ মিনিট idle হলে expire
 
