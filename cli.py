@@ -38,7 +38,7 @@ def clear_screen():
 def print_header():
     clear_screen()
     print(color("╔════════════════════════════════════════════╗", C_CYAN))
-    print(color("║       ⚡ PYFLOW CORE CLI ASSISTANT ⚡       ║", C_CYAN | C_BOLD))
+    print(color("║       ⚡ PYFLOW CORE CLI ASSISTANT ⚡       ║", C_CYAN + C_BOLD))
     print(color("║       Framework Development Kit            ║", C_CYAN))
     print(color("╚════════════════════════════════════════════╝", C_CYAN))
     print()
