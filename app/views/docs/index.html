@@ -796,6 +796,176 @@ print(number_to_words(12500000, lang="bn"))
                     {{ "PyFlow মূলত পাইথনের স্ট্যান্ডার্ড লাইব্রেরি (stdlib) নির্ভর করায় এর 'ডিপেন্ডেন্সি ল্যাগ' নেই বললেই চলে, যা একে অত্যন্ত ফিউচার-প্রুফ করে তোলে। ১৭০টির বেশি ইউনিট টেস্ট যেকোনো পাইথন রানটাইম আপগ্রেডের রিগ্রেশন ঠেকাতে পারে। যেহেতু এটি সাধারণ লারাভেল/কোডইগনাইটারের এমভিসি ডিজাইন প্যাটার্ন মেনে চলে, তাই যেকোনো নতুন ডেভেলপারের পক্ষে কোড সহজে মেইনটেইন করা সম্ভব।" if current_lang == 'bn' else "Because PyFlow depends heavily on Python's native standard library modules, it suffers very little dependency rot. Over 170+ unit tests safeguard codebase integrity against deprecations, and standard MVC folders make onboarding new developers easy." }}
                 </p>
             </div>
+
+            <!-- Q6 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "৬. core/decimal_math.py এ Money ক্লাস তৈরির মূল উদ্দেশ্য কী ছিল?" if current_lang == 'bn' else "6. What is the purpose of the Money class in decimal_math.py?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "কম্পিউটারের ভাসমান সংখ্যা বা float ডাটা টাইপের অভ্যন্তরীণ বাইনারি সীমাবদ্ধতার কারণে ফিন্যান্সিয়াল হিসাবে কিছু পয়সার গরমিল দেখা দেয় (যেমন: ০.১ + ০.২ = ০.৩০০০০০০০০০০০০০৪ BDT)। Money ক্লাস পাইথনের Decimal লাইব্রেরি এবং ROUND_HALF_UP নিয়ম ব্যবহার করে প্রতিটি অ্যাকাউন্টিং এবং বিলিং গণনা ১ পয়সা পর্যন্ত নির্ভুল রাখে।" if current_lang == 'bn' else "Computers suffer from binary representation limitations in floating point math (e.g. 0.1 + 0.2 equals 0.30000000000000004 BDT). The Money class wraps Python's Decimal module with ROUND_HALF_UP logic to keep financial records accurate to the decimal digit." }}
+                </p>
+            </div>
+
+            <!-- Q7 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "৭. PyFlow-তে কীভাবে এক্সটার্নাল লাইব্রেরি ইন্সটল এবং মেইনটেইন করব?" if current_lang == 'bn' else "7. How do I install and manage external libraries in PyFlow?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "নতুন কোনো থার্ড-পার্টি লাইব্রেরি যুক্ত করতে হলে pip install এর মাধ্যমে প্যাকেজটি নামিয়ে রুট ডিরেক্টরির requirements.txt ফাইলে এর নির্দিষ্ট সংস্করণ লক (pin) করে দিতে হবে। এর ফলে ভবিষ্যতে ভিন্ন কোনো হোস্টিং এনভায়রনমেন্টে প্রজেক্টটি ডেপ্লয় করার সময় ডিপেন্ডেন্সি সংস্করণ অসঙ্গতি এড়ানো যাবে।" if current_lang == 'bn' else "Use standard pip packaging tools to install new libraries and pin their exact version in the requirements.txt file. This ensures environment consistency across development and production servers." }}
+                </p>
+            </div>
+
+            <!-- Q8 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "৮. ইমেইল মেইলার কীভাবে কনফিগার করা যাবে?" if current_lang == 'bn' else "8. How do I configure mail server settings?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "মেইলার কনফিগার করতে আপনার .env ফাইলে মেইল হোস্ট সেটিংস আপডেট করুন। core/mailer.py ফাইলটি পাইথনের smtplib ব্যবহার করে এবং SMTP_HOST, SMTP_PORT, SMTP_USER এবং SMTP_PASSWORD ভ্যালুর সাহায্যে ইনভয়েস বা নোটিফিকেশন মেইল পাঠাতে সক্ষম।" if current_lang == 'bn' else "Configure SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASSWORD inside the .env file. The core/mailer.py module leverages Python's built-in smtplib to route transaction messages securely." }}
+                </p>
+            </div>
+
+            <!-- Q9 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "৯. কিউ (Queue Manager) কীভাবে ব্যাকগ্রাউন্ডে কাজ করে?" if current_lang == 'bn' else "9. How does the Queue Worker operate in the background?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "PyFlow-তে কোনো ভারী মেমোরি ব্রোকার (যেমন: Celery বা Redis) ছাড়াই ডাটাবেজ ব্যাকড কিউ ওয়ার্কার তৈরি করা হয়েছে। CLI থেকে python queue_worker.py চালালে এটি ডাটাবেজের jobs টেবিল থেকে নতুন পেন্ডিং টাস্ক থ্রেডিংয়ের সাহায্যে প্রসেস করতে থাকে এবং মূল ওয়েব সার্ভারকে রিলিজ রাখে।" if current_lang == 'bn' else "PyFlow implements a DB-backed queue worker. Running python queue_worker.py via CLI loops through the jobs table and runs registered tasks asynchronously via threads, keeping the HTTP server responsive." }}
+                </p>
+            </div>
+
+            <!-- Q10 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "১০. ক্যাশিং এর জন্য কি রেডিস ছাড়াও অন্য কোনো ড্রাইভ ব্যবহার করা সম্ভব?" if current_lang == 'bn' else "10. Are there other cache drivers besides Redis?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "হ্যাঁ। core/cache.py এ মাল্টি-ড্রাইভার ক্যাশ ইঞ্জিন রয়েছে। আপনার সার্ভারে যদি Redis ইনস্টল না থাকে, তবে .env ফাইলে CACHE_DRIVER=file সেট করে ফাইল-ভিত্তিক ক্যাশিং করতে পারেন, যা ডাটাবেস ক্যাশিংয়ের তুলনায় অনেক দ্রুত।" if current_lang == 'bn' else "Yes. PyFlow's core/cache.py supports multiple cache backends. Set CACHE_DRIVER=file inside .env to store cached outputs inside the storage/cache/ directory if you don't have a running Redis server." }}
+                </p>
+            </div>
+
+            <!-- Q11 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "১১. সিএলআই ব্যবহার করে কোড স্কাফোল্ডিং এর সুবিধা কী?" if current_lang == 'bn' else "11. What is the benefit of the Interactive CLI Assistant?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "রুট ডিরেক্টরির cli.py ফাইলটি একটি ডেভেলপমেন্ট অ্যাসিস্ট্যান্ট হিসেবে কাজ করে। কমান্ড লাইনে ১ ক্লিক করেই মডেল বা কন্ট্রোলারের বেসিক স্ট্রাকচার স্কাফোল্ড করা, ডাটাবেস মাইগ্রেশন রান করা, এবং সিস্টেম হেলথ ডায়াগনস্টিকস চেক করা সম্ভব।" if current_lang == 'bn' else "The root cli.py script provides developer utilities. It lets you scaffold controllers, generate ORM models, inspect registered routes, health-check environmental requirements, and run database seeds instantly." }}
+                </p>
+            </div>
+
+            <!-- Q12 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "১২. CSRF প্রটেকশন ফর্মে কীভাবে কাজ করে?" if current_lang == 'bn' else "12. How does CSRF protection secure web forms?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "প্রতিটি ব্যবহারকারীর সেশনে একটি সিকিউর ক্রিপ্টোগ্রাফিক CSRF টোকেন জেনারেট হয়। HTML ফর্মে {{ csrf_field() }} ব্যবহার করলে একটি হিডেন ইনপুট ফিল্ড যুক্ত হয়। ফর্মে সাবমিট করা টোকেন এবং সেশনের টোকেন না মিললে মিডলওয়্যার রিকোয়েস্ট ব্লক করে দেয়।" if current_lang == 'bn' else "A unique cryptographic token is generated for every user session. Using {{ csrf_field() }} appends a hidden token to forms. Middleware matches it against the session token to prevent unauthorized cross-site requests." }}
+                </p>
+            </div>
+
+            <!-- Q13 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "১৩. ফাইল ও ইমেজ আপলোড করার ক্ষেত্রে কোড স্ট্রাকচার কেমন?" if current_lang == 'bn' else "13. How does PyFlow handle file and image uploads?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "PyFlow-র core/storage.py ফাইলে আপলোড ও স্টোরেজ হেল্পার রয়েছে। এর সাহায্যে ফাইল এক্সটেনশন সিকিউরিটি চেক, রেনাম করা, এবং ফাইলের আকার ভ্যালিডেট করে প্রজেক্টের public/uploads বা storage ডিরেক্টরিগুলোতে সহজে সেভ করা যায়।" if current_lang == 'bn' else "The core/storage.py library abstracts disk writes. It performs file extension verification, size validations, and unique renaming before storing uploads inside the public/uploads/ directories." }}
+                </p>
+            </div>
+
+            <!-- Q14 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "১৪. ডাটাবেস সিডার ও ফ্যাক্টরির ব্যবহারিক প্রয়োজনীয়তা কী?" if current_lang == 'bn' else "14. Why are Database Seeders and Factories useful?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "অ্যাপ্লিকেশন ডেভেলপমেন্টের শুরুর দিকে ডাটাবেজে টেস্ট বা ডামি ডাটার প্রয়োজন হয়। সিডার এবং ফ্যাক্টরি স্ক্রিপ্টের সাহায্যে লুপ চালিয়ে সেকেন্ডের মধ্যে হাজার হাজার ডামি ব্যবহারকারী, পণ্য বা ক্যাটাগরি ডাটাবেজে যুক্ত করে টেস্টিং করা সম্ভব।" if current_lang == 'bn' else "Factories and Seeders allow populating mock records for test runs. Using loops, developers can generate thousands of users or products dynamically within seconds in local and testing environments." }}
+                </p>
+            </div>
+
+            <!-- Q15 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "১৫. FastAPI এর রাউট কীভাবে আলাদা করে এপিআই হিসেবে ম্যাপ করা হয়েছে?" if current_lang == 'bn' else "15. How are FastAPI and PyFlow routes isolated?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "PyFlow এ ASGI-to-WSGI মিডলওয়্যার ব্রিজ রয়েছে। এর ফলে ইউজার যখন ব্রাউজারে /api দিয়ে কোনো রিকোয়েস্ট করেন, তখন গেটওয়ে ব্রিজের মাধ্যমে রিকোয়েস্টটি সরাসরি FastAPI এ চলে যায় এবং মূল এমভিসি রাউটের সাথে কোনো সংঘর্ষ ঘটে না।" if current_lang == 'bn' else "PyFlow uses a custom ASGI-to-WSGI gateway bridge. Requests under the /api/* paths bypass the WSGI core router and map directly to FastAPI endpoints for high-performance async processing." }}
+                </p>
+            </div>
+
+            <!-- Q16 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "১৬. প্রোডাকশনে ডেবাকবার বা ডিবাগ মোড বন্ধ করার নিয়ম কী?" if current_lang == 'bn' else "16. How do I disable debugging output for production?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "অ্যাপ্লিকেশন প্রোডাকশন বা সার্ভারে রিলিজ করার আগে আপনার .env ফাইলে APP_DEBUG=false করে দিন। এর ফলে কোড এরর হলে ব্রাউজারে বিস্তারিত ট্রেসব্যাক হাইড হয়ে যাবে এবং নিচের ডেভেলপার ডেবাকবার বা ফুটবার ডিবাগ প্যানেলটি স্বয়ংক্রিয়ভাবে মুছে যাবে।" if current_lang == 'bn' else "Before pushing to production, set APP_DEBUG=false inside .env. This hides execution traceback screens from end users and automatically turns off the debug footer bar in your views." }}
+                </p>
+            </div>
+
+            <!-- Q17 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "১৭. কাস্টম মিডলওয়্যার কীভাবে যুক্ত করব?" if current_lang == 'bn' else "17. How do I add custom middleware to routes?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "কাস্টম মিডলওয়্যার ক্লাস তৈরি করে core/middleware.py ফাইলে রেজিস্টার করতে হবে। এরপর config/routes.py ফাইলে রাউট ডিক্লারেশনের সময় middleware প্যারমিটারে রেজিস্টার করা ক্লাসের নাম পাস করলেই তা কার্যকর হবে।" if current_lang == 'bn' else "Create your middleware class inheriting Middleware, and register it inside core/middleware.py. Apply it to routes in config/routes.py by passing the middleware keyword inside route setups." }}
+                </p>
+            </div>
+
+            <!-- Q18 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "১৮. সিডিউলার বা ক্রন টাস্ক রান করানোর সঠিক পদ্ধতি কী?" if current_lang == 'bn' else "18. What is the process to run cron tasks via Scheduler?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "প্রথমে app/scheduler.py ফাইলে Scheduler.call() ব্যবহার করে আপনার টাস্ক রেজিস্টার করুন। এরপর লিনাক্স বা সার্ভারের ক্রনজবে প্রতি মিনিটে python scheduler_runner.py কমান্ডটি কল করার নিয়ম সেট করে দিলেই সিডিউলার স্বয়ংক্রিয়ভাবে টাস্ক চালাবে।" if current_lang == 'bn' else "Register tasks inside app/scheduler.py using Scheduler.call(). Run the daemon using python scheduler_runner.py or bind it to your system's crontab config to loop every minute." }}
+                </p>
+            </div>
+
+            <!-- Q19 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "১৯. কাস্টম SQL কুয়েরিতে ইনজেকশন ঠেকানোর মূল লজিক কী?" if current_lang == 'bn' else "19. How does PyFlow prevent SQL injection in raw queries?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "PyFlow-তে কোনো ভ্যালু সরাসরি SQL স্ট্রিংয়ের সাথে যুক্ত করতে দেয়া হয় না। placeholders (?) এবং প্যারামিটারাইজড কুয়েরি বাইন্ডিং ট্যাপল আকারে কানেকশন ড্রাইভারের execute() মেথডে পাঠানো হয়, যা ডাটাবেজ লেভেলে ইনজেকশন স্ক্রিপ্টিং ফিল্টার করে ফেলে।" if current_lang == 'bn' else "PyFlow wraps prepared statements. Parameters must be passed as a separate tuple to Database.execute() using placeholders, which prevents raw SQL string concatenations." }}
+                </p>
+            </div>
+
+            <!-- Q20 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "২০. ইউনিট টেস্ট ও টেস্টিং লাইব্রেরির কভারেজ বাড়ানোর নিয়ম কী?" if current_lang == 'bn' else "20. How do I run tests and increase coverage metrics?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "টেস্ট রান করতে python -m unittest discover -s tests কমান্ডটি ব্যবহার করুন। নতুন কোনো ফিচার যোগ করার সময় tests/ ফোল্ডারে একটি নির্দিষ্ট test_*.py ফাইল লিখে ফিচার ক্লাসের মেথডগুলোর পজিティブ ও নেগেটিভ রেসপন্স যাচাই করার মাধ্যমে টেস্ট কভারেজ বাড়ানো যায়।" if current_lang == 'bn' else "Execute python -m unittest discover -s tests to run unit tests. Write assertions inside tests/test_*.py to verify both valid inputs and exception cases of your new modules." }}
+                </p>
+            </div>
+
+            <!-- Q21 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "২১. JWT এবং API Key কীভাবে ডুয়াল মোডে কাজ করে?" if current_lang == 'bn' else "21. How do JWT and API Key dual-mode authentication work?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "FastAPI এন্ডপয়েন্টগুলো ডুয়াল অথেন্টিকেশন সমর্থন করে। কাস্টমার অ্যাপ থেকে রিকোয়েস্ট করার জন্য Bearer JWT টোকেন ব্যবহার করা যাবে, অথবা থার্ড-পার্টি সফটওয়্যারের সাথে বিটুবি কানেকশনের জন্য হেডার হিসেবে X-API-Key দিয়ে প্রজেক্টে ডাটা পাঠানো যাবে।" if current_lang == 'bn' else "FastAPI endpoints accept two auth flows: JWT Bearer Tokens for frontend client sessions and secure SHA-256 hashed API Keys (X-API-Key header) for machine-to-machine integrations." }}
+                </p>
+            </div>
+
+            <!-- Q22 -->
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #f1f2f6; padding-bottom: 20px;">
+                <h3 style="font-size: 17.5px; font-weight: 700; color: #2f3542; margin-bottom: 8px;">
+                    {{ "২২. প্রজেক্টটি লিনাক্স ভিপিএস (Linux VPS) বা ক্লাউডে হোস্ট করার গাইডলাইন কী?" if current_lang == 'bn' else "22. What are the deployment guidelines for a Linux VPS or Cloud?" }}
+                </h3>
+                <p style="font-size: 14.5px; color: #57606f; line-height: 1.6; margin: 0;">
+                    {{ "প্রোডাকশন লিনাক্স ভিপিএস-এ প্রজেক্ট হোস্ট করতে Uvicorn বা Gunicorn (Uvicorn workers সহ) প্রসেস ম্যানেজার হিসেবে ব্যবহার করবেন। একে Nginx এর রিভার্স প্রক্সি দিয়ে বাইন্ড করতে হবে যাতে SSL সার্টিফিকেট এবং স্ট্যাটিক ফাইল হ্যান্ডেল করা সহজ হয়।" if current_lang == 'bn' else "Deploy on Linux using Gunicorn with Uvicorn workers behind an Nginx reverse proxy. Nginx handles static file assets and SSL certificates, while Gunicorn acts as the ASGI process manager." }}
+                </p>
+            </div>
         </section>
 
     </main>
