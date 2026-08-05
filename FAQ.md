@@ -74,6 +74,15 @@ Welcome to the PyFlow FAQ page! This document covers common technical, architect
 ### Q22: What are the deployment guidelines for a Linux VPS or Cloud?
 **Answer:** Deploy on Linux using Gunicorn with Uvicorn workers behind an Nginx reverse proxy. Nginx handles static file assets and SSL certificates, while Gunicorn acts as the ASGI process manager.
 
+### Q23: What are the advantages of using AI & Machine Learning in PyFlow?
+**Answer:** Since PyFlow runs on Python, you can natively import premium AI modules like Scikit-learn, TensorFlow, or PyTorch inside controllers. This enables: (1) Sales forecasting in ERPs, (2) Disease risk scoring (diabetes/hypertension) in hospital tracking portals, and (3) Seamless Google Gemini API integrations for intelligent chatbots and automated medical summary generators.
+
+### Q24: What analytics and data science tasks can be performed in PyFlow?
+**Answer:** Leveraging Pandas, NumPy, and visualization modules, developers can process millions of database rows effortlessly. Use cases include calculating customer cohort retention, inventory Pareto classifications (ABC), patient demographic reports, and rendering live interactive dashboards using Chart.js or automatic PDF reports.
+
+### Q25: How do Web Scraping & Automation benefit businesses in PyFlow?
+**Answer:** Using BeautifulSoup and Selenium/Playwright, PyFlow can automate online operations. This includes: (1) Scraping competitor platforms to dynamically match prices, (2) Auto-building catalog tables by extracting details from suppliers, and (3) Scheduling automatic weekly email dispatches to stakeholders via scheduler_runner.py.
+
 ---
 
 ## বাংলা সংস্করণ (Bengali Version)
@@ -143,3 +152,12 @@ Welcome to the PyFlow FAQ page! This document covers common technical, architect
 
 ### ২২. প্রজেক্টটি লিনাক্স ভিপিএস (Linux VPS) বা ক্লাউডে হোস্ট করার গাইডলাইন কী?
 **উত্তর:** প্রোডাকশন লিনাক্স ভিপিএস-এ প্রজেক্ট হোস্ট করতে Uvicorn বা Gunicorn (Uvicorn workers সহ) প্রসেস ম্যানেজার হিসেবে ব্যবহার করবেন। একে Nginx এর রিভার্স প্রক্সি দিয়ে বাইন্ড করতে হবে যাতে SSL সার্টিফিকেট এবং স্ট্যাটিক ফাইল হ্যান্ডেল করা সহজ হয়।
+
+### ২৩. PyFlow-তে কৃত্রিম বুদ্ধিমত্তা ও মেশিন লার্নিং (AI & ML) ব্যবহারের কী কী সুবিধা রয়েছে?
+**উত্তর:** যেহেতু PyFlow পাইথনে তৈরি, তাই Scikit-learn, TensorFlow বা PyTorch এর মতো বিশ্বের সব সেরা এআই লাইব্রেরি সরাসরি এর কন্ট্রোলারে প্লাগইন করা সম্ভব। এর সাহায্যে ই-কমার্স ইআরপিতে চাহিদার পূর্বাভাস (Demand Forecasting), হাসপাতালে ডায়াবেটিস ও হাইপারটেনশন রোগীদের ঝুকি পরিমাপ (Stroke Risk Prediction), এবং কাস্টম সেলস চ্যাটবট বা এআই সামারি তৈরিতে সরাসরি গুগল জেমিনি (Gemini API) ইন্টিগ্রেশন করা খুবই সহজ।
+
+### ২৪. পাইথনের ডাটা সায়েন্স ও অ্যানালিটিক্স দিয়ে আমাদের অ্যাপে কী কী কাজ করা যাবে?
+**উত্তর:** Pandas, NumPy, Matplotlib এবং Seaborn ব্যবহার করে কোটি ডাটা দ্রুত প্রসেস ও ফিল্টার করা যাবে। যেমন—ই-কমার্সে কাস্টমার রিটেনশন (Cohort Analysis), ইনভেন্টরি পণ্য সুবিন্যস্ত করা (ABC Analysis), রোগীর ডেমোগ্রাফিক অ্যানালাইসিস এবং লাইভ এপিআই-র সাহায্যে Chart.js বা ApexCharts-এ রিয়েল-টাইম ইন্টারঅ্যাক্টিভ ড্যাশবোর্ড ও পিডিএফ রিপোর্ট জেনারেশন করা যাবে।
+
+### ২৫. ওয়েব স্ক্র্যাপিং ও অটোমেশন (Web Scraping & Automation) আমাদের কী উপকারে আসবে?
+**উত্তর:** BeautifulSoup, Requests এবং Playwright/Selenium দিয়ে আমাদের প্রজেক্ট রোবটের মতো কাজ করতে পারবে। যেমন—প্রতিযোগীদের ওয়েবসাইট থেকে পণ্যের দাম স্ক্র্যাপ করে নিজের সাইটে ডাইনামিক প্রাইসিং সেট করা, সাপ্লায়ার ওয়েবসাইট থেকে তথ্য নিয়ে ক্যাটাগরি সাজানো, এবং টাস্ক সিডিউলার দিয়ে প্রতি সপ্তাহে ডিরেক্টর বা ডোনারদের কাছে অটো-মেইল পাঠানো।
