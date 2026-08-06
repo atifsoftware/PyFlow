@@ -76,6 +76,8 @@ class UserController(Controller):
 
         name = Sanitize.string(self.request.input("name"))
         role = self.request.input("role")
+        if role not in ("admin", "user"):
+            return self.back_with_errors({"role": ["অবৈধ রোল সিলেক্ট করা হয়েছে"]})
         user.update({"name": name, "role": role})
         
         from app.models.activity_log_model import ActivityLog

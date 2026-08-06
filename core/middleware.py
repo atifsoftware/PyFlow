@@ -82,6 +82,14 @@ def api_auth_middleware(request, session):
     return None
 
 
+def api_admin_middleware(request, session):
+    """API Admin Verification Middleware - api_auth_middleware-এর পরে ব্যবহার করুন"""
+    role = getattr(request, "user_role", "user")
+    if role != "admin":
+        return Response.json({"error": "Forbidden - admin role required"}, status=403)
+    return None
+
+
 def permission_middleware(permission_name: str):
     """
     RBAC Permission Middleware — নির্দিষ্ট permission আছে কিনা চেক করে।

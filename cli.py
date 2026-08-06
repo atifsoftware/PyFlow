@@ -280,6 +280,22 @@ class {controller_name}(Controller):
             db_msg = str(e)
         self._print_check("Database Connection", db_msg, db_connected)
         
+        # 5. Security Configuration Check
+        try:
+            from config.config import get_config
+            cfg = get_config()
+            app_debug = str(cfg.get("APP_DEBUG", "false")).lower() in ("true", "1")
+            session_secure = str(cfg.get("SESSION_SECURE_COOKIE", "false")).lower() in ("true", "1")
+            
+            sec_ok = True
+            sec_msg = "Secure Configuration"
+            if not app_debug and not session_secure:
+                sec_ok = False
+                sec_msg = "Warning: APP_DEBUG is false, but SESSION_SECURE_COOKIE is false (Should be true in production!)"
+            self._print_check("Session Cookie Security Check", sec_msg, sec_ok)
+        except Exception as e:
+            self._print_check("Session Cookie Security Check", f"Failed checking: {e}", False)
+            
         pause()
 
     def clear_logs(self):

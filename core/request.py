@@ -197,9 +197,18 @@ class Request:
         return default
 
     def ip(self) -> str:
-        forwarded = self.environ.get("HTTP_X_FORWARDED_FOR")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
+        # X-Forwarded-For শুধুমাত্র তখনই ব্যবহার করব যখন TRUST_PROXY=true কনফিগার করা থাকবে
+        from config.config import get_config
+        try:
+            config = get_config()
+            trust_proxy = str(config.get("TRUST_PROXY", "false")).lower() in ("true", "1")
+        except Exception:
+            trust_proxy = False
+
+        if trust_proxy:
+            forwarded = self.environ.get("HTTP_X_FORWARDED_FOR")
+            if forwarded:
+                return forwarded.split(",")[0].strip()
         return self.environ.get("REMOTE_ADDR", "0.0.0.0")
 
     def is_json(self) -> bool:

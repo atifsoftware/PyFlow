@@ -6,7 +6,7 @@ config/routes.py
 
 from core.router import Router
 from core.controller import action
-from core.middleware import auth_middleware, guest_middleware, csrf_middleware, rate_limit_middleware
+from core.middleware import auth_middleware, guest_middleware, csrf_middleware, rate_limit_middleware, admin_middleware
 
 from app.controllers.home_controller import HomeController
 from app.controllers.auth_controller import AuthController
@@ -41,7 +41,15 @@ def build_router() -> Router:
         router.get("/logout", action(AuthController, "logout"), name="logout")
         router.get("/dashboard", action(AuthController, "dashboard"), name="dashboard")
 
-        # ইউজার CRUD - লগইন করা থাকলে তবেই অ্যাক্সেস করা যাবে
+        # API কী ম্যানেজমেন্ট
+        from app.controllers.api_key_controller import ApiKeyController
+        router.get("/api-keys", action(ApiKeyController, "index"), name="api_keys")
+        router.post("/api-keys", action(ApiKeyController, "store"), name="api_keys.store")
+        router.delete("/api-keys/{id:int}", action(ApiKeyController, "destroy"), name="api_keys.destroy")
+
+    # Admin Protected web routes (MVC)
+    with router.group(prefix="", middleware=[auth_middleware, admin_middleware]):
+        # ইউজার CRUD - লগইন করা থাকলে এবং অ্যাডমিন হলেই অ্যাক্সেস করা যাবে
         router.resource("/users", UserController, name="users")
 
         # সিস্টেম সেটিংস
@@ -52,12 +60,6 @@ def build_router() -> Router:
         # অ্যাক্টিভিটি লগ
         from app.controllers.activity_log_controller import ActivityLogController
         router.get("/logs", action(ActivityLogController, "index"), name="logs")
-
-        # API কী ম্যানেজমেন্ট
-        from app.controllers.api_key_controller import ApiKeyController
-        router.get("/api-keys", action(ApiKeyController, "index"), name="api_keys")
-        router.post("/api-keys", action(ApiKeyController, "store"), name="api_keys.store")
-        router.delete("/api-keys/{id:int}", action(ApiKeyController, "destroy"), name="api_keys.destroy")
 
         # ডাটাবেস সিঙ্ক ও কম্পারিজন টুল
         from app.controllers.db_sync_controller import DBSyncController
@@ -77,12 +79,16 @@ def build_router() -> Router:
 
     # ── API v1 — Protected (JWT) ───────────────────────────────────────────
 
-    from core.middleware import api_auth_middleware
+    from core.middleware import api_auth_middleware, api_admin_middleware
     from core.controller import action as act
     from app.api.v1.user_controller import UserApiV1Controller
 
+    # সাধারণ ইউজার এক্সেস করতে পারবেন এমন এপিআই রাউট
     with router.group(prefix="/api/v1", middleware=[api_auth_middleware]):
         router.get("/profile",      action(AuthController, "api_profile"),      name="api.v1.profile")
+
+    # অ্যাডমিন ব্যতীত অন্য কেউ এক্সেস করতে পারবেন না এমন এপিআই রাউট
+    with router.group(prefix="/api/v1", middleware=[api_auth_middleware, api_admin_middleware]):
         router.get("/users",        act(UserApiV1Controller, "index"),           name="api.v1.users.index")
         router.get("/users/{id:int}", act(UserApiV1Controller, "show"),          name="api.v1.users.show")
         router.post("/users",       act(UserApiV1Controller, "store"),           name="api.v1.users.store")
