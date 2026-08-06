@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="shohaghinfo-pyflow",
-    version="3.0.4",
+    version="3.0.5",
     author="shohaghinfo",
     author_email="shohaghinfo@gmail.com",
     description="A lightweight MVC framework for Python with fluent query builder, routing and active record ORM.",
@@ -11,6 +11,11 @@ setup(
     url="https://github.com/atifsoftware/PyFlow",
     packages=find_packages(),
     include_package_data=True,
+    entry_points={
+        "console_scripts": [
+            "pyflow-init=core.cli_init:main",
+        ],
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
