@@ -81,12 +81,12 @@ class Paginator:
         # Previous page button
         if self.has_previous():
             html_parts.append(
-                f'<a href="{self.previous_page_url()}" class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; text-decoration: none;">'
+                f'<a href="{self.previous_page_url()}" class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; text-decoration: none; border: 1.5px solid var(--bd, #ddd); color: var(--tx-main, #333); display: inline-flex; align-items: center; gap: 8px; background: var(--tb-btn-bg, transparent);">'
                 f'<i class="fas fa-chevron-left" style="font-size: 10px;"></i> পূর্ববর্তী</a>'
             )
         else:
             html_parts.append(
-                f'<span class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--bd); background: var(--tb-btn-bg); color: var(--tx-3);">'
+                f'<span class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--bd, #ddd); background: var(--tb-btn-bg, transparent); color: var(--tx-3, #999);">'
                 f'<i class="fas fa-chevron-left" style="font-size: 10px;"></i> পূর্ববর্তী</span>'
             )
 
@@ -96,37 +96,37 @@ class Paginator:
 
         if start_page > 1:
             html_parts.append(
-                f'<a href="{self.url(1)}" class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; text-decoration: none;">1</a>'
+                f'<a href="{self.url(1)}" class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; text-decoration: none; border: 1.5px solid var(--bd, #ddd); color: var(--tx-main, #333); background: var(--tb-btn-bg, transparent);">1</a>'
             )
             if start_page > 2:
-                html_parts.append('<span style="color: var(--tx-3); padding: 0 4px;">...</span>')
+                html_parts.append('<span style="color: var(--tx-3, #999); padding: 0 4px;">...</span>')
 
         for p in range(start_page, end_page + 1):
             if p == self.current_page:
                 html_parts.append(
-                    f'<span class="pm-btn pm-btn-primary" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; cursor: default; color: white;">{p}</span>'
+                    f'<span class="pm-btn pm-btn-primary" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; cursor: default; background: var(--pm-btn-primary-bg, #5a32a8); color: white; border: 1.5px solid var(--pm-btn-primary-bg, #5a32a8);">{p}</span>'
                 )
             else:
                 html_parts.append(
-                    f'<a href="{self.url(p)}" class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; text-decoration: none;">{p}</a>'
+                    f'<a href="{self.url(p)}" class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; text-decoration: none; border: 1.5px solid var(--bd, #ddd); color: var(--tx-main, #333); background: var(--tb-btn-bg, transparent);">{p}</a>'
                 )
 
         if end_page < self.last_page:
             if end_page < self.last_page - 1:
-                html_parts.append('<span style="color: var(--tx-3); padding: 0 4px;">...</span>')
+                html_parts.append('<span style="color: var(--tx-3, #999); padding: 0 4px;">...</span>')
             html_parts.append(
-                f'<a href="{self.url(self.last_page)}" class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; text-decoration: none;">{self.last_page}</a>'
+                f'<a href="{self.url(self.last_page)}" class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; text-decoration: none; border: 1.5px solid var(--bd, #ddd); color: var(--tx-main, #333); background: var(--tb-btn-bg, transparent);">{self.last_page}</a>'
             )
 
         # Next page button
         if self.has_more():
             html_parts.append(
-                f'<a href="{self.next_page_url()}" class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; text-decoration: none;">'
+                f'<a href="{self.next_page_url()}" class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; text-decoration: none; border: 1.5px solid var(--bd, #ddd); color: var(--tx-main, #333); display: inline-flex; align-items: center; gap: 8px; background: var(--tb-btn-bg, transparent);">'
                 f'পরবর্তী <i class="fas fa-chevron-right" style="font-size: 10px;"></i></a>'
             )
         else:
             html_parts.append(
-                f'<span class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--bd); background: var(--tb-btn-bg); color: var(--tx-3);">'
+                f'<span class="pm-btn pm-btn-outline" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--bd, #ddd); background: var(--tb-btn-bg, transparent); color: var(--tx-3, #999);">'
                 f'পরবর্তী <i class="fas fa-chevron-right" style="font-size: 10px;"></i></span>'
             )
 

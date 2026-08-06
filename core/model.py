@@ -99,7 +99,7 @@ class Model:
             cls.on_creating(filtered)
         Event.fire(f"{cls.table}.creating", filtered)
         new_id = cls.query().insert(filtered)
-        instance = cls.find(new_id)
+        instance = cls({**filtered, cls.primary_key: new_id})
         if hasattr(cls, "on_created"):
             cls.on_created(instance)
         Event.fire(f"{cls.table}.created", instance)
@@ -289,12 +289,17 @@ class _EagerQueryProxy:
 
         from core.database import Database
         ph = Database.placeholder()
-        placeholders = ", ".join([ph] * len(pk_values))
         safe_fk = Database.quote_identifier(fk)
         safe_table = Database.quote_identifier(related_cls.table)
-        sql = f"SELECT * FROM {safe_table} WHERE {safe_fk} IN ({placeholders})"
-        cursor = Database.execute(sql, tuple(pk_values))
-        related_rows = cursor.fetchall()
+
+        related_rows = []
+        chunk_size = 500
+        for i in range(0, len(pk_values), chunk_size):
+            chunk = pk_values[i:i+chunk_size]
+            placeholders = ", ".join([ph] * len(chunk))
+            sql = f"SELECT * FROM {safe_table} WHERE {safe_fk} IN ({placeholders})"
+            cursor = Database.execute(sql, tuple(chunk))
+            related_rows.extend(cursor.fetchall())
 
         grouped: dict = {}
         for row in related_rows:
@@ -323,12 +328,17 @@ class _EagerQueryProxy:
 
         from core.database import Database
         ph = Database.placeholder()
-        placeholders = ", ".join([ph] * len(pk_values))
         safe_fk = Database.quote_identifier(fk)
         safe_table = Database.quote_identifier(related_cls.table)
-        sql = f"SELECT * FROM {safe_table} WHERE {safe_fk} IN ({placeholders})"
-        cursor = Database.execute(sql, tuple(pk_values))
-        related_rows = cursor.fetchall()
+
+        related_rows = []
+        chunk_size = 500
+        for i in range(0, len(pk_values), chunk_size):
+            chunk = pk_values[i:i+chunk_size]
+            placeholders = ", ".join([ph] * len(chunk))
+            sql = f"SELECT * FROM {safe_table} WHERE {safe_fk} IN ({placeholders})"
+            cursor = Database.execute(sql, tuple(chunk))
+            related_rows.extend(cursor.fetchall())
 
         grouped: dict = {}
         for row in related_rows:
@@ -358,12 +368,17 @@ class _EagerQueryProxy:
 
         from core.database import Database
         ph = Database.placeholder()
-        placeholders = ", ".join([ph] * len(fk_values))
         safe_ok = Database.quote_identifier(owner_key)
         safe_table = Database.quote_identifier(related_cls.table)
-        sql = f"SELECT * FROM {safe_table} WHERE {safe_ok} IN ({placeholders})"
-        cursor = Database.execute(sql, tuple(fk_values))
-        related_rows = cursor.fetchall()
+
+        related_rows = []
+        chunk_size = 500
+        for i in range(0, len(fk_values), chunk_size):
+            chunk = fk_values[i:i+chunk_size]
+            placeholders = ", ".join([ph] * len(chunk))
+            sql = f"SELECT * FROM {safe_table} WHERE {safe_ok} IN ({placeholders})"
+            cursor = Database.execute(sql, tuple(chunk))
+            related_rows.extend(cursor.fetchall())
 
         keyed: dict = {}
         for row in related_rows:

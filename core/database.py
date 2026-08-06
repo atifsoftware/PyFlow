@@ -425,7 +425,15 @@ class Database:
             cur.execute(sql, params)
             elapsed = (time.monotonic() - start) * 1000
             Profiler.log_query(sql, params, elapsed)
-            if elapsed > 200:
+            
+            slow_threshold = 200
+            if cls._config:
+                try:
+                    slow_threshold = int(cls._config.get("SLOW_QUERY_MS", 200))
+                except Exception:
+                    pass
+
+            if elapsed > slow_threshold:
                 logger.warning("Slow query (%.0fms): %s", elapsed, sql[:120])
             return cur
         except Exception as exc:

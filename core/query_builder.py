@@ -336,8 +336,22 @@ class QueryBuilder:
         if not self._wheres:
             raise QueryError(
                 "নিরাপত্তার কারণে WHERE ছাড়া UPDATE চালানো নিষেধ। "
-                "সব রো আপডেট করতে চাইলে .where('1','=','1') ব্যবহার করুন।"
+                "সব রো আপডেট করতে চাইলে .update_all() ব্যবহার করুন।"
             )
+        params = tuple(data.values()) + tuple(self._params)
+        cursor = Database.execute(sql, params)
+        if not Database.in_transaction():
+            Database.commit()
+        return cursor.rowcount
+
+    def update_all(self, data: dict) -> int:
+        """সব রো আপডেট করে (সতর্কতা: বিপজ্জনক হতে পারে!)"""
+        columns = [_safe_identifier(c) for c in data.keys()]
+        ph = Database.placeholder()
+        set_clause = ", ".join([f"{c} = {ph}" for c in columns])
+        sql = f"UPDATE {self.table} SET {set_clause}"
+        if self._wheres:
+            sql += self._build_where_clause()
         params = tuple(data.values()) + tuple(self._params)
         cursor = Database.execute(sql, params)
         if not Database.in_transaction():
@@ -350,8 +364,18 @@ class QueryBuilder:
         if not self._wheres:
             raise QueryError(
                 "নিরাপত্তার কারণে WHERE ছাড়া DELETE চালানো নিষেধ। "
-                "সব রো ডিলিট করতে চাইলে .where('1','=','1') ব্যবহার করুন।"
+                "সব রো ডিলিট করতে চাইলে .delete_all() ব্যবহার করুন।"
             )
+        cursor = Database.execute(sql, tuple(self._params))
+        if not Database.in_transaction():
+            Database.commit()
+        return cursor.rowcount
+
+    def delete_all(self) -> int:
+        """সব রো ডিলিট করে (সতর্কতা: বিপজ্জনক হতে পারে!)"""
+        sql = f"DELETE FROM {self.table}"
+        if self._wheres:
+            sql += self._build_where_clause()
         cursor = Database.execute(sql, tuple(self._params))
         if not Database.in_transaction():
             Database.commit()

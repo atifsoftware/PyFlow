@@ -165,6 +165,20 @@ class QueryBuilderTest(PyFlowTestCase):
             filtered = qb.get()
             self.assertLessEqual(len(filtered), 2)
 
+    def test_update_all_modifies_multiple_rows(self):
+        self._seed_users(3)
+        rows_updated = QueryBuilder("users").update_all({"role": "guest"})
+        self.assertGreaterEqual(rows_updated, 3)
+        results = QueryBuilder("users").where("role", "guest").get()
+        self.assertGreaterEqual(len(results), 3)
+
+    def test_delete_all_removes_multiple_rows(self):
+        self._seed_users(3)
+        rows_deleted = QueryBuilder("users").delete_all()
+        self.assertGreaterEqual(rows_deleted, 3)
+        count = QueryBuilder("users").count()
+        self.assertEqual(count, 0)
+
 
 if __name__ == "__main__":
     import unittest
