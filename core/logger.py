@@ -33,17 +33,46 @@ class Logger:
         DEBUG: 7
     }
 
+    _initialized = False
+    _app_logger = None
+    _err_logger = None
     _log_file = 'storage/logs/app.log'
     _error_log_file = 'storage/logs/error.log'
 
     @classmethod
     def init(cls):
+        if cls._initialized:
+            return
+        
+        import logging
+        from logging.handlers import RotatingFileHandler
+
         config = get_config()
-        # Use config paths or defaults
         cls._log_file = config.get("LOG_FILE", "storage/logs/app.log")
         log_dir = os.path.dirname(os.path.abspath(cls._log_file))
         os.makedirs(log_dir, exist_ok=True)
         cls._error_log_file = os.path.join(log_dir, "error.log")
+
+        max_bytes = 10 * 1024 * 1024  # 10MB
+        backup_count = 5
+
+        cls._app_logger = logging.getLogger("pyflow.app_file")
+        cls._app_logger.setLevel(logging.DEBUG)
+        cls._app_logger.propagate = False
+        if not cls._app_logger.handlers:
+            handler = RotatingFileHandler(cls._log_file, maxBytes=max_bytes, backupCount=backup_count, encoding="utf-8")
+            handler.setFormatter(logging.Formatter("%(message)s"))
+            cls._app_logger.addHandler(handler)
+
+        cls._err_logger = logging.getLogger("pyflow.error_file")
+        cls._err_logger.setLevel(logging.WARNING)
+        cls._err_logger.propagate = False
+        if not cls._err_logger.handlers:
+            handler = RotatingFileHandler(cls._error_log_file, maxBytes=max_bytes, backupCount=backup_count, encoding="utf-8")
+            handler.setFormatter(logging.Formatter("%(message)s"))
+            cls._err_logger.addHandler(handler)
+
+        cls._initialized = True
 
     @classmethod
     def emergency(cls, message, context=None): cls.log(cls.EMERGENCY, message, context)
@@ -86,14 +115,13 @@ class Logger:
                 
         context_str = f" | Context: {json.dumps(context, ensure_ascii=False)}" if context else ""
         
-        log_entry = f"[{timestamp}] {level.upper()} | IP: {ip} | User: {user_id} | {request_uri} | {message}{context_str}\n"
-        
-        # Write to log file
-        log_path = cls._error_log_file if level in (cls.EMERGENCY, cls.ALERT, cls.CRITICAL, cls.ERROR) else cls._log_file
+        log_entry = f"[{timestamp}] {level.upper()} | IP: {ip} | User: {user_id} | {request_uri} | {message}{context_str}"
         
         try:
-            with open(log_path, "a", encoding="utf-8") as f:
-                f.write(log_entry)
+            if level in (cls.EMERGENCY, cls.ALERT, cls.CRITICAL, cls.ERROR):
+                cls._err_logger.warning(log_entry)
+            else:
+                cls._app_logger.info(log_entry)
         except Exception as e:
             print(f"Logging failed: {e}")
             

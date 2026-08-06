@@ -103,34 +103,42 @@ class Application:
             if override and override.upper() in ("PUT", "PATCH", "DELETE"):
                 request.method = override.upper()
 
+        response = None
         try:
-            route, params = self.router.resolve(request.method, request.path)
-            if route is None:
-                response = self._render_error_page(404, request_path=request.path)
-            else:
-                request.params = params or {}
-                response = self._run_route(route, request, session)
-        except MethodNotAllowedError:
-            response = Response("405 Method Not Allowed", status=405)
+            try:
+                route, params = self.router.resolve(request.method, request.path)
+                if route is None:
+                    response = self._render_error_page(404, request_path=request.path)
+                else:
+                    request.params = params or {}
+                    response = self._run_route(route, request, session)
+            except MethodNotAllowedError:
+                response = Response("405 Method Not Allowed", status=405)
+        except Exception as exc:
+            response = self._handle_exception(exc)
+        finally:
+            if hasattr(session, "save"):
+                session.save()
 
-        # সেশন কুকি প্রতিটা রেসপন্সেই রিফ্রেশ করে দেওয়া হয় (expiry বাড়ানোর জন্য),
-        # redirect হলেও এটা দরকার তাই কোনো শর্ত ছাড়াই সেট করা হচ্ছে
-        response.set_cookie(
-            Session.COOKIE_NAME,
-            session.session_id,
-            max_age=Session.LIFETIME_SECONDS,
-            http_only=True,
-            secure=self.config.get("SESSION_SECURE_COOKIE", False),
-            same_site="Lax",
-        )
+        if response:
+            # সেশন কুকি প্রতিটা রেসপন্সেই রিফ্রেশ করে দেওয়া হয় (expiry বাধার জন্য),
+            # redirect বা 500 error হলেও এটা দরকার তাই সেট করা হচ্ছে
+            response.set_cookie(
+                Session.COOKIE_NAME,
+                session.session_id,
+                max_age=Session.LIFETIME_SECONDS,
+                http_only=True,
+                secure=self.config.get("SESSION_SECURE_COOKIE", False),
+                same_site="Lax",
+            )
 
-        # ডিবাগ বার ইনজেক্ট করা
-        if self.debug and response.headers.get("Content-Type", "").startswith("text/html"):
-            response = self._inject_debug_bar(response, request, session)
+            # ডিবাগ বার ইনজেক্ট করা
+            if self.debug and response.headers.get("Content-Type", "").startswith("text/html"):
+                response = self._inject_debug_bar(response, request, session)
 
-        # Gzip compression — client Accept-Encoding: gzip চাইলে compress করা হবে
-        if getattr(request, "_gzip_requested", False):
-            response = self._compress_response(response)
+            # Gzip compression — client Accept-Encoding: gzip চাইলে compress করা হবে
+            if getattr(request, "_gzip_requested", False):
+                response = self._compress_response(response)
 
         return response
 
@@ -168,7 +176,10 @@ class Application:
         except Exception:
             return response
 
-        if "</body>" not in html_text:
+        # Case insensitive match check
+        lower_html = html_text.lower()
+        idx = lower_html.rfind("</body>")
+        if idx == -1:
             return response
 
         prof_data = Profiler.get_data()
@@ -325,8 +336,8 @@ function switchPyFlowTab(tabName) {{
 }}
 </script>
 """
-        # HTML </body> ট্যাগের আগে ইনজেক্ট করা
-        html_text = html_text.replace("</body>", f"{debug_html}</body>")
+        # HTML </body> ট্যাগের আগে ইনজেক্ট করা (rfind দিয়ে করা হলো যাতে শুধুমাত্র শেষের </body> ম্যাচ করে)
+        html_text = html_text[:idx] + debug_html + html_text[idx:]
         return Response(html_text.encode("utf-8"), status=response.status_code, headers=response.headers)
 
     def _run_route(self, route, request, session) -> Response:

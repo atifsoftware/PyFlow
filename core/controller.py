@@ -23,6 +23,8 @@ def action(controller_cls, method_name: str):
 
 
 class Controller:
+    _translation_cache = {}
+
     def __init__(self, request, session, view_engine):
         self.request = request
         self.session = session
@@ -41,15 +43,25 @@ class Controller:
 
         import os
         import json
+        from config.config import get_config
+
+        config = get_config()
+        app_debug = str(config.get("APP_DEBUG", "false")).lower() in ("true", "1")
 
         translations = {}
         lang_file = os.path.join("app", "lang", f"{current_lang}.json")
-        if os.path.exists(lang_file):
-            try:
-                with open(lang_file, "r", encoding="utf-8") as f:
-                    translations = json.load(f)
-            except Exception:
-                translations = {}
+        
+        if not app_debug and current_lang in self._translation_cache:
+            translations = self._translation_cache[current_lang]
+        else:
+            if os.path.exists(lang_file):
+                try:
+                    with open(lang_file, "r", encoding="utf-8") as f:
+                        translations = json.load(f)
+                    if not app_debug:
+                        self._translation_cache[current_lang] = translations
+                except Exception:
+                    translations = {}
 
         def translate(key, default=""):
             return translations.get(key, default or key)
@@ -62,9 +74,7 @@ class Controller:
         data.setdefault("user_role", self.session.get("role"))
         data.setdefault("current_lang", current_lang)
         data.setdefault("__", translate)
-        from config.config import get_config
 
-        config = get_config()
         data.setdefault("app_name", config.get("APP_NAME", "PyFlow App"))
         data.setdefault("app_version", config.get("APP_VERSION", "v3.0.0"))
         data.setdefault("app_url", config.get("APP_URL", "http://localhost:8000"))
