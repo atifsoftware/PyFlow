@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="shohaghinfo-pyflow",
-    version="3.0.5",
+    version="3.0.6",
     author="shohaghinfo",
     author_email="shohaghinfo@gmail.com",
     description="A lightweight MVC framework for Python with fluent query builder, routing and active record ORM.",
