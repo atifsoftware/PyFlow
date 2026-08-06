@@ -22,6 +22,18 @@ class AuthController(Controller):
         if not self.verify_csrf():
             return self.back_with_errors({"_token": ["সেশন মেয়াদোত্তীর্ণ, আবার চেষ্টা করুন"]})
 
+        from config.config import get_config
+        cfg = get_config()
+        max_attempts = cfg.get("REGISTER_LIMIT_ATTEMPTS", 3)
+        window_seconds = cfg.get("REGISTER_LIMIT_SECONDS", 300)
+
+        ip_key = f"register:{self.request.ip()}"
+        if RateLimiter.too_many_attempts(ip_key, max_attempts=max_attempts, window_seconds=window_seconds):
+            return self.back_with_errors(
+                {"email": [f"অতিরিক্ত অ্যাকাউন্ট খোলার চেষ্টা সনাক্ত হয়েছে। দয়া করে {window_seconds // 60} মিনিট পর আবার চেষ্টা করুন।"]}
+            )
+        RateLimiter.hit(ip_key)
+
         errors = self.validate({
             "name": ["required", "max:100"],
             "email": ["required", "email"],
@@ -48,11 +60,17 @@ class AuthController(Controller):
         if not self.verify_csrf():
             return self.back_with_errors({"_token": ["সেশন মেয়াদোত্তীর্ণ, আবার চেষ্টা করুন"]})
 
+        from config.config import get_config
+        cfg = get_config()
+        max_attempts = cfg.get("LOGIN_LIMIT_ATTEMPTS", 5)
+        window_seconds = cfg.get("LOGIN_LIMIT_SECONDS", 300)
+
         ip_key = f"login:{self.request.ip()}"
-        if RateLimiter.too_many_attempts(ip_key, max_attempts=5, window_seconds=300):
+        if RateLimiter.too_many_attempts(ip_key, max_attempts=max_attempts, window_seconds=window_seconds):
             return self.back_with_errors(
-                {"email": ["অনেকবার ভুল চেষ্টা হয়েছে, ৫ মিনিট পর আবার চেষ্টা করুন"]}
+                {"email": [f"অনেকবার ভুল চেষ্টা হয়েছে, {window_seconds // 60} মিনিট পর আবার চেষ্টা করুন"]}
             )
+
 
         email = Sanitize.email(self.request.input("email"))
         password = self.request.input("password") or ""

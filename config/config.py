@@ -103,5 +103,12 @@ def get_config() -> dict:
 
         # Storage
         "STORAGE_ROOT": merged.get("STORAGE_ROOT", "public/static"),
+
+        # Rate Limiting Settings
+        "LOGIN_LIMIT_ATTEMPTS": int(merged.get("LOGIN_LIMIT_ATTEMPTS", "5")),
+        "LOGIN_LIMIT_SECONDS":  int(merged.get("LOGIN_LIMIT_SECONDS", "300")),
+        "REGISTER_LIMIT_ATTEMPTS": int(merged.get("REGISTER_LIMIT_ATTEMPTS", "3")),
+        "REGISTER_LIMIT_SECONDS":  int(merged.get("REGISTER_LIMIT_SECONDS", "300")),
     }
+
 
