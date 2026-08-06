@@ -7,6 +7,7 @@ def main():
     import app as app_mod
     import core as core_mod
     import config as config_mod
+    import public as public_mod
 
     target_dir = os.getcwd()
     
@@ -14,7 +15,8 @@ def main():
     modules = [
         (app_mod, "app"),
         (core_mod, "core"),
-        (config_mod, "config")
+        (config_mod, "config"),
+        (public_mod, "public")
     ]
     
     print("PyFlow project initializing...")
