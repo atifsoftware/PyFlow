@@ -18,10 +18,9 @@ Driver-aware quoting:
 import re
 from core.database import Database, QueryError
 
-# Identifier validation — backtick অথবা double-quote অথবা সাদা সব গ্রাহ্য
-_IDENTIFIER_RE = re.compile(
-    r'^[`"]?[a-zA-Z_][a-zA-Z0-9_]*[`"]?(\.[`"]?[a-zA-Z_][a-zA-Z0-9_]*[`"]?)?$'
-)
+# Compile identifier regexes at module level for optimal performance
+_RAW_BASE_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$')
+_ALIAS_RE = re.compile(r'^(?:as\s+)?[a-zA-Z_][a-zA-Z0-9_]*$', re.IGNORECASE)
 
 
 def _safe_identifier(name: str) -> str:
@@ -38,8 +37,7 @@ def _safe_identifier(name: str) -> str:
     base = name.split(" ")[0]  # "users u" এর মতো alias হলে base অংশ চেক করে
     # Quote সরিয়ে raw name validate করা
     raw_base = base.strip("`\"\'")
-    raw_re   = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$')
-    if not raw_re.match(raw_base):
+    if not _RAW_BASE_RE.match(raw_base):
         raise QueryError(f"অবৈধ কলাম/টেবিল নাম: {name!r}")
 
     # Driver অনুযায়ী quote character
@@ -49,8 +47,18 @@ def _safe_identifier(name: str) -> str:
     quoted = ".".join(f"{q}{p}{q}" for p in parts)
 
     if " " in name:
-        alias = name.split(" ", 1)[1]
-        return f"{quoted} {alias}"
+        alias = name.split(" ", 1)[1].strip()
+        # Alias-এ SQL injection প্রতিরোধে কঠোর ভ্যালিডেশন
+        if not _ALIAS_RE.match(alias):
+            raise QueryError(f"অবৈধ alias: {alias!r}")
+        
+        # Alias কলামটির উপরেও ড্রাইভের কোট রুল প্রয়োগ করা
+        alias_parts = re.split(r'\s+', alias)
+        if len(alias_parts) == 2 and alias_parts[0].upper() == "AS":
+            return f"{quoted} AS {q}{alias_parts[1]}{q}"
+        else:
+            return f"{quoted} {q}{alias}{q}"
+            
     return quoted
 
 
@@ -195,6 +203,7 @@ class QueryBuilder:
         return self
 
     def paginate(self, request_or_page, per_page: int = 15):
+        import copy
         from core.request import Request
         if isinstance(request_or_page, Request):
             request = request_or_page
@@ -204,20 +213,22 @@ class QueryBuilder:
                 page = 1
             page = max(1, page)
 
-            # Count total matching query before modifying limit/offset
-            total = self.count()
+            # মূল QueryBuilder অবজেক্টের স্টেট অক্ষুণ্ণ রাখতে ক্লোন ব্যবহার করি
+            clone = copy.copy(self)
+            total = clone.count()
 
-            self._limit = per_page
-            self._offset = (page - 1) * per_page
-            rows = self.get()
+            clone._limit = per_page
+            clone._offset = (page - 1) * per_page
+            rows = clone.get()
 
             from core.pagination import Paginator
             return Paginator(rows, total, per_page, page, request.path, request.query)
         else:
             page = max(1, int(request_or_page))
-            self._limit = per_page
-            self._offset = (page - 1) * per_page
-            return self
+            clone = copy.copy(self)
+            clone._limit = per_page
+            clone._offset = (page - 1) * per_page
+            return clone
 
     def having(self, column, operator, value):
         """GROUP BY-এর পরে ফিল্টার করার জন্য HAVING clause — aggregate ফাংশনে ব্যবহার করুন"""
@@ -368,12 +379,28 @@ class QueryBuilder:
         ph = Database.placeholder()
         placeholders = ", ".join([ph] * len(columns))
         sql = f"INSERT INTO {self.table} ({', '.join(columns)}) VALUES ({placeholders})"
+        
+        is_postgres = Database.driver == "postgresql"
+        if is_postgres:
+            sql += ' RETURNING "id"'
+            
         cursor = Database.execute(sql, tuple(data.values()))
+        
+        inserted_id = None
+        if is_postgres:
+            row = cursor.fetchone()
+            if row:
+                inserted_id = dict(row).get("id") if isinstance(row, dict) else row[0]
+        else:
+            inserted_id = Database.last_insert_id(cursor)
+            
         if not Database.in_transaction():
             Database.commit()
-        return Database.last_insert_id(cursor)
+        return inserted_id
 
     def update(self, data: dict) -> int:
+        if not data:
+            return 0
         self._invalidate_cache()
         columns = [_safe_identifier(c) for c in data.keys()]
         ph = Database.placeholder()
@@ -393,6 +420,8 @@ class QueryBuilder:
 
     def update_all(self, data: dict) -> int:
         """সব রো আপডেট করে (সতর্কতা: বিপজ্জনক হতে পারে!)"""
+        if not data:
+            return 0
         self._invalidate_cache()
         columns = [_safe_identifier(c) for c in data.keys()]
         ph = Database.placeholder()

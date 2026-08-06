@@ -17,12 +17,10 @@ class Queue:
         now = int(time.time())
         available_at = now + delay
         
-        sql = """
+        ph = Database.placeholder()
+        sql = f"""
             INSERT INTO jobs (queue, payload, attempts, reserved_at, available_at, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """ if Database.driver == "mysql" else """
-            INSERT INTO jobs (queue, payload, attempts, reserved_at, available_at, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})
         """
         
         try:
@@ -37,14 +35,11 @@ class Queue:
     def pop(cls, queue="default"):
         """Pop a job off the queue, reserving it atomically"""
         now = int(time.time())
+        ph = Database.placeholder()
         
-        select_sql = """
+        select_sql = f"""
             SELECT id, payload, attempts FROM jobs
-            WHERE queue = %s AND reserved_at IS NULL AND available_at <= %s
-            ORDER BY id ASC LIMIT 1
-        """ if Database.driver == "mysql" else """
-            SELECT id, payload, attempts FROM jobs
-            WHERE queue = ? AND reserved_at IS NULL AND available_at <= ?
+            WHERE queue = {ph} AND reserved_at IS NULL AND available_at <= {ph}
             ORDER BY id ASC LIMIT 1
         """
         
@@ -64,12 +59,9 @@ class Queue:
                 attempts = row[2]
                 
             # Attempt to reserve job (compare-and-swap update)
-            update_sql = """
-                UPDATE jobs SET reserved_at = %s, attempts = attempts + 1
-                WHERE id = %s AND reserved_at IS NULL
-            """ if Database.driver == "mysql" else """
-                UPDATE jobs SET reserved_at = ?, attempts = attempts + 1
-                WHERE id = ? AND reserved_at IS NULL
+            update_sql = f"""
+                UPDATE jobs SET reserved_at = {ph}, attempts = attempts + 1
+                WHERE id = {ph} AND reserved_at IS NULL
             """
             
             cursor = Database.execute(update_sql, (now, job_id))
@@ -91,7 +83,8 @@ class Queue:
     @classmethod
     def delete(cls, job_id):
         """Delete a completed job from the queue"""
-        sql = "DELETE FROM jobs WHERE id = %s" if Database.driver == "mysql" else "DELETE FROM jobs WHERE id = ?"
+        ph = Database.placeholder()
+        sql = f"DELETE FROM jobs WHERE id = {ph}"
         try:
             Database.execute(sql, (job_id,))
             Database.commit()
@@ -103,12 +96,10 @@ class Queue:
         """Release a failed job back onto the queue with an optional delay"""
         now = int(time.time())
         available_at = now + delay
-        sql = """
-            UPDATE jobs SET reserved_at = NULL, available_at = %s
-            WHERE id = %s
-        """ if Database.driver == "mysql" else """
-            UPDATE jobs SET reserved_at = NULL, available_at = ?
-            WHERE id = ?
+        ph = Database.placeholder()
+        sql = f"""
+            UPDATE jobs SET reserved_at = NULL, available_at = {ph}
+            WHERE id = {ph}
         """
         try:
             Database.execute(sql, (available_at, job_id))

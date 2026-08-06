@@ -149,7 +149,7 @@ class Model:
                 "logs": {"type": "has_many", "model": ActivityLog, "foreign_key": "user_id"},
             }
         """
-        return _EagerQueryProxy(cls, list(relation_names))
+        return EagerQueryProxy(cls, list(relation_names))
 
     def _set_relation(self, name: str, value):
         """Eager loaded relation সেট করা"""
@@ -209,7 +209,7 @@ def _default_fk(table_name: str) -> str:
 
 # ─────────────────────────── Eager Query Proxy ────────────────────────────
 
-class _EagerQueryProxy:
+class EagerQueryProxy:
     """
     User.with_("posts").get() এই chain handle করে।
     .get() কল হলে main query চালায়, তারপর relations batch IN() query দিয়ে load করে।

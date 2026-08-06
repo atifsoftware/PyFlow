@@ -148,13 +148,27 @@ class ConnectionPool:
             self._pool.put(conn)
             self._created += 1
 
+    def _is_connection_alive(self, conn) -> bool:
+        """কানেকশন সচল আছে কিনা ড্রাইভার-নিরপেক্ষভাবে চেক করে"""
+        try:
+            if hasattr(conn, "ping"):
+                conn.ping(reconnect=True)
+                return True
+            # PostgreSQL (psycopg2) এর জন্য
+            if hasattr(conn, "closed") and conn.closed != 0:
+                return False
+            if hasattr(conn, "isolation_level"):
+                # isolation_level রিড করার চেষ্টা করলে psycopg2 কানেকশন সচল আছে কিনা তা সকেট স্তরে ইনস্ট্যান্ট চেক করে
+                _ = conn.isolation_level
+            return True
+        except Exception:
+            return False
+
     def acquire(self, timeout: float = 5.0):
         """Pool থেকে একটা connection নেওয়া। খালি না থাকলে নতুন বানায়।"""
         try:
             conn = self._pool.get_nowait()
-            try:
-                conn.ping(reconnect=True)
-            except Exception:
+            if not self._is_connection_alive(conn):
                 conn = self._factory()
             return conn
         except Empty:
@@ -168,9 +182,7 @@ class ConnectionPool:
 
         try:
             conn = self._pool.get(timeout=timeout)
-            try:
-                conn.ping(reconnect=True)
-            except Exception:
+            if not self._is_connection_alive(conn):
                 conn = self._factory()
             return conn
         except Empty:
