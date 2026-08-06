@@ -274,6 +274,42 @@ curl -X 'GET' \
 
 ---
 
+## 🌐 Production Deployment Guide (প্রোডাকশন ডেপ্লয়মেন্ট গাইড)
+
+ডেভেলপমেন্ট মোডে PyFlow সরাসরি পাইথন সার্ভারের সাহায্যে স্ট্যাটিক ফাইল ও অ্যাপ্লিকেশন রেসপন্স সার্ভ করে। কিন্তু প্রোডাকশন এনভায়রনমেন্টে উচ্চ কর্মক্ষমতা (Performance) এবং নিরাপত্তা নিশ্চিত করার জন্য নিম্নোক্ত নির্দেশিকা অনুসরণ করুন:
+
+### ১. Nginx / Caddy দিয়ে স্ট্যাটিক ফাইল সরাসরি সার্ভ করা:
+প্রোডাকশনে পাইথন কোডের মাধ্যমে স্ট্যাটিক ফাইল (`/static/*`) সার্ভ করা ধীরগতির এবং অতিরিক্ত মেমোরি খরচ করতে পারে। তাই Nginx বা Caddy ব্যবহার করে স্ট্যাটিক ফাইলগুলো সরাসরি ক্লায়েন্টকে সার্ভ করুন এবং অন্য সব রিকোয়েস্ট Uvicorn ASGI গেটওয়েতে রিডাইরেক্ট করুন।
+
+**Nginx Configuration Example:**
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com;
+
+    # স্ট্যাটিক ফাইলের পাথ (সরাসরি Nginx সার্ভ করবে)
+    location /static/ {
+        alias /path/to/pyflow/public/static/;
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+
+    # বাকি সব রিকোয়েস্ট ASGI/WSGI গেটওয়েতে পাঠানো
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+### ২. সেশন ফাইল লক সক্রিয়করণ:
+PyFlow ফাইল-বেসড সেশন লকিং মেকানিজম ব্যবহার করে যা একাধিক সমান্তরাল AJAX রিকোয়েস্টের সময় রেস কন্ডিশন (Race Condition) প্রতিরোধ করে। প্রোডাকশন ট্রাফিকের জন্য এটি অত্যন্ত উপযোগী।
+
+---
+
 ## 🤝 অবদান রাখুন
 যেকোনো বাগ ফিক্স, ফিচার আইডিয়া বা ইমপ্রুভমেন্টের জন্য পুল রিকোয়েস্ট (Pull Request) পাঠাতে পারেন। 
 

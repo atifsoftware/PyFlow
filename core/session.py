@@ -15,6 +15,39 @@ import os
 import json
 import secrets
 import time
+import logging
+
+logger = logging.getLogger("pyflow")
+
+
+class FileLock:
+    """
+    একটি সাধারণ ক্রস-প্লাটফর্ম ফাইল লকিং মেকানিজম।
+    অ্যাটমিক ডিরেক্টরি তৈরির (os.mkdir) মাধ্যমে রেস কন্ডিশন প্রতিরোধ করে।
+    """
+    def __init__(self, lock_path: str, timeout: float = 2.0):
+        self.lock_path = lock_path
+        self.timeout = timeout
+        self.has_lock = False
+
+    def acquire(self) -> bool:
+        start = time.time()
+        while time.time() - start < self.timeout:
+            try:
+                os.mkdir(self.lock_path)
+                self.has_lock = True
+                return True
+            except OSError:
+                time.sleep(0.05)
+        return False
+
+    def release(self) -> None:
+        if self.has_lock:
+            try:
+                os.rmdir(self.lock_path)
+            except OSError:
+                pass
+            self.has_lock = False
 
 
 class Session:
@@ -43,7 +76,12 @@ class Session:
         path = self._path()
         if not os.path.exists(path):
             return {}
+        lock = FileLock(path + ".lock")
+        if not lock.acquire():
+            logger.warning("সেশন ফাইল লক অর্জন করা যায়নি (load): %s", path)
         try:
+            if not os.path.exists(path):
+                return {}
             with open(path, "r", encoding="utf-8") as f:
                 payload = json.load(f)
 
@@ -52,42 +90,55 @@ class Session:
             # ফিক্স: সর্বোচ্চ আয়ু চেক (absolute lifetime)
             created_at = payload.get("_created", 0)
             if now - created_at > self.LIFETIME_SECONDS:
-                os.remove(path)
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
                 return {}
 
             # ফিক্স: idle timeout চেক (last_active থেকে হিসাব)
             last_active = payload.get("_last_active", created_at)
             if now - last_active > self.IDLE_TIMEOUT_SECONDS:
-                os.remove(path)
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
                 return {}
 
             return payload.get("data", {})
         except (json.JSONDecodeError, OSError):
             return {}
+        finally:
+            lock.release()
 
     def save(self):
-        """_dirty না হলে disk write এড়িয়ে যায় — অপ্রয়োজনীয় I/O কমায়"""
+        """_dirty না হলে disk write এড়িয়ে যায় — I/O কমায়, এবং লক ব্যবহার করে রেস কন্ডিশন প্রতিরোধ করে।"""
         if not self._dirty:
             return
         path = self._path()
-        now = time.time()
-        # _created একবারই সেট হয়; পরবর্তী save()-এ বদলায় না
-        existing_created = None
-        if os.path.exists(path):
-            try:
-                with open(path, "r", encoding="utf-8") as f:
-                    existing_created = json.load(f).get("_created")
-            except (json.JSONDecodeError, OSError):
-                pass
+        lock = FileLock(path + ".lock")
+        if not lock.acquire():
+            logger.warning("সেশন ফাইল লক অর্জন করা যায়নি (save): %s", path)
+        try:
+            now = time.time()
+            existing_created = None
+            if os.path.exists(path):
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        existing_created = json.load(f).get("_created")
+                except (json.JSONDecodeError, OSError):
+                    pass
 
-        payload = {
-            "_created": existing_created or now,   # প্রথমবার সেট, পরে অপরিবর্তিত
-            "_last_active": now,                    # প্রতি write-এ আপডেট (idle timeout)
-            "data": self._data,
-        }
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(payload, f)
-        self._dirty = False
+            payload = {
+                "_created": existing_created or now,
+                "_last_active": now,
+                "data": self._data,
+            }
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(payload, f)
+            self._dirty = False
+        finally:
+            lock.release()
 
     def get(self, key, default=None):
         return self._data.get(key, default)
@@ -134,18 +185,37 @@ class Session:
     def regenerate(self):
         """লগইনের পরে অবশ্যই কল করবেন - session fixation attack ঠেকানোর জন্য"""
         old_path = self._path()
-        if os.path.exists(old_path):
-            os.remove(old_path)
+        lock = FileLock(old_path + ".lock")
+        if not lock.acquire():
+            logger.warning("সেশন ফাইল লক অর্জন করা যায়নি (regenerate): %s", old_path)
+        try:
+            if os.path.exists(old_path):
+                try:
+                    os.remove(old_path)
+                except OSError:
+                    pass
+        finally:
+            lock.release()
+
         self.session_id = self._generate_id()
         self._dirty = True
         self.save()
 
     def destroy(self):
         path = self._path()
-        if os.path.exists(path):
-            os.remove(path)
-        self._data = {}
-        self._dirty = False
+        lock = FileLock(path + ".lock")
+        if not lock.acquire():
+            logger.warning("সেশন ফাইল লক অর্জন করা যায়নি (destroy): %s", path)
+        try:
+            if os.path.exists(path):
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+            self._data = {}
+            self._dirty = False
+        finally:
+            lock.release()
 
     def touch(self):
         """_last_active আপডেট করতে জোর করে save করে (long-running page-এর জন্য)"""
