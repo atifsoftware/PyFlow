@@ -111,7 +111,7 @@ Upload the project files to your cPanel directory (e.g., `/home/username/pyflow.
 Create a `.env` file in the root folder of your project on the server and enter your credentials:
 ```ini
 APP_NAME="PyFlow Production"
-APP_VERSION=v3.0.0
+APP_VERSION=v3.0.9
 APP_DEBUG=false
 APP_URL=https://yourdomain.com
 
@@ -309,7 +309,7 @@ python run.py
 সার্ভারে থাকা প্রজেক্টের রুট ডিরেক্টরিতে একটি নতুন `.env` ফাইল তৈরি করুন এবং আপনার ডাটাবেজ ক্রেডেনশিয়াল দিন:
 ```ini
 APP_NAME="PyFlow Production"
-APP_VERSION=v3.0.0
+APP_VERSION=v3.0.9
 APP_DEBUG=false
 APP_URL=https://yourdomain.com
 

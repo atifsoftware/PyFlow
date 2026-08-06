@@ -76,7 +76,7 @@ class Controller:
         data.setdefault("__", translate)
 
         data.setdefault("app_name", config.get("APP_NAME", "PyFlow App"))
-        data.setdefault("app_version", config.get("APP_VERSION", "v3.0.0"))
+        data.setdefault("app_version", config.get("APP_VERSION", "v3.0.9"))
         data.setdefault("app_url", config.get("APP_URL", "http://localhost:8000"))
 
 
