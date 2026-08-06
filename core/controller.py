@@ -16,7 +16,37 @@ def action(controller_cls, method_name: str):
     প্রতিটা রিকোয়েস্টে কন্ট্রোলারের নতুন instance তৈরি হয় (thread-safe থাকার জন্য)।
     """
     def handler(request, session, view_engine):
-        controller = controller_cls(request, session, view_engine)
+        import inspect
+        app = getattr(view_engine, "app", None)
+        container = getattr(app, "container", None)
+
+        if not container:
+            controller = controller_cls(request, session, view_engine)
+        else:
+            sign = inspect.signature(controller_cls.__init__)
+            params = list(sign.parameters.values())[1:]  # self বাদ দিয়ে
+
+            args = []
+            for param in params:
+                # Name বা Type-হিন্ট দিয়ে request context ম্যাচ করি
+                if param.name == "request" or param.annotation == request.__class__:
+                    args.append(request)
+                elif param.name == "session" or param.annotation == session.__class__:
+                    args.append(session)
+                elif param.name == "view_engine" or param.annotation == view_engine.__class__:
+                    args.append(view_engine)
+                else:
+                    # বাকি সার্ভিসগুলো IoC কন্টেইনার দিয়ে রিজলভ করি
+                    if param.annotation is not inspect.Parameter.empty:
+                        args.append(container.resolve(param.annotation))
+                    elif param.default is not inspect.Parameter.empty:
+                        args.append(param.default)
+                    else:
+                        raise Exception(
+                            f"Unable to resolve parameter '{param.name}' in controller '{controller_cls.__name__}' constructor"
+                        )
+            controller = controller_cls(*args)
+
         method = getattr(controller, method_name)
         return method()
     return handler

@@ -599,8 +599,16 @@ if __name__ == "__main__":
 
 
 if __name__ == "__main__":
+    import sys
+    if hasattr(sys.stdout, 'reconfigure'):
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+        except Exception:
+            pass
+            
     if len(sys.argv) > 1:
         # Non-interactive CLI mode: python cli.py make:migration create_users
+        import json
         command = sys.argv[1]
         arg = sys.argv[2] if len(sys.argv) > 2 else ""
         cli = PyFlowCLI()
@@ -617,6 +625,150 @@ if __name__ == "__main__":
             content = f'class {class_name}:\n    def up(self, cursor, driver): pass\n    def down(self, cursor, driver): cursor.execute("DROP TABLE IF EXISTS `{table}`")\n'
             with open(os.path.join(out_dir, file_name), "w") as f: f.write(content)
             print(color(f"✅ Created: database/migrations/{file_name}", C_GREEN))
+            
+        elif command == "make:plugin":
+            if not arg: print("Usage: python cli.py make:plugin <name>"); sys.exit(1)
+            folder = arg.lower()
+            name_cap = "".join(w.capitalize() for w in folder.split("_"))
+            plugin_dir = os.path.join(PROJECT_ROOT, "plugins", folder)
+            os.makedirs(plugin_dir, exist_ok=True)
+            os.makedirs(os.path.join(plugin_dir, "controllers"), exist_ok=True)
+            os.makedirs(os.path.join(plugin_dir, "views"), exist_ok=True)
+            os.makedirs(os.path.join(plugin_dir, "migrations"), exist_ok=True)
+            
+            manifest = {
+                "name": name_cap,
+                "version": "1.0",
+                "enabled": True,
+                "providers": [
+                    f"plugins.{folder}.providers.{name_cap}ServiceProvider"
+                ]
+            }
+            with open(os.path.join(plugin_dir, "plugin.json"), "w", encoding="utf-8") as f:
+                json.dump(manifest, f, indent=4)
+                
+            provider_content = f"""from core.provider import ServiceProvider
+
+class {name_cap}ServiceProvider(ServiceProvider):
+    def register(self):
+        pass
+
+    def boot(self):
+        pass
+"""
+            with open(os.path.join(plugin_dir, "providers.py"), "w", encoding="utf-8") as f:
+                f.write(provider_content)
+            print(color(f"✅ Created plugin: plugins/{folder}", C_GREEN))
+
+        elif command == "make:module":
+            if not arg: print("Usage: python cli.py make:module <name>"); sys.exit(1)
+            folder = arg.lower()
+            name_cap = "".join(w.capitalize() for w in folder.split("_"))
+            module_dir = os.path.join(PROJECT_ROOT, "modules", folder)
+            os.makedirs(module_dir, exist_ok=True)
+            os.makedirs(os.path.join(module_dir, "controllers"), exist_ok=True)
+            os.makedirs(os.path.join(module_dir, "models"), exist_ok=True)
+            os.makedirs(os.path.join(module_dir, "views"), exist_ok=True)
+            os.makedirs(os.path.join(module_dir, "migrations"), exist_ok=True)
+            
+            manifest = {
+                "name": name_cap,
+                "version": "1.0",
+                "enabled": True,
+                "providers": [
+                    f"modules.{folder}.providers.{name_cap}ServiceProvider"
+                ]
+            }
+            with open(os.path.join(module_dir, "module.json"), "w", encoding="utf-8") as f:
+                json.dump(manifest, f, indent=4)
+                
+            provider_content = f"""from core.provider import ServiceProvider
+import os
+
+class {name_cap}ServiceProvider(ServiceProvider):
+    def register(self):
+        views_dir = os.path.join(os.path.dirname(__file__), "views")
+        self.app.view_engine.register_namespace("{folder}", views_dir)
+
+    def boot(self):
+        pass
+"""
+            with open(os.path.join(module_dir, "providers.py"), "w", encoding="utf-8") as f:
+                f.write(provider_content)
+            with open(os.path.join(module_dir, "routes.py"), "w", encoding="utf-8") as f:
+                f.write("# Module specific routes\n")
+            with open(os.path.join(module_dir, "config.py"), "w", encoding="utf-8") as f:
+                f.write("# Module config overrides\n")
+            print(color(f"✅ Created module: modules/{folder}", C_GREEN))
+
+        elif command == "make:package":
+            if not arg: print("Usage: python cli.py make:package <name>"); sys.exit(1)
+            folder = arg.lower()
+            name_cap = "".join(w.capitalize() for w in folder.split("_"))
+            package_dir = os.path.join(PROJECT_ROOT, "packages", folder)
+            os.makedirs(package_dir, exist_ok=True)
+            with open(os.path.join(package_dir, "__init__.py"), "w", encoding="utf-8") as f:
+                f.write(f"from .{folder} import {name_cap}\n")
+            with open(os.path.join(package_dir, f"{folder}.py"), "w", encoding="utf-8") as f:
+                f.write(f"class {name_cap}:\n    pass\n")
+            print(color(f"✅ Created package: packages/{folder}", C_GREEN))
+
+        elif command == "make:event":
+            if not arg: print("Usage: python cli.py make:event <name>"); sys.exit(1)
+            class_name = "".join(w.capitalize() for w in arg.split("_"))
+            file_name = f"{arg.lower()}.py"
+            out_dir = os.path.join(PROJECT_ROOT, "app", "events")
+            os.makedirs(out_dir, exist_ok=True)
+            content = f"""class {class_name}:
+    def __init__(self, data=None):
+        self.data = data
+"""
+            with open(os.path.join(out_dir, file_name), "w", encoding="utf-8") as f:
+                f.write(content)
+            print(color(f"✅ Created event: app/events/{file_name}", C_GREEN))
+
+        elif command == "make:listener":
+            if not arg: print("Usage: python cli.py make:listener <name>"); sys.exit(1)
+            class_name = "".join(w.capitalize() for w in arg.split("_"))
+            file_name = f"{arg.lower()}.py"
+            out_dir = os.path.join(PROJECT_ROOT, "app", "listeners")
+            os.makedirs(out_dir, exist_ok=True)
+            content = f"""class {class_name}:
+    def handle(self, event):
+        # Handle event data here
+        pass
+"""
+            with open(os.path.join(out_dir, file_name), "w", encoding="utf-8") as f:
+                f.write(content)
+            print(color(f"✅ Created listener: app/listeners/{file_name}", C_GREEN))
+
+        elif command == "make:middleware":
+            if not arg: print("Usage: python cli.py make:middleware <name>"); sys.exit(1)
+            file_name = f"{arg.lower()}.py"
+            out_dir = os.path.join(PROJECT_ROOT, "app", "middleware")
+            os.makedirs(out_dir, exist_ok=True)
+            content = f"""def {arg.lower()}(request, session):
+    # Middleware logic
+    return None
+"""
+            with open(os.path.join(out_dir, file_name), "w", encoding="utf-8") as f:
+                f.write(content)
+            print(color(f"✅ Created middleware: app/middleware/{file_name}", C_GREEN))
+
+        elif command == "make:service":
+            if not arg: print("Usage: python cli.py make:service <name>"); sys.exit(1)
+            class_name = "".join(w.capitalize() for w in arg.split("_"))
+            file_name = f"{arg.lower()}.py"
+            out_dir = os.path.join(PROJECT_ROOT, "app", "services")
+            os.makedirs(out_dir, exist_ok=True)
+            content = f"""class {class_name}:
+    def __init__(self):
+        pass
+"""
+            with open(os.path.join(out_dir, file_name), "w", encoding="utf-8") as f:
+                f.write(content)
+            print(color(f"✅ Created service: app/services/{file_name}", C_GREEN))
+
         elif command == "test":
             tests_dir = os.path.join(PROJECT_ROOT, "tests")
             subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py", "-v"], cwd=PROJECT_ROOT)

@@ -45,8 +45,13 @@ class Application:
             views_dir=config.get("VIEWS_DIR", "app/views"),
             cache_enabled=not self.debug,
         )
+        self.view_engine.app = self
         Database.init(config)
         self._setup_logging()
+
+        # IoC Dependency Injection Container
+        from core.container import Container
+        self.container = Container()
 
         # Module & Plugin Auto-Discovery & Service Provider Booting
         from core.module_manager import ModuleManager
