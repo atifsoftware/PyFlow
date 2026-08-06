@@ -307,21 +307,50 @@ class Database:
         conn.execute("PRAGMA journal_mode = WAL")
         return conn
 
+    @classmethod
+    def _is_connection_alive(cls, conn) -> bool:
+        """কানেকশন সচল আছে কিনা তা পরীক্ষা করে"""
+        if conn is None:
+            return False
+        try:
+            if cls.driver == "mysql":
+                conn.ping(reconnect=True)
+                return True
+            elif cls.driver == "postgresql":
+                return conn.closed == 0
+            else:  # sqlite
+                conn.execute("SELECT 1")
+                return True
+        except Exception:
+            return False
+
     # ──────────────────────────── Connection ─────────────────────────────────
 
     @classmethod
     def connection(cls):
         """
         বর্তমান থ্রেডের connection রিটার্ন করে।
-        - MySQL / PostgreSQL: pool থেকে নেওয়া হয়
-        - SQLite: thread-local connection
+        - MySQL / PostgreSQL: pool থেকে নেওয়া হয় এবং সচলতা যাচাই করা হয়।
+        - SQLite: thread-local connection সচলতা যাচাই সহ।
         """
         if Database.driver in ("mysql", "postgresql"):
             if not hasattr(Database._local, "conn") or Database._local.conn is None:
                 Database._local.conn = Database._pool.acquire()
+            elif not cls._is_connection_alive(Database._local.conn):
+                try:
+                    Database._local.conn.close()
+                except Exception:
+                    pass
+                Database._local.conn = Database._pool.acquire()
             return Database._local.conn
         else:  # sqlite
             if not hasattr(Database._local, "conn") or Database._local.conn is None:
+                Database._local.conn = Database._create_sqlite_connection()
+            elif not cls._is_connection_alive(Database._local.conn):
+                try:
+                    Database._local.conn.close()
+                except Exception:
+                    pass
                 Database._local.conn = Database._create_sqlite_connection()
             return Database._local.conn
 
