@@ -206,6 +206,9 @@ class Request:
             trust_proxy = False
 
         if trust_proxy:
+            cf_ip = self.environ.get("HTTP_CF_CONNECTING_IP")
+            if cf_ip:
+                return cf_ip.strip()
             forwarded = self.environ.get("HTTP_X_FORWARDED_FOR")
             if forwarded:
                 return forwarded.split(",")[0].strip()
