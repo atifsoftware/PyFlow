@@ -237,8 +237,23 @@ form input:focus {
 
 @media(max-width: 768px) {
     .navbar {
-        padding: 16px 20px;
+        padding: 14px 20px;
         flex-direction: column;
-        gap: 15px;
+        gap: 12px;
+        text-align: center;
+    }
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+    .nav-links a {
+        padding: 4px 8px;
+        font-size: 13.5px;
+    }
+    .btn-lang {
+        margin-left: 0 !important;
+        margin-top: 4px;
     }
 }
+

@@ -178,9 +178,31 @@ class Application:
         # HTML template of the debug bar
         debug_html = f"""
 <!-- PyFlow Debug Bar -->
+<style>
+    #pyflow-debugbar-header-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    @media (max-width: 768px) {
+        .pm-db-hide-mobile {
+            display: none !important;
+        }
+        #pyflow-debugbar-header {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 8px;
+            padding: 10px 12px !important;
+        }
+        #pyflow-debugbar-header-info {
+            flex-wrap: wrap;
+            gap: 8px !important;
+        }
+    }
+</style>
 <div id="pyflow-debugbar" style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(20, 20, 25, 0.95); border-top: 2px solid #5a32a8; color: #e1e1e6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; z-index: 999999; box-shadow: 0 -4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(8px);">
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; cursor: pointer; border-bottom: 1px solid #333;" onclick="togglePyFlowDebugbar()">
-        <div style="display: flex; align-items: center; gap: 16px;">
+    <div id="pyflow-debugbar-header" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; cursor: pointer; border-bottom: 1px solid #333;" onclick="togglePyFlowDebugbar()">
+        <div id="pyflow-debugbar-header-info">
             <span style="font-weight: bold; color: #9d4edd; display: flex; align-items: center; gap: 4px;">
                 ⚡ PyFlow Debugbar
             </span>
@@ -200,8 +222,9 @@ class Application:
                 📋 {len(logs)} Logs
             </span>
         </div>
-        <div style="color: #888;">[Click to Toggle]</div>
+        <div class="pm-db-hide-mobile" style="color: #888;">[Click to Toggle]</div>
     </div>
+
     
     <div id="pyflow-debugbar-content" style="display: none; max-height: 350px; overflow-y: auto; padding: 16px; border-top: 1px solid #222;">
         <!-- Tabs -->
@@ -214,25 +237,28 @@ class Application:
         <!-- Queries Tab -->
         <div id="pm-tab-queries" class="pm-tab-content">
             {f'<p style="color: #888; text-align: center; margin: 20px 0;">কোনো Database Query চালানো হয়নি।</p>' if not queries else ''}
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                <thead>
-                    <tr style="border-bottom: 1px solid #444; color: #aaa;">
-                        <th style="padding: 8px;">SQL Statement</th>
-                        <th style="padding: 8px; width: 250px;">Parameters</th>
-                        <th style="padding: 8px; width: 100px; text-align: right;">Duration</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {"".join(f'''
-                    <tr style="border-bottom: 1px solid #2d2d38;">
-                        <td style="padding: 8px; font-family: monospace; color: #70e000; font-size: 12px; word-break: break-all;">{q['sql']}</td>
-                        <td style="padding: 8px; font-family: monospace; color: #f72585; font-size: 11px;">{q['params']}</td>
-                        <td style="padding: 8px; text-align: right; color: {'#ff595e' if q['duration'] > 100 else '#ffb703'}; font-weight: bold;">{q['duration']:.2f} ms</td>
-                    </tr>
-                    ''' for q in queries)}
-                </tbody>
-            </table>
+            <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 600px;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid #444; color: #aaa;">
+                            <th style="padding: 8px;">SQL Statement</th>
+                            <th style="padding: 8px; width: 250px;">Parameters</th>
+                            <th style="padding: 8px; width: 100px; text-align: right;">Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {"".join(f'''
+                        <tr style="border-bottom: 1px solid #2d2d38;">
+                            <td style="padding: 8px; font-family: monospace; color: #70e000; font-size: 12px; word-break: break-all;">{q['sql']}</td>
+                            <td style="padding: 8px; font-family: monospace; color: #f72585; font-size: 11px;">{q['params']}</td>
+                            <td style="padding: 8px; text-align: right; color: {'#ff595e' if q['duration'] > 100 else '#ffb703'}; font-weight: bold;">{q['duration']:.2f} ms</td>
+                        </tr>
+                        ''' for q in queries)}
+                    </tbody>
+                </table>
+            </div>
         </div>
+
         
         <!-- Session Tab -->
         <div id="pm-tab-session" class="pm-tab-content" style="display: none;">
