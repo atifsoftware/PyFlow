@@ -24,18 +24,5 @@ from config.routes import build_router
 
 config = get_config()
 router = build_router()
-pyflow_wsgi = Application(router, config)
-
-try:
-    from a2wsgi import ASGIMiddleware
-    from app.api import api as fastapi_app
-    fastapi_wsgi = ASGIMiddleware(fastapi_app)
-    
-    def application(environ, start_response):
-        path = environ.get("PATH_INFO", "")
-        if path == "/api" or path.startswith("/api/") or path == "/openapi.json":
-            return fastapi_wsgi(environ, start_response)
-        return pyflow_wsgi(environ, start_response)
-except ImportError:
-    application = pyflow_wsgi
+application = Application(router, config)
 
