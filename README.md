@@ -7,8 +7,8 @@
 
 🌐 **Live Demo (লাইভ ডেমো):** [https://pyflow.nexterp.bd/](https://pyflow.nexterp.bd/)
 
-*   **📖 Read the [PyFlow Q&A FAQ (২২টি প্রশ্নোত্তর)](FAQ.md) for quick architecture, database pool, dynamic html, and scaling answers.**
-*   **📖 বাংলা এবং ইংরেজি বিস্তারিত প্রশ্নোত্তর দেখতে পড়ুন [PyFlow FAQ (২২টি প্রশ্নোত্তর)](FAQ.md)।**
+*   **📖 Read the [PyFlow Q&A FAQ (২৫টি প্রশ্নোত্তর)](FAQ.md) for quick architecture, database pool, dynamic html, and scaling answers.**
+*   **📖 বাংলা এবং ইংরেজি বিস্তারিত প্রশ্নোত্তর দেখতে পড়ুন [PyFlow FAQ (২৫টি প্রশ্নোত্তর)](FAQ.md)।**
 
 
 [বাংলা বিবরণ নিচে দেওয়া হয়েছে]
