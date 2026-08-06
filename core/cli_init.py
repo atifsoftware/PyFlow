@@ -51,7 +51,7 @@ def run_wsgi(port: int):
     os.makedirs("storage/logs", exist_ok=True)
     os.makedirs("storage/sessions", exist_ok=True)
 
-    print(f"🚀 {config['APP_NAME']} running (WSGI): http://127.0.0.1:{port}")
+    print(f"[{config['APP_NAME']}] running (WSGI): http://127.0.0.1:{port}")
     with make_server("127.0.0.1", port, app) as httpd:
         try:
             httpd.serve_forever()
@@ -62,14 +62,14 @@ def run_asgi(port: int):
     try:
         import uvicorn
     except ImportError:
-        print("❌ uvicorn not installed. Run: pip install uvicorn[standard]")
+        print("Error: uvicorn not installed. Run: pip install uvicorn[standard]")
         sys.exit(1)
 
     config = get_config()
     os.makedirs("storage/logs", exist_ok=True)
     os.makedirs("storage/sessions", exist_ok=True)
 
-    print(f"🚀 {config['APP_NAME']} running (FastAPI + PyFlow): http://127.0.0.1:{port}")
+    print(f"[{config['APP_NAME']}] running (FastAPI + PyFlow): http://127.0.0.1:{port}")
     reload = config.get("APP_DEBUG", False)
     uvicorn.run("core.asgi_bridge:application", host="127.0.0.1", port=port, reload=reload, log_level="info")
 
