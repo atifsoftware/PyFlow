@@ -70,6 +70,18 @@ class CoreFixesTest(PyFlowTestCase):
         res_all = qb.update_all({})
         self.assertEqual(res_all, 0)
 
+    def test_clone_does_not_share_list_references(self):
+        qb = User.where("role", "user")
+        cloned = qb.clone()
+        
+        # Modify the cloned builder
+        cloned.where("active", 1)
+        
+        # Verify original builder's wheres list is not affected
+        self.assertEqual(len(qb._wheres), 1)
+        self.assertEqual(len(cloned._wheres), 2)
+
+
 
 if __name__ == "__main__":
     import unittest

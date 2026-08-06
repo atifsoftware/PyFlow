@@ -203,7 +203,6 @@ class QueryBuilder:
         return self
 
     def paginate(self, request_or_page, per_page: int = 15):
-        import copy
         from core.request import Request
         if isinstance(request_or_page, Request):
             request = request_or_page
@@ -214,7 +213,7 @@ class QueryBuilder:
             page = max(1, page)
 
             # মূল QueryBuilder অবজেক্টের স্টেট অক্ষুণ্ণ রাখতে ক্লোন ব্যবহার করি
-            clone = copy.copy(self)
+            clone = self.clone()
             total = clone.count()
 
             clone._limit = per_page
@@ -225,7 +224,7 @@ class QueryBuilder:
             return Paginator(rows, total, per_page, page, request.path, request.query)
         else:
             page = max(1, int(request_or_page))
-            clone = copy.copy(self)
+            clone = self.clone()
             clone._limit = per_page
             clone._offset = (page - 1) * per_page
             return clone
@@ -350,8 +349,7 @@ class QueryBuilder:
 
     def count(self):
         """ফিক্স: মূল QueryBuilder-এর _select না বদলে আলাদা কপি দিয়ে COUNT করে"""
-        import copy
-        count_qb = copy.copy(self)
+        count_qb = self.clone()
         count_qb._select = ["COUNT(*) as cnt"]
         count_qb._order = []
         count_qb._limit = None
@@ -459,6 +457,22 @@ class QueryBuilder:
         if not Database.in_transaction():
             Database.commit()
         return cursor.rowcount
+
+    def clone(self):
+        """
+        QueryBuilder অবজেক্টের একটি গভীর ক্লোন (deep/clean copy) তৈরি করে
+        যাতে ক্লোন করা অবজেক্টের লিস্ট মিউটেট করলে মূল অবজেক্ট পরিবর্তিত না হয়।
+        """
+        import copy
+        new_qb = copy.copy(self)
+        new_qb._select = list(self._select)
+        new_qb._wheres = list(self._wheres)
+        new_qb._joins = list(self._joins)
+        new_qb._order = list(self._order)
+        new_qb._group = list(self._group)
+        new_qb._havings = list(self._havings)
+        new_qb._params = list(self._params)
+        return new_qb
 
     @staticmethod
     def raw(sql: str, params: tuple = ()):
