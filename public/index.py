@@ -24,5 +24,32 @@ from config.routes import build_router
 
 config = get_config()
 router = build_router()
-application = Application(router, config)
+pyflow_wsgi = Application(router, config)
+
+_fastapi_wsgi = None
+
+def application(environ, start_response):
+    global _fastapi_wsgi
+    path = environ.get("PATH_INFO", "")
+    
+    # Route `/api/*` and `/openapi.json` to FastAPI
+    if path == "/api" or path.startswith("/api/") or path == "/openapi.json":
+        try:
+            if _fastapi_wsgi is None:
+                from a2wsgi import ASGIMiddleware
+                from app.api import api as fastapi_app
+                _fastapi_wsgi = ASGIMiddleware(fastapi_app)
+            return _fastapi_wsgi(environ, start_response)
+        except Exception as exc:
+            status = '500 Internal Server Error'
+            headers = [('Content-type', 'application/json; charset=utf-8')]
+            start_response(status, headers)
+            import json
+            return [json.dumps({
+                "status": "error",
+                "message": "FastAPI initialization failed on this server.",
+                "detail": str(exc)
+            }).encode('utf-8')]
+            
+    return pyflow_wsgi(environ, start_response)
 
