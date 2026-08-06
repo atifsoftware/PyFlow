@@ -352,11 +352,44 @@ class TransactionTest(PyFlowTestCase):
                 raise ValueError("force rollback")
         except ValueError:
             pass
-
         self.assertIsNone(
             QueryBuilder("users").where("email", email).first(),
             "Rollback-এর পরে data থাকা উচিত নয়"
         )
+
+    def test_nested_transaction_hooks_isolation(self):
+        """ভেরিফাই করে যে nested transaction rollback হলে বাইরের commit hooks ডিলিট হয়ে যায় না"""
+        outer_commit_fired = False
+        inner_commit_fired = False
+        inner_rollback_fired = False
+
+        def set_outer_commit():
+            nonlocal outer_commit_fired
+            outer_commit_fired = True
+
+        def set_inner_commit():
+            nonlocal inner_commit_fired
+            inner_commit_fired = True
+
+        def set_inner_rollback():
+            nonlocal inner_rollback_fired
+            inner_rollback_fired = True
+
+        with Database.transaction():
+            Database.on_commit(set_outer_commit)
+
+            try:
+                with Database.transaction():
+                    Database.on_commit(set_inner_commit)
+                    Database.on_rollback(set_inner_rollback)
+                    raise ValueError("Nested roll back")
+            except ValueError:
+                pass
+
+        # Outer transaction সফলভাবে commit হয়েছে
+        self.assertTrue(outer_commit_fired, "বাইরের commit hook অবশ্যই ফায়ার হওয়া উচিত")
+        self.assertFalse(inner_commit_fired, "Nested transaction rollback হওয়ায় ভেতরের commit hook ফায়ার হওয়া উচিত নয়")
+        self.assertTrue(inner_rollback_fired, "Nested transaction-এর rollback hook অবশ্যই ফায়ার হওয়া উচিত")
 
 
 if __name__ == "__main__":

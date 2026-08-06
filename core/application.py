@@ -23,6 +23,7 @@ from core.view import TemplateEngine, ViewError
 from core.database import Database, QueryError, Profiler
 from core.security import RateLimiter
 from core.static import serve_static
+from core.router import MethodNotAllowedError
 
 
 class ProfilerLogHandler(logging.Handler):
@@ -102,15 +103,15 @@ class Application:
             if override and override.upper() in ("PUT", "PATCH", "DELETE"):
                 request.method = override.upper()
 
-        route, params = self.router.resolve(request.method, request.path)
-
-        if route is None:
-            response = self._render_error_page(404, request_path=request.path)
-        elif route == "METHOD_NOT_ALLOWED":
+        try:
+            route, params = self.router.resolve(request.method, request.path)
+            if route is None:
+                response = self._render_error_page(404, request_path=request.path)
+            else:
+                request.params = params or {}
+                response = self._run_route(route, request, session)
+        except MethodNotAllowedError:
             response = Response("405 Method Not Allowed", status=405)
-        else:
-            request.params = params or {}
-            response = self._run_route(route, request, session)
 
         # সেশন কুকি প্রতিটা রেসপন্সেই রিফ্রেশ করে দেওয়া হয় (expiry বাড়ানোর জন্য),
         # redirect হলেও এটা দরকার তাই কোনো শর্ত ছাড়াই সেট করা হচ্ছে

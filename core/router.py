@@ -10,6 +10,12 @@ core/router.py
 """
 
 import re
+import threading
+
+
+class MethodNotAllowedError(Exception):
+    """Exception raised when a route matches but the HTTP method does not."""
+    pass
 
 
 class Route:
@@ -94,9 +100,28 @@ class _RouteGroup:
 class Router:
     def __init__(self):
         self.routes = []
-        self._group_prefix = ""
-        self._group_middleware = []
+        self._local = threading.local()
         self._names = {}
+
+    @property
+    def _group_prefix(self) -> str:
+        if not hasattr(self._local, "group_prefix"):
+            self._local.group_prefix = ""
+        return self._local.group_prefix
+
+    @_group_prefix.setter
+    def _group_prefix(self, value: str):
+        self._local.group_prefix = value
+
+    @property
+    def _group_middleware(self) -> list:
+        if not hasattr(self._local, "group_middleware"):
+            self._local.group_middleware = []
+        return self._local.group_middleware
+
+    @_group_middleware.setter
+    def _group_middleware(self, value: list):
+        self._local.group_middleware = value
 
     # ------------------------------------------------------------ registration
     def _add(self, method, pattern, handler, name=None, middleware=None):
@@ -150,7 +175,7 @@ class Router:
     def resolve(self, method, path):
         """
         ম্যাচ করা route রিটার্ন করে + params। কোনো path ম্যাচ করলেও method না
-        মিললে 405 বোঝানোর জন্য matched_any_path=True রিটার্ন করে।
+        মিললে 405 বোঝানোর জন্য MethodNotAllowedError এক্সেপশন রেইজ করে।
         """
         matched_any_path = False
         for route in self.routes:
@@ -160,7 +185,7 @@ class Router:
                 if route.method == method.upper():
                     return route, params
         if matched_any_path:
-            return "METHOD_NOT_ALLOWED", None
+            raise MethodNotAllowedError("Method not allowed for this route")
         return None, None
 
     def url_for(self, name, **kwargs) -> str:

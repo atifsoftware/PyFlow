@@ -18,6 +18,7 @@ run.py
 
 import sys
 import os
+import argparse
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, PROJECT_ROOT)
@@ -81,15 +82,26 @@ def run_asgi(port: int):
 
 
 def main():
-    args = sys.argv[1:]
-    wsgi_mode = "--wsgi" in args
-    port_args = [a for a in args if a.isdigit()]
-    port = int(port_args[0]) if port_args else 8000
+    parser = argparse.ArgumentParser(description="PyFlow Development Server Launcher")
+    parser.add_argument(
+        "port",
+        type=int,
+        nargs="?",
+        default=8000,
+        help="Port to bind the server to (default: 8000)"
+    )
+    parser.add_argument(
+        "--wsgi",
+        action="store_true",
+        help="Run in legacy WSGI-only mode (without FastAPI/ASGI bridge)"
+    )
 
-    if wsgi_mode:
-        run_wsgi(port)
+    args = parser.parse_args()
+
+    if args.wsgi:
+        run_wsgi(args.port)
     else:
-        run_asgi(port)
+        run_asgi(args.port)
 
 
 if __name__ == "__main__":

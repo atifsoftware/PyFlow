@@ -47,8 +47,9 @@ class RouterTest(PyFlowTestCase):
 
     def test_method_not_allowed(self):
         r = self._make_router()
-        route, params = r.resolve("DELETE", "/about")
-        self.assertEqual(route, "METHOD_NOT_ALLOWED")
+        from core.router import MethodNotAllowedError
+        with self.assertRaises(MethodNotAllowedError):
+            r.resolve("DELETE", "/about")
 
     def test_int_param_extracted(self):
         r = self._make_router()

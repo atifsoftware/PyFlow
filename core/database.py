@@ -449,9 +449,9 @@ class Database:
             order = Order.create(data)
             Database.on_commit(lambda: Mailer.send_order_confirmation(order))
         """
-        if not hasattr(cls._local, "commit_hooks"):
-            cls._local.commit_hooks = []
-        cls._local.commit_hooks.append(callback)
+        if not hasattr(cls._local, "commit_hooks") or not cls._local.commit_hooks:
+            cls._local.commit_hooks = [[]]
+        cls._local.commit_hooks[-1].append(callback)
 
     @classmethod
     def on_rollback(cls, callback):
@@ -463,14 +463,17 @@ class Database:
             StockOut.create(data)
             Database.on_rollback(lambda: logger.error("Stock deduction failed!"))
         """
-        if not hasattr(cls._local, "rollback_hooks"):
-            cls._local.rollback_hooks = []
-        cls._local.rollback_hooks.append(callback)
+        if not hasattr(cls._local, "rollback_hooks") or not cls._local.rollback_hooks:
+            cls._local.rollback_hooks = [[]]
+        cls._local.rollback_hooks[-1].append(callback)
 
     @classmethod
     def _fire_commit_hooks(cls):
         """Commit hooks চালানো ও clear করা"""
-        hooks = getattr(cls._local, "commit_hooks", [])
+        if hasattr(cls._local, "commit_hooks") and cls._local.commit_hooks:
+            hooks = cls._local.commit_hooks.pop()
+        else:
+            hooks = []
         cls._local.commit_hooks = []
         for hook in hooks:
             try:
@@ -481,7 +484,10 @@ class Database:
     @classmethod
     def _fire_rollback_hooks(cls):
         """Rollback hooks চালানো ও clear করা"""
-        hooks = getattr(cls._local, "rollback_hooks", [])
+        if hasattr(cls._local, "rollback_hooks") and cls._local.rollback_hooks:
+            hooks = cls._local.rollback_hooks.pop()
+        else:
+            hooks = []
         cls._local.rollback_hooks  = []
         cls._local.commit_hooks    = []   # commit hooks বাতিল
         for hook in hooks:
@@ -552,6 +558,17 @@ class Database:
             Database._local.transaction_level += 1
             level = Database._local.transaction_level
 
+            # Initialize hooks for this transaction level
+            if not hasattr(Database._local, "commit_hooks") or not Database._local.commit_hooks:
+                Database._local.commit_hooks = [[]]
+            else:
+                Database._local.commit_hooks.append([])
+
+            if not hasattr(Database._local, "rollback_hooks") or not Database._local.rollback_hooks:
+                Database._local.rollback_hooks = [[]]
+            else:
+                Database._local.rollback_hooks.append([])
+
             if level > 1:
                 # Nested → SAVEPOINT
                 sp_name = f"sp_{level}"
@@ -578,6 +595,18 @@ class Database:
                         conn.cursor().execute(f"RELEASE SAVEPOINT {sp_name}")
                     except Exception as sp_err:
                         logger.error("SAVEPOINT rollback ব্যর্থ: %s", sp_err)
+
+                    # Fire and discard this level's rollback hooks
+                    if hasattr(Database._local, "rollback_hooks") and len(Database._local.rollback_hooks) >= level:
+                        r_hooks = Database._local.rollback_hooks.pop()
+                        for hook in r_hooks:
+                            try:
+                                hook()
+                            except Exception as e:
+                                logger.warning("on_rollback hook ব্যর্থ হয়েছে: %s", e)
+                    # Discard this level's commit hooks since it rolled back
+                    if hasattr(Database._local, "commit_hooks") and len(Database._local.commit_hooks) >= level:
+                        Database._local.commit_hooks.pop()
                 else:
                     Database.rollback()
                     Database._fire_rollback_hooks()
@@ -594,6 +623,16 @@ class Database:
                         conn.cursor().execute(f"RELEASE SAVEPOINT {sp_name}")
                     except Exception:
                         pass
+
+                    # Merge nested hooks to the parent transaction level
+                    if hasattr(Database._local, "commit_hooks") and len(Database._local.commit_hooks) >= level:
+                        c_hooks = Database._local.commit_hooks.pop()
+                        if Database._local.commit_hooks:
+                            Database._local.commit_hooks[-1].extend(c_hooks)
+                    if hasattr(Database._local, "rollback_hooks") and len(Database._local.rollback_hooks) >= level:
+                        r_hooks = Database._local.rollback_hooks.pop()
+                        if Database._local.rollback_hooks:
+                            Database._local.rollback_hooks[-1].extend(r_hooks)
                 else:
                     Database.commit()
                     Database._fire_commit_hooks()
