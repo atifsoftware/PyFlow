@@ -5,7 +5,8 @@
 # PyFlow — Premium Custom Python MVC & FastAPI Framework 🚀
 ### Version 3.0.0 (Latest Release)
 
-🌐 **Live Demo (লাইভ ডেমো):** [https://pyflow.nexterp.bd/](https://pyflow.nexterp.bd/)
+🌐 **Live Demo (লাইভ ডেমো):** [https://pyflow.nexterp.bd/](https://pyflow.nexterp.bd/) | 🛠️ **[Installation Guide (ইনস্টলেশন গাইড)](INSTALL.md)**
+
 
 *   **📖 Read the [PyFlow Q&A FAQ (২৫টি প্রশ্নোত্তর)](FAQ.md) for quick architecture, database pool, dynamic html, and scaling answers.**
 *   **📖 বাংলা এবং ইংরেজি বিস্তারিত প্রশ্নোত্তর দেখতে পড়ুন [PyFlow FAQ (২৫টি প্রশ্নোত্তর)](FAQ.md)।**
