@@ -19,6 +19,8 @@ import time
 import html
 import secrets
 import json
+import threading
+from collections import deque
 from typing import Optional
 
 
@@ -176,66 +178,77 @@ class Sanitize:
 # --------------------------------------------------------------------------
 # Rate Limiter (brute-force / login-spam প্রতিরোধ) - in-memory, single-process
 # প্রোডাকশনে বড় স্কেলে Redis ব্যবহার করা উচিত, কিন্তু এখানে dependency-free রাখা হলো
+# FIX: threading.Lock দিয়ে race condition ঠেকানো হয়েছে
 # --------------------------------------------------------------------------
 class RateLimiter:
-    _hits = {}  # key -> list[timestamps]
+    _hits: dict = {}          # key -> list[timestamps]
+    _lock = threading.Lock()  # thread-safe read-modify-write
 
     @classmethod
     def too_many_attempts(cls, key: str, max_attempts: int = 5, window_seconds: int = 60) -> bool:
         now = time.time()
-        attempts = cls._hits.get(key, [])
-        attempts = [t for t in attempts if now - t < window_seconds]
-        cls._hits[key] = attempts
-        return len(attempts) >= max_attempts
+        with cls._lock:
+            attempts = [t for t in cls._hits.get(key, []) if now - t < window_seconds]
+            cls._hits[key] = attempts
+            return len(attempts) >= max_attempts
 
     @classmethod
     def hit(cls, key: str):
-        cls._hits.setdefault(key, []).append(time.time())
+        now = time.time()
+        with cls._lock:
+            cls._hits.setdefault(key, []).append(now)
 
     @classmethod
     def clear(cls, key: str):
-        cls._hits.pop(key, None)
+        with cls._lock:
+            cls._hits.pop(key, None)
 
 
 # --------------------------------------------------------------------------
 # Traffic Monitor & DDoS Shield
+# FIX: threading.Lock + deque দিয়ে thread-safe করা হয়েছে।
+#      আগে list reassignment (_global_hits = [...]) race condition তৈরি করতো।
 # --------------------------------------------------------------------------
 class TrafficMonitor:
-    _global_hits = []
-    _last_alert_time = 0
+    _global_hits: deque = deque()  # timestamp deque — O(1) append ও popleft
+    _last_alert_time: float = 0
+    _lock = threading.Lock()
 
     @classmethod
     def record_hit(cls, request, max_global_rpm: int = 1000) -> int:
         """
         রেকর্ড করে প্রতি মিনিটে মোট ট্রাফিক সংখ্যা গণনা করে।
-        যদি থ্রেশহোল্ড অতিক্রম করে, তবে ডাটাবেসে ও লগে অ্যালার্ট দেয়।
+        যদি থ্রেশহোল্ড অতিক্রম করে, তবে ডাটাবেসে ও লগে অ্যালার্ট দেয়.
         """
         now = time.time()
-        # Clean up old hits
-        cls._global_hits = [t for t in cls._global_hits if now - t < 60]
-        cls._global_hits.append(now)
-        
-        global_rpm = len(cls._global_hits)
         max_global_rpm = int(max_global_rpm)
-        
-        if global_rpm >= max_global_rpm:
-            # Limit database alert creation to once every 15 seconds to avoid flooding
-            if now - cls._last_alert_time > 15:
+
+        # Lock-এর ভেতরে শুধু state mutation করা হয় — I/O বাইরে
+        with cls._lock:
+            # পুরনো hits সরানো (60 সেকেন্ডের বাইরের) — deque থেকে বাম দিক O(1)
+            while cls._global_hits and now - cls._global_hits[0] >= 60:
+                cls._global_hits.popleft()
+            cls._global_hits.append(now)
+            global_rpm = len(cls._global_hits)
+            should_alert = global_rpm >= max_global_rpm and (now - cls._last_alert_time > 15)
+            if should_alert:
                 cls._last_alert_time = now
-                import logging
-                logger = logging.getLogger("pyflow")
-                logger.critical(f"[SECURITY ALERT] Potential DDoS / High Traffic detected! Rate: {global_rpm} req/min.")
-                
-                try:
-                    from app.models.activity_log_model import ActivityLog
-                    ActivityLog.log(
-                        request, 
-                        action="ddos_alert", 
-                        description=f"অস্বাভাবিক ট্রাফিক সনাক্ত হয়েছে: মিনিটে {global_rpm} রিকোয়েস্ট (সীমা: {max_global_rpm})"
-                    )
-                except Exception:
-                    pass
-                    
+
+        # Lock-এর বাইরে I/O side effects (logging, DB write)
+        if should_alert:
+            import logging
+            logger = logging.getLogger("pyflow")
+            logger.critical(f"[SECURITY ALERT] Potential DDoS / High Traffic detected! Rate: {global_rpm} req/min.")
+            try:
+                from app.models.activity_log_model import ActivityLog
+                ActivityLog.log(
+                    request,
+                    action="ddos_alert",
+                    description=f"অস্বাভাবিক ট্রাফিক সনাক্ত হয়েছে: মিনিটে {global_rpm} রিকোয়েস্ট (সীমা: {max_global_rpm})"
+                )
+            except Exception:
+                pass
+
         return global_rpm
 
 

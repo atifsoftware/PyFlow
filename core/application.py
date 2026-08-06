@@ -37,10 +37,11 @@ class ProfilerLogHandler(logging.Handler):
 
 
 class Application:
-    def __init__(self, router, config: dict):
+    def __init__(self, router, config: dict, global_middleware: list = None):
         self.router = router
         self.config = config
         self.debug = config.get("APP_DEBUG", False)
+        self.global_middleware = global_middleware or []  # সব route-এ চলবে
         self.view_engine = TemplateEngine(
             views_dir=config.get("VIEWS_DIR", "app/views"),
             cache_enabled=not self.debug,
@@ -370,6 +371,13 @@ function switchPyFlowTab(tabName) {{
         return Response(html_text.encode("utf-8"), status=response.status_code, headers=response.headers)
 
     def _run_route(self, route, request, session) -> Response:
+        # প্রথমে global middleware চালানো (সব route-এ প্রযোজ্য)
+        for mw in self.global_middleware:
+            result = mw(request, session)
+            if result is not None:
+                return result
+
+        # তারপর route-specific middleware
         for mw in route.middleware:
             result = mw(request, session)
             if result is not None:
@@ -378,7 +386,7 @@ function switchPyFlowTab(tabName) {{
         import inspect
         try:
             sig = inspect.signature(route.handler)
-            has_view_engine = len(sig.parameters) >= 3 or any(p.name == 'view_engine' for p in sig.parameters.values())
+            has_view_engine = "view_engine" in sig.parameters or len(sig.parameters) >= 3
         except ValueError:
             # Fallback if signature cannot be obtained
             has_view_engine = True

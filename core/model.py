@@ -193,17 +193,47 @@ class Model:
 
     @classmethod
     def _filter_fillable(cls, data: dict) -> dict:
-        """শুধু fillable কলামগুলো pass করে — mass-assignment protection"""
+        """শুধু fillable কলামগুলো pass করে — mass-assignment protection।
+        FIX: fillable সেট না থাকলে আগে নীরবে {} রিটার্ন করতো, যা empty row insert করতো।
+             এখন: fillable = [] হলে সব data pass করে (open model), কিন্তু warning লগ করে।
+             নিরাপদ থাকতে চাইলে Model subclass-এ fillable সেট করুন।
+        """
         if not cls.fillable:
-            return {}
+            import logging
+            logging.getLogger("pyflow").warning(
+                f"[MODEL] '{cls.__name__}' ক্লাসে 'fillable' সেট করা নেই — সব কলাম pass হচ্ছে। "
+                "Mass-assignment protection নিষ্ক্রিয়। নিরাপত্তার জন্য fillable তালিকা সেট করুন।"
+            )
+            return dict(data)  # সব data pass করা (open model behavior)
         return {k: v for k, v in data.items() if k in cls.fillable}
 
 
 # ─────────────────────────── Module Helpers ───────────────────────────────
 
 def _default_fk(table_name: str) -> str:
-    """Table name থেকে default foreign key তৈরি করা: users → user_id"""
-    base = table_name.rstrip("s") if table_name.endswith("s") else table_name
+    """Table name থেকে default foreign key তৈরি করা: users → user_id
+    FIX: আগের rstrip('s') logic ভুল ছিল — 'status' → 'statu_id', 'news' → 'new_id'।
+         এখন শুধু সাধারণ plural শেষ (-ies → y, -es → নিয়ম, -s → বাদ) handle করা হয়।
+    """
+    t = table_name.lower()
+    # অনিয়মিত শব্দ whitelist
+    _irregular = {
+        "people": "person", "men": "man", "women": "woman",
+        "children": "child", "teeth": "tooth", "feet": "foot",
+    }
+    if t in _irregular:
+        return f"{_irregular[t]}_id"
+
+    # সাধারণ pluralization বিপরীত করা
+    if t.endswith("ies") and len(t) > 3:
+        base = t[:-3] + "y"    # categories → category
+    elif t.endswith("ses") or t.endswith("xes") or t.endswith("zes") or t.endswith("ches") or t.endswith("shes"):
+        base = t[:-2]           # boxes → box, classes → class
+    elif t.endswith("s") and not t.endswith("ss") and len(t) > 2:
+        base = t[:-1]           # users → user (কিন্তু 'status', 'address' → যেমন আছে)
+    else:
+        base = t               # 'news', 'status' → নিজেই foreign key base
+
     return f"{base}_id"
 
 

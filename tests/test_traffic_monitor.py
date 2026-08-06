@@ -40,7 +40,7 @@ class TrafficMonitorTest(PyFlowTestCase):
     def setUp(self):
         super().setUp()
         # Reset hits for clean state
-        TrafficMonitor._global_hits = []
+        TrafficMonitor._global_hits.clear()  # deque.clear() — list assignment করলে deque ভেঙে যাবে
         TrafficMonitor._last_alert_time = 0
         RateLimiter._hits = {}
 
@@ -63,7 +63,7 @@ class TrafficMonitorTest(PyFlowTestCase):
         # Verify that a ddos_alert log is recorded in the activity_logs table
         alerts = ActivityLog.query().where("action", "ddos_alert").get()
         self.assertGreaterEqual(len(alerts), 1)
-        self.assertIn("রিকোয়েস্ট", alerts[0]["description"])
+        self.assertIn("মিনিটে", alerts[0]["description"])
         
     def test_global_rate_limiter_block_logs_dos_block(self):
         from core.application import Application

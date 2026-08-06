@@ -7,6 +7,12 @@ Dependency Injection Container (IoC Container).
 import inspect
 from core.logger import Logger
 
+
+class CircularDependencyError(Exception):
+    """Circular dependency সনাক্ত হলে এই exception raise হবে।"""
+    pass
+
+
 class Container:
     def __init__(self):
         self._bindings = {}
@@ -26,8 +32,10 @@ class Container:
         """নির্দিষ্ট অবজেক্ট সরাসরি রেজিস্ট্রেশন করা"""
         self._instances[abstract] = instance_obj
 
-    def resolve(self, abstract):
+    def resolve(self, abstract, _resolving: set = None):
         """ক্লাস টাইপ বা রেজিস্টার্ড কি ধরে ডিপেন্ডেন্সি রিজলভ করে"""
+        _resolving = _resolving or set()
+
         # ১. যদি সরাসরি ইনস্ট্যান্স রেজিস্টার্ড থাকে
         if abstract in self._instances:
             return self._instances[abstract]
@@ -40,7 +48,7 @@ class Container:
                 resolved = concrete(self)
             else:
                 # এটি একটি ক্লাস টাইপ
-                resolved = self.autowire(concrete)
+                resolved = self.autowire(concrete, _resolving)
             
             if singleton:
                 self._instances[abstract] = resolved
@@ -48,12 +56,25 @@ class Container:
 
         # ৩. বাইন্ডিং না থাকলে অটো-ওয়্যারিং এর চেষ্টা করি
         if inspect.isclass(abstract):
-            return self.autowire(abstract)
+            return self.autowire(abstract, _resolving)
 
         raise Exception(f"Unable to resolve dependency: {abstract}")
 
-    def autowire(self, cls):
-        """ইন্সপেকশন ব্যবহার করে স্বয়ংক্রিয়ভাবে ক্লাসের ডিপেন্ডেন্সি ইনজেক্ট করে"""
+    def autowire(self, cls, _resolving: set = None):
+        """ইন্সপেকশন ব্যবহার করে স্বয়ংক্রিয়ভাবে ক্লাসের ডিপেন্ডেন্সি ইনজেক্ট করে।
+        FIX: circular dependency (A→B→A) এখন RecursionError এর বদলে
+             CircularDependencyError দিয়ে স্পষ্টভাবে ধরা হয়।
+        """
+        _resolving = set(_resolving or set())
+
+        # Circular dependency চেক
+        if cls in _resolving:
+            chain = " → ".join(c.__name__ for c in _resolving) + f" → {cls.__name__}"
+            raise CircularDependencyError(
+                f"Circular dependency detected: {chain}"
+            )
+        _resolving.add(cls)
+
         if not hasattr(cls, "__init__") or cls.__init__ is object.__init__:
             return cls()
 
@@ -72,7 +93,7 @@ class Container:
                         f"Cannot autowire parameter '{param.name}' in class '{cls.__name__}': missing type annotation or default value."
                     )
             else:
-                # টাইপ হিন্ট থাকলে সেটি রিজলভ করি
-                dependencies.append(self.resolve(annotation))
+                # টাইপ হিন্ট থাকলে সেটি রিজলভ করি (_resolving চেইন পাস করা)
+                dependencies.append(self.resolve(annotation, _resolving))
 
         return cls(*dependencies)

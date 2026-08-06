@@ -24,11 +24,27 @@ class FileLock:
     """
     একটি সাধারণ ক্রস-প্লাটফর্ম ফাইল লকিং মেকানিজম।
     অ্যাটমিক ডিরেক্টরি তৈরির (os.mkdir) মাধ্যমে রেস কন্ডিশন প্রতিরোধ করে।
+    FIX: stale lock detection যোগ করা হয়েছে — process crash হলে পুরনো .lock
+         directory আটকে থাকার সমস্যা সমাধান করা হয়েছে।
     """
+    STALE_TIMEOUT_SECONDS = 10  # এর বেশি পুরনো lock stale মনে করা হবে
+
     def __init__(self, lock_path: str, timeout: float = 2.0):
         self.lock_path = lock_path
         self.timeout = timeout
         self.has_lock = False
+
+    def _remove_stale_lock(self) -> bool:
+        """Stale lock directory সরিয়ে দেওয়ার চেষ্টা করে।"""
+        try:
+            mtime = os.path.getmtime(self.lock_path)
+            if time.time() - mtime > self.STALE_TIMEOUT_SECONDS:
+                os.rmdir(self.lock_path)
+                logger.warning("Stale session lock সরানো হয়েছে: %s", self.lock_path)
+                return True
+        except OSError:
+            pass
+        return False
 
     def acquire(self) -> bool:
         start = time.time()
@@ -38,6 +54,8 @@ class FileLock:
                 self.has_lock = True
                 return True
             except OSError:
+                # Stale lock হলে সরিয়ে পুনরায় চেষ্টা করি
+                self._remove_stale_lock()
                 time.sleep(0.05)
         return False
 
@@ -78,7 +96,10 @@ class Session:
             return {}
         lock = FileLock(path + ".lock")
         if not lock.acquire():
-            logger.warning("সেশন ফাইল লক অর্জন করা যায়নি (load): %s", path)
+            # FIX: lock না পেলে আগে warning দিয়েও file read করা হতো।
+            #      এখন নিরাপদে empty dict রিটার্ন করা হয়।
+            logger.warning("সেশন ফাইল লক অর্জন করা যায়নি (load): %s", path)
+            return {}
         try:
             if not os.path.exists(path):
                 return {}
@@ -118,7 +139,10 @@ class Session:
         path = self._path()
         lock = FileLock(path + ".lock")
         if not lock.acquire():
-            logger.warning("সেশন ফাইল লক অর্জন করা যায়নি (save): %s", path)
+            # FIX: lock না পেলে আগে warning দিয়েও file write করা হতো।
+            #      এখন নিরাপদে skip করা হয় — corrupt write ঠেকানো হয়।
+            logger.warning("সেশন ফাইল লক অর্জন করা যায়নি (save): %s", path)
+            return
         try:
             now = time.time()
             existing_created = None
