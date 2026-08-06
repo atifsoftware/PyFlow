@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: pyflow_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: pyflow_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: pyflow_web
+    restart: always
+    command: python run.py 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www/pyflow
+      - /var/www/pyflow/.venv/
+      - /var/www/pyflow/storage/
+    depends_on:
+      db:
+        condition: service_healthy
+
+  queue:
+    build: .
+    container_name: pyflow_queue
+    restart: always
+    command: python queue_worker.py --queue default
+    volumes:
+      - .:/var/www/pyflow
+      - /var/www/pyflow/.venv/
+      - /var/www/pyflow/storage/
+    depends_on:
+      db:
+        condition: service_healthy
+
+  scheduler:
+    build: .
+    container_name: pyflow_scheduler
+    restart: always
+    command: python scheduler_runner.py
+    volumes:
+      - .:/var/www/pyflow
+      - /var/www/pyflow/.venv/
+      - /var/www/pyflow/storage/
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:

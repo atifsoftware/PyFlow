@@ -1,0 +1,17 @@
+.git/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.testing
+storage/logs/*
+storage/sessions/*
+storage/cache/*
+storage/*.sqlite
+dist/
+build/
+*.egg-info/
+config.zip
+stderr.log
