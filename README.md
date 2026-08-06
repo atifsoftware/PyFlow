@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/static/images/logo.png" alt="PyFlow Logo" width="180" style="border-radius: 24px;" />
+</p>
+
 # PyFlow — Premium Custom Python MVC & FastAPI Framework 🚀
 ### Version 3.0.0 (Latest Release)
 

@@ -12,4 +12,6 @@ storage/uploads/*
 !storage/uploads/.gitkeep
 stderr.log
 .git.zip
+app/__pycache__.zip
+
 
