@@ -42,7 +42,9 @@
 <body>
     <nav class="navbar">
         <a href="/" class="brand">Py<span style="color:#e056fd;">Flow</span></a>
-        <div class="nav-links" style="display: flex; align-items: center; gap: 15px;">
+        
+        <!-- Desktop Links -->
+        <div class="nav-links desktop-menu" style="display: flex; align-items: center; gap: 15px;">
             <a href="/">{{ __('home') }}</a>
             <a href="/docs">{{ __('docs') }}</a>
             @if(user_name)
@@ -59,10 +61,53 @@
             <a href="?lang=bn" class="btn-lang"><i class="fas fa-globe"></i> বাংলা</a>
             @endif
         </div>
+
+        <!-- Hamburger Icon for Mobile -->
+        <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()" aria-label="Toggle Menu" style="background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 5px;">
+            <i class="fas fa-bars"></i>
+        </button>
     </nav>
+
+    <!-- Mobile Sidebar Drawer -->
+    <div id="mobile-sidebar" class="mobile-sidebar">
+        <div class="mobile-sidebar-header">
+            <a href="/" class="brand">Py<span style="color:#e056fd;">Flow</span></a>
+            <button class="close-sidebar-btn" onclick="toggleMobileSidebar()">&times;</button>
+        </div>
+        <div class="mobile-sidebar-links">
+            <a href="/" onclick="toggleMobileSidebar()">{{ __('home') }}</a>
+            <a href="/docs" onclick="toggleMobileSidebar()">{{ __('docs') }}</a>
+            @if(user_name)
+            <a href="/dashboard" onclick="toggleMobileSidebar()">{{ __('dashboard') }}</a>
+            <a href="/logout" onclick="toggleMobileSidebar()">{{ __('logout') }}</a>
+            @else
+            <a href="/login" onclick="toggleMobileSidebar()">{{ __('login') }}</a>
+            <a href="/register" onclick="toggleMobileSidebar()">{{ __('register') }}</a>
+            @endif
+
+            @if(current_lang == 'bn')
+            <a href="?lang=en" class="btn-lang" style="margin-left:0; margin-top:10px; display:inline-block; text-align:center;"><i class="fas fa-globe"></i> English</a>
+            @else
+            <a href="?lang=bn" class="btn-lang" style="margin-left:0; margin-top:10px; display:inline-block; text-align:center;"><i class="fas fa-globe"></i> বাংলা</a>
+            @endif
+        </div>
+    </div>
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
     <main class="container">
         @yield('content')
     </main>
+
+    <script>
+    function toggleMobileSidebar() {
+        var sidebar = document.getElementById('mobile-sidebar');
+        var overlay = document.getElementById('sidebar-overlay');
+        if (sidebar && overlay) {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+    }
+    </script>
 </body>
 
 </html>

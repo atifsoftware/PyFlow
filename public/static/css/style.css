@@ -235,25 +235,101 @@ form input:focus {
     opacity: 0.8;
 }
 
+/* Desktop menu visible by default */
+.desktop-menu {
+    display: flex !important;
+}
+.mobile-menu-toggle {
+    display: none;
+}
+
+/* Mobile Sidebar Drawer Styles */
+.mobile-sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px; /* Hidden by default */
+    width: 280px;
+    height: 100vh;
+    background: var(--navbar-bg);
+    z-index: 100000;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+}
+.mobile-sidebar.active {
+    left: 0;
+}
+.mobile-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 15px;
+}
+.close-sidebar-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 28px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.close-sidebar-btn:hover {
+    color: #fff;
+}
+.mobile-sidebar-links {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.mobile-sidebar-links a {
+    color: #94a3b8;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16.5px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+.mobile-sidebar-links a:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99999;
+    display: none;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+.sidebar-overlay.active {
+    display: block;
+}
+
 @media(max-width: 768px) {
+    .desktop-menu {
+        display: none !important;
+    }
+    .mobile-menu-toggle {
+        display: block;
+    }
     .navbar {
-        padding: 14px 20px;
-        flex-direction: column;
-        gap: 12px;
-        text-align: center;
-    }
-    .nav-links {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px;
-    }
-    .nav-links a {
-        padding: 4px 8px;
-        font-size: 13.5px;
-    }
-    .btn-lang {
-        margin-left: 0 !important;
-        margin-top: 4px;
+        padding: 16px 24px !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        gap: 0 !important;
+        text-align: left !important;
     }
 }
+
 
