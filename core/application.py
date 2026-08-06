@@ -179,26 +179,26 @@ class Application:
         debug_html = f"""
 <!-- PyFlow Debug Bar -->
 <style>
-    #pyflow-debugbar-header-info {
+    #pyflow-debugbar-header-info {{
         display: flex;
         align-items: center;
         gap: 16px;
-    }
-    @media (max-width: 768px) {
-        .pm-db-hide-mobile {
+    }}
+    @media (max-width: 768px) {{
+        .pm-db-hide-mobile {{
             display: none !important;
-        }
-        #pyflow-debugbar-header {
+        }}
+        #pyflow-debugbar-header {{
             flex-direction: column;
             align-items: flex-start !important;
             gap: 8px;
             padding: 10px 12px !important;
-        }
-        #pyflow-debugbar-header-info {
+        }}
+        #pyflow-debugbar-header-info {{
             flex-wrap: wrap;
             gap: 8px !important;
-        }
-    }
+        }}
+    }}
 </style>
 <div id="pyflow-debugbar" style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(20, 20, 25, 0.95); border-top: 2px solid #5a32a8; color: #e1e1e6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; z-index: 999999; box-shadow: 0 -4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(8px);">
     <div id="pyflow-debugbar-header" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; cursor: pointer; border-bottom: 1px solid #333;" onclick="togglePyFlowDebugbar()">
