@@ -1,0 +1,8 @@
+{
+    "name": "Inventory",
+    "version": "1.0",
+    "enabled": true,
+    "providers": [
+        "modules.inventory.providers.InventoryServiceProvider"
+    ]
+}

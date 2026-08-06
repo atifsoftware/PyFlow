@@ -31,6 +31,11 @@ class TemplateEngine:
         self.views_dir = views_dir
         self.cache_enabled = cache_enabled
         self._compiled_cache = {}
+        self.namespaces = {}
+
+    def register_namespace(self, name: str, views_dir: str):
+        """ভিউ নেমস্পেস রেজিস্টার করার হেল্পার (যেমন: inventory)"""
+        self.namespaces[name] = views_dir
 
     def render(self, template_name: str, data: dict = None) -> str:
         data = data or {}
@@ -41,6 +46,22 @@ class TemplateEngine:
 
     # ---------------------------------------------------------------- loading
     def _template_path(self, name: str) -> str:
+        if "::" in name:
+            ns, template_name = name.split("::", 1)
+            if ns in self.namespaces:
+                views_dir = self.namespaces[ns]
+                template_file = template_name.replace(".", "/") + ".html"
+                path = os.path.abspath(os.path.join(views_dir, template_file))
+                real_views = os.path.realpath(views_dir)
+                real_path = os.path.realpath(path)
+                if not real_path.startswith(real_views):
+                    raise ViewError("অবৈধ টেমপ্লেট পাথ")
+                if not os.path.exists(real_path):
+                    raise ViewError(f"টেমপ্লেট পাওয়া যায়নি: {name} in namespace {ns}")
+                return real_path
+            else:
+                raise ViewError(f"অজানা ভিউ নেমস্পেস: {ns}")
+
         name = name.replace(".", "/") + ".html"
         path = os.path.join(self.views_dir, name)
         real_views = os.path.realpath(self.views_dir)

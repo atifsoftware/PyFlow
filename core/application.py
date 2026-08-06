@@ -48,6 +48,13 @@ class Application:
         Database.init(config)
         self._setup_logging()
 
+        # Module & Plugin Auto-Discovery & Service Provider Booting
+        from core.module_manager import ModuleManager
+        self.module_manager = ModuleManager(self)
+        self.module_manager.discover_and_load()
+        self.module_manager.register_providers()
+        self.module_manager.boot_providers()
+
     def _setup_logging(self):
         logging.basicConfig(
             filename=self.config.get("LOG_FILE", "storage/logs/app.log"),
