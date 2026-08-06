@@ -14,4 +14,10 @@ stderr.log
 .git.zip
 app/__pycache__.zip
 
+# Python Packaging
+build/
+dist/
+*.egg-info/
+pyflow_framework-*/
+
 

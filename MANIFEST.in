@@ -1,0 +1,3 @@
+recursive-include app/views *
+recursive-include app/lang *
+recursive-include public *
