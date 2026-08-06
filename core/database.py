@@ -44,6 +44,19 @@ Atomic Transaction ব্যবহার:
         journal = Journal.create(header)
         with Database.savepoint("line_1"):
             JournalLine.create(line)         # শুধু এটা rollback হতে পারে
+
+    # ⚠️ সতর্কবার্তা: নেস্টেড ট্রানজেকশনে (Savepoint) কোনো এক্সেপশন ঘটলে তা স্বয়ংক্রিয়ভাবে 
+    # প্যারেন্ট ট্রানজেকশনে প্রপাগেট করবে এবং পুরো ট্রানজেকশন রোলব্যাক হবে। যদি আপনি চান শুধু 
+    # ইনার সেভপয়েন্ট রোলব্যাক হোক এবং আউটার ব্লকের কাজ চলমান থাকুক, তাহলে ইনার ব্লককে 
+    # try-except দিয়ে রিলিজ করতে হবে:
+    # 
+    # with Database.transaction(): # Outer
+    #     Order.create(data)
+    #     try:
+    #         with Database.transaction(): # Inner Savepoint
+    #             Payment.process()
+    #     except Exception as e:
+    #         log_error(e) # শুধু ইনারটা রোলব্যাক হবে, আউটার ট্রানজেকশন সাকসেসফুল হবে
 """
 
 import os

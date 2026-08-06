@@ -2,6 +2,8 @@ import os
 import json
 import datetime
 import threading
+import logging
+from logging.handlers import RotatingFileHandler
 from config.config import get_config
 
 _local = threading.local()
@@ -44,9 +46,6 @@ class Logger:
         if cls._initialized:
             return
         
-        import logging
-        from logging.handlers import RotatingFileHandler
-
         config = get_config()
         cls._log_file = config.get("LOG_FILE", "storage/logs/app.log")
         log_dir = os.path.dirname(os.path.abspath(cls._log_file))
@@ -126,7 +125,6 @@ class Logger:
             print(f"Logging failed: {e}")
             
         # Also integrate with the standard python logging, so it shows up in the Debug Bar!
-        import logging
         logger = logging.getLogger("pyflow")
         level_map = {
             cls.EMERGENCY: logging.CRITICAL,

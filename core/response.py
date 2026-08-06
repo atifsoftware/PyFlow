@@ -11,13 +11,24 @@ from core.security import security_headers
 
 class Response:
     def __init__(self, body="", status=200, headers=None, content_type="text/html; charset=utf-8"):
-        self.body = body
+        self._body = body
         self.status_code = status
         self.headers = headers or {}
         self.headers.setdefault("Content-Type", content_type)
         self._cookies = SimpleCookie()
         for k, v in security_headers().items():
             self.headers.setdefault(k, v)
+
+    @property
+    def body(self):
+        return self._body
+
+    @body.setter
+    def body(self, value):
+        self._body = value
+
+    def set_body(self, body):
+        self._body = body
 
     def set_cookie(self, key, value, max_age=None, http_only=True, secure=False, same_site="Lax", path="/"):
         self._cookies[key] = value
@@ -51,9 +62,9 @@ class Response:
         return header_list
 
     def wsgi_body(self):
-        if isinstance(self.body, bytes):
-            return [self.body]
-        body = self.body if isinstance(self.body, str) else str(self.body)
+        if isinstance(self._body, bytes):
+            return [self._body]
+        body = self._body if isinstance(self._body, str) else str(self._body)
         return [body.encode("utf-8")]
 
     # --------------------------------------------------------- factory helpers

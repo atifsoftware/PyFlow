@@ -18,15 +18,16 @@ Model Lifecycle Event ও Custom Event সিস্টেম।
 """
 
 import logging
+from typing import Callable, Any, List
 
 logger = logging.getLogger("pyflow.event")
 
 
 class Event:
-    _listeners: dict = {}
+    _listeners: dict[str, List[Callable]] = {}
 
     @classmethod
-    def listen(cls, event_name: str, callback) -> None:
+    def listen(cls, event_name: str, callback: Callable) -> None:
         """একটি event-এ listener যোগ করে। একই event-এ একাধিক listener হতে পারে।"""
         if event_name not in cls._listeners:
             cls._listeners[event_name] = []

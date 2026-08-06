@@ -290,8 +290,9 @@ class _EagerQueryProxy:
         from core.database import Database
         ph = Database.placeholder()
         placeholders = ", ".join([ph] * len(pk_values))
-        safe_fk = f"`{fk}`" if not fk.startswith("`") else fk
-        sql = f"SELECT * FROM `{related_cls.table}` WHERE {safe_fk} IN ({placeholders})"
+        safe_fk = Database.quote_identifier(fk)
+        safe_table = Database.quote_identifier(related_cls.table)
+        sql = f"SELECT * FROM {safe_table} WHERE {safe_fk} IN ({placeholders})"
         cursor = Database.execute(sql, tuple(pk_values))
         related_rows = cursor.fetchall()
 
@@ -323,8 +324,9 @@ class _EagerQueryProxy:
         from core.database import Database
         ph = Database.placeholder()
         placeholders = ", ".join([ph] * len(pk_values))
-        safe_fk = f"`{fk}`" if not fk.startswith("`") else fk
-        sql = f"SELECT * FROM `{related_cls.table}` WHERE {safe_fk} IN ({placeholders})"
+        safe_fk = Database.quote_identifier(fk)
+        safe_table = Database.quote_identifier(related_cls.table)
+        sql = f"SELECT * FROM {safe_table} WHERE {safe_fk} IN ({placeholders})"
         cursor = Database.execute(sql, tuple(pk_values))
         related_rows = cursor.fetchall()
 
@@ -357,8 +359,9 @@ class _EagerQueryProxy:
         from core.database import Database
         ph = Database.placeholder()
         placeholders = ", ".join([ph] * len(fk_values))
-        safe_ok = f"`{owner_key}`" if not owner_key.startswith("`") else owner_key
-        sql = f"SELECT * FROM `{related_cls.table}` WHERE {safe_ok} IN ({placeholders})"
+        safe_ok = Database.quote_identifier(owner_key)
+        safe_table = Database.quote_identifier(related_cls.table)
+        sql = f"SELECT * FROM {safe_table} WHERE {safe_ok} IN ({placeholders})"
         cursor = Database.execute(sql, tuple(fk_values))
         related_rows = cursor.fetchall()
 

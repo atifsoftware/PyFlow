@@ -155,10 +155,10 @@ class Application:
             body_bytes = b"".join(response.wsgi_body())
             if len(body_bytes) < 1024:
                 # ছোট response compress করা লাভজনক নয়
-                response._body = body_bytes
+                response.set_body(body_bytes)
                 return response
             compressed = gzip.compress(body_bytes, compresslevel=6)
-            response._body = compressed
+            response.set_body(compressed)
             response.headers["Content-Encoding"] = "gzip"
             response.headers["Content-Length"] = str(len(compressed))
             response.headers["Vary"] = "Accept-Encoding"
