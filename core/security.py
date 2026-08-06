@@ -165,6 +165,13 @@ class Sanitize:
             return value
         return None
 
+    @staticmethod
+    def escape_like(value: str) -> str:
+        """LIKE কুয়েরিতে wildcard এস্কেপ করে যাতে literal % বা _ খোঁজা যায়"""
+        if value is None:
+            return ""
+        return str(value).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
 
 # --------------------------------------------------------------------------
 # Rate Limiter (brute-force / login-spam প্রতিরোধ) - in-memory, single-process

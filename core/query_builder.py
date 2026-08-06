@@ -109,6 +109,25 @@ class QueryBuilder:
         self._params.append(value)
         return self
 
+    def where_group(self, callback, joiner="AND"):
+        """
+        Grouped WHERE clauses — e.g. WHERE a AND (b OR c)
+        callback-এ একটি নতুন QueryBuilder instance পাস করা হয় যার wheres-কে parenthesis-এ wrap করা হয়।
+        """
+        sub_qb = QueryBuilder(self.table)
+        callback(sub_qb)
+        if sub_qb._wheres:
+            parts = []
+            for i, (fragment, j) in enumerate(sub_qb._wheres):
+                if i == 0:
+                    parts.append(fragment)
+                else:
+                    parts.append(f"{j} {fragment}")
+            sub_sql = " ".join(parts)
+            self._wheres.append((f"({sub_sql})", joiner))
+            self._params.extend(sub_qb._params)
+        return self
+
     def where_in(self, column, values):
         column = _safe_identifier(column)
         if not values:
@@ -209,9 +228,20 @@ class QueryBuilder:
         self._havings.append((f"{column} {operator} {ph}", value))
         return self
 
-    def having_raw(self, fragment: str, value):
-        """কাস্টম HAVING expression — যেমন having_raw('COUNT(*)', '>', 5)"""
-        self._havings.append((fragment, value))
+    def having_raw(self, fragment: str, operator: str, value=None):
+        """
+        কাস্টম HAVING expression — যেমন having_raw('COUNT(*)', '>', 5)
+        
+        ⚠️ সতর্কবার্তা: কাস্টম এক্সপ্রেশনে ভ্যারিয়েবল বাইন্ড করতে value প্যারামিটারটি ব্যবহার করুন।
+        কখনোই having_raw("COUNT(*) > " + input_val) এভাবে লজিক লিখবেন না।
+        """
+        if value is None:
+            value = operator
+            operator = ""
+        
+        ph = Database.placeholder() if operator else ""
+        expr = f"{fragment} {operator} {ph}".strip()
+        self._havings.append((expr, value))
         return self
 
     # ------------------------------------------------------------ BUILD SQL
@@ -270,13 +300,20 @@ class QueryBuilder:
         sql, params = self.to_sql()
 
         if self._cache_ttl is not None:
-            # Cache key: SQL fingerprint + params hash
+            # Cache key namespace with table version tag
+            try:
+                from core.cache import Cache
+                version = str(Cache.get(f"table_version:{self.table}", "1"))
+            except Exception:
+                version = "1"
+
             import hashlib, json
             try:
                 key_source = sql + "|" + json.dumps(params, default=str, sort_keys=True)
             except Exception:
                 key_source = sql + "|" + str(params)
-            cache_key = "qb:" + hashlib.md5(key_source.encode("utf-8")).hexdigest()
+            
+            cache_key = f"qb:table:{self.table}:v{version}:" + hashlib.md5(key_source.encode("utf-8")).hexdigest()
 
             try:
                 from core.cache import Cache
@@ -317,7 +354,16 @@ class QueryBuilder:
         return self.count() > 0
 
     # --------------------------------------------------------- WRITE OPS
+    def _invalidate_cache(self):
+        """টেবিলের রাইট অপারেশন হলে ক্যাশ ইনভ্যালিডেট করে"""
+        try:
+            from core.cache import Cache
+            Cache.increment(f"table_version:{self.table}")
+        except Exception:
+            pass
+
     def insert(self, data: dict) -> int:
+        self._invalidate_cache()
         columns = [_safe_identifier(c) for c in data.keys()]
         ph = Database.placeholder()
         placeholders = ", ".join([ph] * len(columns))
@@ -328,6 +374,7 @@ class QueryBuilder:
         return Database.last_insert_id(cursor)
 
     def update(self, data: dict) -> int:
+        self._invalidate_cache()
         columns = [_safe_identifier(c) for c in data.keys()]
         ph = Database.placeholder()
         set_clause = ", ".join([f"{c} = {ph}" for c in columns])
@@ -346,6 +393,7 @@ class QueryBuilder:
 
     def update_all(self, data: dict) -> int:
         """সব রো আপডেট করে (সতর্কতা: বিপজ্জনক হতে পারে!)"""
+        self._invalidate_cache()
         columns = [_safe_identifier(c) for c in data.keys()]
         ph = Database.placeholder()
         set_clause = ", ".join([f"{c} = {ph}" for c in columns])
@@ -359,6 +407,7 @@ class QueryBuilder:
         return cursor.rowcount
 
     def delete(self) -> int:
+        self._invalidate_cache()
         sql = f"DELETE FROM {self.table}"
         sql += self._build_where_clause()
         if not self._wheres:
@@ -373,6 +422,7 @@ class QueryBuilder:
 
     def delete_all(self) -> int:
         """সব রো ডিলিট করে (সতর্কতা: বিপজ্জনক হতে পারে!)"""
+        self._invalidate_cache()
         sql = f"DELETE FROM {self.table}"
         if self._wheres:
             sql += self._build_where_clause()

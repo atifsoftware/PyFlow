@@ -179,6 +179,26 @@ class QueryBuilderTest(PyFlowTestCase):
         count = QueryBuilder("users").count()
         self.assertEqual(count, 0)
 
+    def test_having_raw_works_correctly(self):
+        qb = QueryBuilder("users").group_by("role").having_raw("COUNT(*)", ">", 1)
+        sql, params = qb.to_sql()
+        self.assertIn("HAVING COUNT(*) >", sql)
+        self.assertIn(1, params)
+
+    def test_where_group_parenthesizes_clauses(self):
+        qb = QueryBuilder("users").where("active", 1).where_group(
+            lambda q: q.where("role", "admin").or_where("id", 5)
+        )
+        sql, params = qb.to_sql()
+        self.assertIn("WHERE `active` = ? AND (`role` = ? OR `id` = ?)", sql.replace('"', '`'))
+        self.assertIn("admin", params)
+        self.assertIn(5, params)
+
+    def test_sanitize_escape_like(self):
+        from core.security import Sanitize
+        escaped = Sanitize.escape_like("user%name_test\\value")
+        self.assertEqual(escaped, "user\\%name\\_test\\\\value")
+
 
 if __name__ == "__main__":
     import unittest
