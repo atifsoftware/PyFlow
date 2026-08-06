@@ -92,3 +92,6 @@ if __name__ == "__main__":
         print(" -> Created file: run.py")
         
     print("\nSUCCESS: PyFlow template loaded successfully! Run 'python run.py' to start the development server.")
+
+if __name__ == "__main__":
+    main()
