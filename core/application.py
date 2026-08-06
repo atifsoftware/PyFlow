@@ -86,8 +86,25 @@ class Application:
         # login-attempt spam ঠেকাতে একটা global soft-limit (per-IP)
         global_key = f"global:{request.ip()}"
         if RateLimiter.too_many_attempts(global_key, max_attempts=300, window_seconds=60):
+            # Alert throttling: Log alert max once every 15 seconds per IP
+            alert_key = f"alert:block:{request.ip()}"
+            if not RateLimiter.too_many_attempts(alert_key, max_attempts=1, window_seconds=15):
+                self.logger.warning(f"[SECURITY ALERT] IP {request.ip()} blocked due to rate limits.")
+                try:
+                    from app.models.activity_log_model import ActivityLog
+                    ActivityLog.log(
+                        request,
+                        action="dos_block",
+                        description=f"অতিরিক্ত রিকোয়েস্টের কারণে আইপি {request.ip()} সাময়িকভাবে ব্লক করা হয়েছে"
+                    )
+                except Exception:
+                    pass
             return Response("429 Too Many Requests", status=429)
         RateLimiter.hit(global_key)
+
+        # Global traffic monitor & DDoS Shield
+        from core.security import TrafficMonitor
+        TrafficMonitor.record_hit(request, self.config.get("DDOS_THRESHOLD_RPM", 1000))
 
         cookie_session_id = request.cookie(Session.COOKIE_NAME)
         session = Session(

@@ -85,6 +85,7 @@ class PyFlowTestCase(unittest.TestCase):
                 action TEXT,
                 description TEXT,
                 ip_address TEXT,
+                user_agent TEXT,
                 created_at TEXT
             )""",
             """CREATE TABLE IF NOT EXISTS jobs (

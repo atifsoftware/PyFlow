@@ -198,6 +198,49 @@ class RateLimiter:
 
 
 # --------------------------------------------------------------------------
+# Traffic Monitor & DDoS Shield
+# --------------------------------------------------------------------------
+class TrafficMonitor:
+    _global_hits = []
+    _last_alert_time = 0
+
+    @classmethod
+    def record_hit(cls, request, max_global_rpm: int = 1000) -> int:
+        """
+        রেকর্ড করে প্রতি মিনিটে মোট ট্রাফিক সংখ্যা গণনা করে।
+        যদি থ্রেশহোল্ড অতিক্রম করে, তবে ডাটাবেসে ও লগে অ্যালার্ট দেয়।
+        """
+        now = time.time()
+        # Clean up old hits
+        cls._global_hits = [t for t in cls._global_hits if now - t < 60]
+        cls._global_hits.append(now)
+        
+        global_rpm = len(cls._global_hits)
+        max_global_rpm = int(max_global_rpm)
+        
+        if global_rpm >= max_global_rpm:
+            # Limit database alert creation to once every 15 seconds to avoid flooding
+            if now - cls._last_alert_time > 15:
+                cls._last_alert_time = now
+                import logging
+                logger = logging.getLogger("pyflow")
+                logger.critical(f"[SECURITY ALERT] Potential DDoS / High Traffic detected! Rate: {global_rpm} req/min.")
+                
+                try:
+                    from app.models.activity_log_model import ActivityLog
+                    ActivityLog.log(
+                        request, 
+                        action="ddos_alert", 
+                        description=f"অস্বাভাবিক ট্রাফিক সনাক্ত হয়েছে: মিনিটে {global_rpm} রিকোয়েস্ট (সীমা: {max_global_rpm})"
+                    )
+                except Exception:
+                    pass
+                    
+        return global_rpm
+
+
+
+# --------------------------------------------------------------------------
 # Security headers - প্রতিটা response-এ যোগ হবে (middleware থেকে কল হয়)
 # --------------------------------------------------------------------------
 def security_headers() -> dict:
