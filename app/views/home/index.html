@@ -199,7 +199,60 @@
     @keyframes blink {
         50% { opacity: 0; }
     }
+    @media (max-width: 768px) {
+
+        .hero-section {
+            padding: 50px 16px;
+            margin-bottom: 30px;
+        }
+        .hero-title {
+            font-size: 32px;
+            letter-spacing: -0.8px;
+            line-height: 1.2;
+        }
+        .hero-subtitle {
+            font-size: 15px;
+            margin-bottom: 30px;
+        }
+        .hero-actions {
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+        .hero-actions .btn-premium {
+            width: 100%;
+            max-width: 280px;
+            justify-content: center;
+            padding: 12px 24px;
+            font-size: 14.5px;
+        }
+        .features-header {
+            margin-bottom: 30px;
+        }
+        .features-title {
+            font-size: 26px;
+        }
+        .features-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .feature-card {
+            padding: 24px;
+        }
+        .why-section {
+            padding: 40px 16px;
+        }
+        .why-bullet {
+            width: 38px;
+            height: 38px;
+            font-size: 14px;
+        }
+        .why-item {
+            gap: 12px;
+        }
+    }
 </style>
+
 
 <!-- Hero Section -->
 <div class="hero-section">
