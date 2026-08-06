@@ -1,6 +1,9 @@
 @echo off
+chcp 65001 > nul
 title PyFlow Server Stopper
 color 0C
+set PYTHONPATH=.
+set PYTHONIOENCODING=utf-8
 
 echo ===================================================
 echo   🛑 Stopping PyFlow Server on Port 8000

@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 title PyFlow Server Runner
 color 0A
 set PYTHONPATH=.
