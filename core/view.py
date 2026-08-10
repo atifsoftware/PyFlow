@@ -57,25 +57,35 @@ class TemplateEngine:
         """Register view namespace (e.g., inventory::views)"""
         self.namespaces[name] = views_dir
         # Update loader to include namespaces
-        loaders = {
-            '': FileSystemLoader(self.views_dir)
-        }
+        # Use base loader directly + PrefixLoader for namespaces only
+        namespace_loaders = {}
         for ns_name, ns_dir in self.namespaces.items():
-            loaders[ns_name] = FileSystemLoader(ns_dir)
+            namespace_loaders[ns_name] = FileSystemLoader(ns_dir)
         
-        self.env.loader = ChoiceLoader([PrefixLoader(loaders)])
+        # Combine base loader with namespace loaders using ChoiceLoader
+        if namespace_loaders:
+            self.env.loader = ChoiceLoader([
+                FileSystemLoader(self.views_dir),  # Base loader for default templates
+                PrefixLoader(namespace_loaders)     # PrefixLoader for namespaced templates
+            ])
+        else:
+            self.env.loader = FileSystemLoader(self.views_dir)
 
     def render(self, template_name: str, data: dict = None) -> str:
         """Render template with given data"""
         data = data or {}
         
+        # Handle namespace notation FIRST (e.g., inventory::home.index)
+        namespace = None
+        if "::" in template_name:
+            namespace, template_name = template_name.split("::", 1)
+        
         # Convert dot notation to path (e.g., home.index → home/index.html)
         template_path = template_name.replace(".", "/") + ".html"
         
-        # Handle namespace notation (e.g., inventory::home.index)
-        if "::" in template_path:
-            ns, template_path = template_path.split("::", 1)
-            template_path = f"{ns}:{template_path}"
+        # Add namespace prefix for Jinja2 PrefixLoader
+        if namespace:
+            template_path = f"{namespace}/{template_path}"
         
         try:
             template = self.env.get_template(template_path)

@@ -1,0 +1,53 @@
+[2026-08-10 01:50:31] INFO | IP: 0.0.0.0 | User: guest | CLI | Loaded 1 active modules, 0 active plugins.
+2026-08-10 01:50:31,264 [INFO] Loaded 1 active modules, 0 active plugins.
+2026-08-10 01:50:33,004 [ERROR] Unhandled exception: Template not found: home.index
+Traceback (most recent call last):
+  File "/workspace/core/view.py", line 81, in render
+    template = self.env.get_template(template_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/jinja2/environment.py", line 1016, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/jinja2/environment.py", line 975, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/jinja2/loaders.py", line 607, in load
+    raise TemplateNotFound(name)
+jinja2.exceptions.TemplateNotFound: home/index.html
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/core/application.py", line 144, in _handle_request
+    response = self._run_route(route, request, session)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/core/application.py", line 395, in _run_route
+    controller_instance_or_result = route.handler(request, session, self.view_engine)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/core/controller.py", line 51, in handler
+    return method()
+           ^^^^^^^^
+  File "/workspace/app/controllers/home_controller.py", line 11, in index
+    return self.view("home.index", {
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/core/controller.py", line 114, in view
+    html = self.view_engine.render(template, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/core/view.py", line 84, in render
+    raise ViewError(f"Template not found: {template_name}") from e
+core.view.ViewError: Template not found: home.index
+
+[2026-08-10 01:50:40] INFO | IP: 0.0.0.0 | User: guest | CLI | Loaded 1 active modules, 0 active plugins.
+2026-08-10 01:50:40,026 [INFO] Loaded 1 active modules, 0 active plugins.
+[2026-08-10 03:01:55] INFO | IP: 0.0.0.0 | User: guest | CLI | Loaded 1 active modules, 0 active plugins.
+2026-08-10 03:01:55,423 [INFO] Loaded 1 active modules, 0 active plugins.
+[2026-08-10 03:02:40] INFO | IP: 0.0.0.0 | User: guest | CLI | Loaded 1 active modules, 0 active plugins.
+2026-08-10 03:02:40,025 [INFO] Loaded 1 active modules, 0 active plugins.
+[2026-08-10 03:02:44] INFO | IP: 0.0.0.0 | User: guest | CLI | Loaded 1 active modules, 0 active plugins.
+2026-08-10 03:02:44,406 [INFO] Loaded 1 active modules, 0 active plugins.
+[2026-08-10 03:02:57] INFO | IP: 0.0.0.0 | User: guest | CLI | Loaded 1 active modules, 0 active plugins.
+2026-08-10 03:02:57,147 [INFO] Loaded 1 active modules, 0 active plugins.
+[2026-08-10 03:02:57] INFO | IP: 0.0.0.0 | User: guest | CLI | Loaded 1 active modules, 0 active plugins.
+2026-08-10 03:02:57,149 [INFO] Loaded 1 active modules, 0 active plugins.
+[2026-08-10 03:02:57] INFO | IP: 0.0.0.0 | User: guest | CLI | Loaded 1 active modules, 0 active plugins.
+2026-08-10 03:02:57,160 [INFO] Loaded 1 active modules, 0 active plugins.
