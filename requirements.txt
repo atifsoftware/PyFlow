@@ -2,14 +2,14 @@
 # ================================
 # Python 3.9+ প্রয়োজন
 
-# ─── Core: MySQL ড্রাইভার (PHP-এর PDO-র মতো কাজ করে) ───────────────────
-# Pure Python MySQL client — কোনো C extension লাগে না
-pymysql==1.1.1
-
-# ─── Production MySQL Driver (Optional but Recommended) ────────────────────
-# mysqlclient is faster and production-ready, but requires C compiler
-# Uncomment if you need maximum performance and have build tools installed
+# ─── Core: MySQL ড্রাইভার (Production Ready) ───────────────────────────────
+# mysqlclient is faster and production-ready (C extension based)
+# PHP-এর PDO-র মতো কাজ করে, তবে বেশি ফাস্ট
 mysqlclient==2.2.8
+
+# ─── Alternative: Pure Python MySQL client (Development) ───────────────────
+# Uncomment if you don't have C compiler or prefer pure Python
+# pymysql==1.1.1
 
 # ─── Template Engine: Jinja2 (Recommended over custom engine) ─────────────
 # Industry-standard, fast, secure, and feature-rich templating

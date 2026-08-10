@@ -13,7 +13,7 @@ from core.testing import PyFlowTestCase
 from core.container import Container
 from core.controller import action
 from core.application import Application
-from config.routes import build_router
+from app.routes import build_router
 
 
 # ডামি ক্লাসসমূহ

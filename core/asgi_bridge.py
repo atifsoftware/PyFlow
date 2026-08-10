@@ -22,7 +22,7 @@ from a2wsgi import WSGIMiddleware
 from app.api import api as fastapi_app
 from core.application import Application
 from config.config import get_config
-from config.routes import build_router
+from app.routes import build_router
 
 
 def _build_pyflow_wsgi():

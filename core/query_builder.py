@@ -330,16 +330,16 @@ class QueryBuilder:
                 cached = Cache.get(cache_key)
                 if cached is not None:
                     return cached
-                cursor = Database.execute(sql, params)
-                rows = [dict(r) for r in cursor.fetchall()]
+                rows = Database.execute(sql, params)
+                # rows already list of dict from Database.execute
                 Cache.put(cache_key, rows, ttl=self._cache_ttl)
                 return rows
             except Exception:
                 pass  # cache ব্যর্থ হলে normally execute করা
 
-        cursor = Database.execute(sql, params)
-        rows = cursor.fetchall()
-        return [dict(r) for r in rows]
+        rows = Database.execute(sql, params)
+        # rows already list of dict from Database.execute
+        return rows
 
 
     def first(self):
@@ -355,9 +355,11 @@ class QueryBuilder:
         count_qb._limit = None
         count_qb._offset = None
         sql, params = count_qb.to_sql()
-        cursor = Database.execute(sql, params)
-        row = cursor.fetchone()
-        return dict(row)["cnt"] if row else 0
+        rows = Database.execute(sql, params)
+        # rows is list of dict from Database.execute
+        if rows and len(rows) > 0:
+            return rows[0].get("cnt", 0)
+        return 0
 
     def exists(self) -> bool:
         return self.count() > 0
@@ -371,7 +373,11 @@ class QueryBuilder:
         except Exception:
             pass
 
-    def insert(self, data: dict) -> int:
+    def insert(self, data: dict):
+        """
+        Insert a single record into the table.
+        Returns: dict with 'id' and 'affected' keys (or just 'affected' if no auto-increment)
+        """
         self._invalidate_cache()
         columns = [_safe_identifier(c) for c in data.keys()]
         ph = Database.placeholder()
@@ -381,20 +387,17 @@ class QueryBuilder:
         is_postgres = Database.driver == "postgresql"
         if is_postgres:
             sql += ' RETURNING "id"'
-            
-        cursor = Database.execute(sql, tuple(data.values()))
-        
-        inserted_id = None
-        if is_postgres:
+            cursor = Database.execute(sql, tuple(data.values()))
             row = cursor.fetchone()
-            if row:
-                inserted_id = dict(row).get("id") if isinstance(row, dict) else row[0]
+            inserted_id = dict(row).get("id") if row and isinstance(row, dict) else (row[0] if row else None)
+            result = {'id': inserted_id, 'affected': 1}
         else:
-            inserted_id = Database.last_insert_id(cursor)
+            # Database.execute now returns dict for INSERT operations
+            result = Database.execute(sql, tuple(data.values()))
             
         if not Database.in_transaction():
             Database.commit()
-        return inserted_id
+        return result
 
     def update(self, data: dict) -> int:
         if not data:
@@ -480,8 +483,9 @@ class QueryBuilder:
         একদম কাস্টম query চালানোর জন্য - কিন্তু params সবসময় bound রাখতে হবে।
         কখনো raw(f"... {user_input}") এভাবে লিখবেন না।
         """
-        cursor = Database.execute(sql, params)
+        result = Database.execute(sql, params)
         if sql.strip().upper().startswith("SELECT"):
-            return [dict(r) for r in cursor.fetchall()]
+            # result is already list of dict from Database.execute
+            return result
         Database.commit()
-        return cursor.rowcount
+        return result if isinstance(result, int) else (result.get('affected', 0) if isinstance(result, dict) else 0)

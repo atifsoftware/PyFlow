@@ -44,7 +44,7 @@ from config.config import get_config
 def run_wsgi(port: int):
     from wsgiref.simple_server import make_server
     from core.application import Application
-    from config.routes import build_router
+    from app.routes import build_router
 
     config = get_config()
     router = build_router()
