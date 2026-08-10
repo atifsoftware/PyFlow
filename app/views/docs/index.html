@@ -1,5 +1,5 @@
-@extends('layout.master')
-@section('content')
+{% extends 'layout/master.html' %}
+{% block content %}
 
 <style>
     .docs-container {
@@ -1043,7 +1043,7 @@ function switchSection(sectionId) {
 
 <footer style="text-align: center; padding: 40px 20px; color: #a4b0be; font-size: 13px; margin-top: 50px; border-top: 1px solid #f1f2f6;">
     <p style="margin-bottom: 6px;">{{ __('footer_text') }}</p>
-    <p>&copy; {{ date('Y') if hasattr(date, 'Y') else '2026' }} PyFlow Framework. All rights reserved.</p>
+    <p>&copy; {{ '2026' }} PyFlow Framework. All rights reserved.</p>
 </footer>
 
-@endsection
+{% endblock %}

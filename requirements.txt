@@ -6,6 +6,16 @@
 # Pure Python MySQL client — কোনো C extension লাগে না
 pymysql==1.1.1
 
+# ─── Production MySQL Driver (Optional but Recommended) ────────────────────
+# mysqlclient is faster and production-ready, but requires C compiler
+# Uncomment if you need maximum performance and have build tools installed
+mysqlclient==2.2.8
+
+# ─── Template Engine: Jinja2 (Recommended over custom engine) ─────────────
+# Industry-standard, fast, secure, and feature-rich templating
+jinja2>=3.1.0
+markupsafe>=2.1.0
+
 # ─── Core: PostgreSQL ড্রাইভার ───────────────────────────────────────────
 # DB_DRIVER=postgresql ব্যবহার করলে এটা দরকার
 # binary version — Linux/Mac/Windows সবায় সহজে ইনস্টল হয়

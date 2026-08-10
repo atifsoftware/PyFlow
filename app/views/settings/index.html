@@ -1,5 +1,5 @@
-@extends('layout.admin')
-@section('content')
+{% extends 'layout/admin.html' %}
+{% block content %}
 
 <!-- Page Header -->
 <div class="adm-page-header fade-up">
@@ -25,7 +25,7 @@
             </div>
             <div class="pm-card-body">
                 <form method="POST" action="/settings">
-                    @csrf
+                    <input type="hidden" name="_token" value="{{ csrf_token }}">
 
                     <!-- General Settings Section -->
                     <h5 style="color: var(--tx-1); font-weight: 700; margin-bottom: 20px; border-left: 4px solid var(--purple); padding-left: 10px;">
@@ -38,12 +38,12 @@
                         <input type="text" name="site_name" class="pm-input"
                                placeholder="যেমন: PyFlow App"
                                value="{{ settings.get('site_name', '') }}" required>
-                        @if(errors.get('site_name'))
+                        {% if errors.get('site_name' %})
                         <div class="pm-field-error">
                             <i class="fas fa-circle-exclamation" style="font-size:11px;"></i>
                             {{ errors.get('site_name')[0] }}
                         </div>
-                        @endif
+                        {% endif %}
                     </div>
 
                     <!-- Site Email -->
@@ -52,12 +52,12 @@
                         <input type="email" name="site_email" class="pm-input"
                                placeholder="যেমন: admin@example.com"
                                value="{{ settings.get('site_email', '') }}" required>
-                        @if(errors.get('site_email'))
+                        {% if errors.get('site_email' %})
                         <div class="pm-field-error">
                             <i class="fas fa-circle-exclamation" style="font-size:11px;"></i>
                             {{ errors.get('site_email')[0] }}
                         </div>
-                        @endif
+                        {% endif %}
                     </div>
 
                     <!-- Permissions Section -->
@@ -74,7 +74,7 @@
                         <div class="form-check form-switch" style="padding-left: 2.5em; font-size: 20px;">
                             <input class="form-check-input" type="checkbox" name="allow_registration" value="1"
                                    style="cursor: pointer;"
-                                   @if(settings.get('allow_registration') == '1') checked @endif>
+                                   {% if settings.get('allow_registration' %} == '1') checked {% endif %}>
                         </div>
                     </div>
 
@@ -87,7 +87,7 @@
                         <div class="form-check form-switch" style="padding-left: 2.5em; font-size: 20px;">
                             <input class="form-check-input" type="checkbox" name="maintenance_mode" value="1"
                                    style="cursor: pointer;"
-                                   @if(settings.get('maintenance_mode') == '1') checked @endif>
+                                   {% if settings.get('maintenance_mode' %} == '1') checked {% endif %}>
                         </div>
                     </div>
 
@@ -101,4 +101,4 @@
     </div>
 </div>
 
-@endsection
+{% endblock %}

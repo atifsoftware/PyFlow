@@ -186,28 +186,28 @@
     </div>
 
     <!-- Alerts -->
-    @if(errors.get('email'))
+    {% if errors.get('email') %}
     <div class="alert-box alert-error">
         <i class="fas fa-circle-exclamation"></i>
         {{ errors.get('email')[0] }}
     </div>
-    @endif
-    @if(errors.get('_token'))
+    {% endif %}
+    {% if errors.get('_token') %}
     <div class="alert-box alert-error">
         <i class="fas fa-shield-exclamation"></i>
         {{ errors.get('_token')[0] }}
     </div>
-    @endif
-    @if(success)
+    {% endif %}
+    {% if success %}
     <div class="alert-box alert-success">
         <i class="fas fa-circle-check"></i>
         {{ success }}
     </div>
-    @endif
+    {% endif %}
 
     <!-- Form -->
     <form method="POST" action="/login">
-        @csrf
+        <input type="hidden" name="_token" value="{{ csrf_token }}">
 
         <div class="form-group">
             <label class="form-label">ইমেইল এড্রেস</label>

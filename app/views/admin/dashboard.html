@@ -1,5 +1,5 @@
-@extends('layout.admin')
-@section('content')
+{% extends 'layout/admin.html' %}
+{% block content %}
 
 <div class="row g-4">
     <!-- Breadcrumb -->
@@ -88,7 +88,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach(recent_logs as log)
+                            {% for recent_logs as log %}
                             <tr style="border-top: 1px solid rgba(255,255,255,0.04);">
                                 <td class="ps-4 py-3">
                                     <div class="d-flex align-items-center gap-2">
@@ -106,15 +106,15 @@
                                     {{ log.created_at }}
                                 </td>
                             </tr>
-                            @endforeach
-                            @if(not recent_logs)
+                            {% endfor %}
+                            {% if not recent_logs %}
                             <tr>
                                 <td colspan="3" class="text-center py-5 text-muted">
                                     <i class="fas fa-inbox fa-2x mb-3 d-block" style="opacity:0.3;"></i>
                                     কোনো activity log নেই
                                 </td>
                             </tr>
-                            @endif
+                            {% endif %}
                         </tbody>
                     </table>
                 </div>
@@ -167,4 +167,4 @@ updateClock();
 setInterval(updateClock, 1000);
 </script>
 
-@endsection
+{% endblock %}
