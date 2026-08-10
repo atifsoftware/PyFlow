@@ -160,9 +160,10 @@ class Mailer:
     @classmethod
     def _render_view(cls, view_path: str, data: dict) -> str:
         """Template render করে HTML string রিটার্ন করে"""
-        from core.view import View
+        from core.view import TemplateEngine
         try:
-            return View.render(view_path, data)
+            engine = TemplateEngine()
+            return engine.render(view_path, data)
         except Exception as exc:
             import logging
             logging.getLogger("pyflow.mailer").warning(f"Email template render error: {exc}")

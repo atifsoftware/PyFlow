@@ -261,26 +261,26 @@ class Database:
 
     @classmethod
     def _create_mysql_connection(cls):
-        """নতুন MySQL connection তৈরি করা"""
+        """নতুন MySQL connection তৈরি করা (mysqlclient ব্যবহার করে)"""
         try:
-            import pymysql
-            import pymysql.cursors
+            import MySQLdb
+            import MySQLdb.cursors
         except ImportError as exc:
             raise QueryError(
-                "MySQL ব্যবহার করতে 'pip install pymysql' করুন, "
+                "MySQL ব্যবহার করতে 'pip install mysqlclient' করুন, "
                 "অথবা .env-এ DB_DRIVER=sqlite দিয়ে রাখুন"
             ) from exc
 
         config = Database._config
-        conn   = pymysql.connect(
+        conn   = MySQLdb.connect(
             host         = config.get("DB_HOST", "127.0.0.1"),
             port         = int(config.get("DB_PORT", 3306)),
             user         = config.get("DB_USER", "root"),
-            password     = config.get("DB_PASSWORD", ""),
-            database     = config.get("DB_NAME", ""),
+            passwd       = config.get("DB_PASSWORD", ""),
+            db           = config.get("DB_NAME", ""),
             charset      = "utf8mb4",
             collation    = "utf8mb4_unicode_ci",
-            cursorclass  = pymysql.cursors.DictCursor,
+            cursorclass  = MySQLdb.cursors.SSCursor,  # Server-side cursor for better performance
             autocommit   = False,
             connect_timeout = 10,
             read_timeout    = 30,
@@ -380,19 +380,39 @@ class Database:
             return Database._local.conn
 
     @classmethod
-    def cursor(cls):
+    def cursor(cls, as_dict: bool = True):
         """
         Driver-aware cursor রিটার্ন করে।
-        PostgreSQL-এ RealDictCursor ব্যবহার করে dict-like rows পাওয়া যায়।
+        - MySQL: SSCursor (server-side) + DictCursor মিক্স করে dict-like rows
+        - PostgreSQL: RealDictCursor ব্যবহার করে dict-like rows
+        - SQLite: Row factory দিয়ে dict-like access
+        
+        as_dict=False দিলে plain cursor রিটার্ন করে (ফাস্ট)
         """
         conn = cls.connection()
-        if cls.driver == "postgresql":
+        if cls.driver == "mysql":
             try:
-                import psycopg2.extras
-                return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+                import MySQLdb.cursors
+                if as_dict:
+                    # Server-side + Dict cursor combination
+                    class DictSSCursor(MySQLdb.cursors.SSCursor, MySQLdb.cursors.DictCursorMixIn):
+                        pass
+                    return conn.cursor(cursorclass=DictSSCursor)
+                return conn.cursor(cursorclass=MySQLdb.cursors.SSCursor)
             except Exception:
                 return conn.cursor()
-        return conn.cursor()
+        elif cls.driver == "postgresql":
+            try:
+                import psycopg2.extras
+                if as_dict:
+                    return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+                return conn.cursor()
+            except Exception:
+                return conn.cursor()
+        else:  # sqlite
+            if as_dict:
+                conn.row_factory = sqlite3.Row
+            return conn.cursor()
 
     @classmethod
     def placeholder(cls) -> str:
@@ -420,7 +440,7 @@ class Database:
     # ──────────────────────────── Execute ────────────────────────────────────
 
     @classmethod
-    def execute(cls, sql: str, params: tuple = ()):
+    def execute(cls, sql: str, params: tuple = (), use_dict_cursor: bool = True):
         """
         যেকোনো SQL চালায়। params সবসময় tuple/list হিসেবে দিতে হবে।
         কখনো sql-এর ভেতর f-string দিয়ে ভ্যালু বসাবেন না — SQL Injection ঝুঁকি।
@@ -429,9 +449,16 @@ class Database:
             Database.execute("SELECT * FROM users WHERE id = %s", (1,))  # MySQL/PostgreSQL
             Database.execute("SELECT * FROM users WHERE id = ?",  (1,))  # SQLite
             # query_builder ব্যবহার করলে placeholder স্বয়ংক্রিয়
+        
+        use_dict_cursor=False দিলে plain cursor রিটার্ন করে (ফাস্ট, কম মেমোরি)
+        
+        Returns:
+            - SELECT queries: list of dict (as_dict=True) or list of tuple (as_dict=False)
+            - INSERT/UPDATE/DELETE: int (affected rows)
+            - INSERT with auto-increment: dict with 'id' key (MySQL/PostgreSQL)
         """
         conn   = cls.connection()
-        cur    = cls.cursor()  # driver-aware cursor
+        cur    = cls.cursor(as_dict=use_dict_cursor)  # driver-aware cursor
         start  = time.monotonic()
         try:
             cur.execute(sql, params)
@@ -447,27 +474,86 @@ class Database:
 
             if elapsed > slow_threshold:
                 logger.warning("Slow query (%.0fms): %s", elapsed, sql[:120])
-            return cur
+            
+            # ড্রাইভার অনুযায়ী রেজাল্ট ফরম্যাট
+            sql_upper = sql.strip().upper()
+            if sql_upper.startswith("SELECT") or sql_upper.startswith("SHOW") or sql_upper.startswith("DESCRIBE"):
+                # SELECT queries - রেজাল্ট ফেচ করে লিস্ট আকারে রিটার্ন
+                if cls.driver == "sqlite":
+                    # SQLite Row object কে dict এ কনভার্ট
+                    if use_dict_cursor and hasattr(cur.description, '__len__'):
+                        columns = [desc[0] for desc in cur.description]
+                        rows = []
+                        for row in cur.fetchall():
+                            rows.append(dict(zip(columns, row)))
+                        return rows
+                    else:
+                        return cur.fetchall()
+                elif cls.driver == "mysql":
+                    # mysqlclient already returns tuples or dicts based on cursor
+                    return cur.fetchall()
+                elif cls.driver == "postgresql":
+                    # psycopg2 RealDictCursor returns dict-like objects
+                    return cur.fetchall()
+                else:
+                    return cur.fetchall()
+            elif sql_upper.startswith("INSERT"):
+                # INSERT - affected rows + last insert id
+                affected = cur.rowcount if cur.rowcount else 1
+                last_id = cls.last_insert_id()
+                if last_id:
+                    return {'id': last_id, 'affected': affected}
+                return {'affected': affected}
+            else:
+                # UPDATE, DELETE, CREATE, DROP etc.
+                return cur.rowcount if cur.rowcount else 0
         except Exception as exc:
             # Transaction-এর বাইরে থাকলে অটো rollback
             if not cls.in_transaction():
                 conn.rollback()
             logger.error("Query ব্যর্থ: %s | params=%s | error=%s", sql, params, exc)
             raise QueryError(f"Query ব্যর্থ হয়েছে: {exc}\nSQL: {sql}") from exc
+        finally:
+            # কার্সার বন্ধ করা (connection pool এ ফেরত যায়)
+            try:
+                cur.close()
+            except Exception:
+                pass
 
     @classmethod
-    def execute_many(cls, sql: str, params_list: list) -> int:
-        """একাধিক row একসাথে INSERT করার জন্য (batch insert)।"""
+    def execute_many(cls, sql: str, params_list: list, batch_size: int = 1000) -> int:
+        """
+        একাধিক row একসাথে INSERT করার জন্য (batch insert)।
+        বড় ডেটার জন্য batch_size অনুযায়ী ভাগ করে পাঠায় (মেমোরি অপ্টিমাইজড)।
+        
+        ব্যবহার:
+            Database.execute_many(
+                "INSERT INTO users (name, email) VALUES (%s, %s)",
+                [(name1, email1), (name2, email2), ...],
+                batch_size=500
+            )
+        """
+        if not params_list:
+            return 0
+            
         conn = cls.connection()
-        cur  = cls.cursor()
+        cur = cls.cursor(as_dict=False)  # Plain cursor for write ops (faster)
+        total_rows = 0
+        
         try:
-            cur.executemany(sql, params_list)
+            # বড় ডেটা সেটকে ছোট ব্যাচে ভাগ করা
+            for i in range(0, len(params_list), batch_size):
+                batch = params_list[i:i + batch_size]
+                cur.executemany(sql, batch)
+                total_rows += cur.rowcount if cur.rowcount else len(batch)
+            
             if not cls.in_transaction():
                 cls.commit()
-            return cur.rowcount
+            return total_rows
         except Exception as exc:
             if not cls.in_transaction():
                 conn.rollback()
+            logger.error("Batch query ব্যর্থ: %s", exc)
             raise QueryError(f"Batch query ব্যর্থ: {exc}") from exc
 
     # ──────────────────────────── Commit / Rollback ──────────────────────────
@@ -496,8 +582,51 @@ class Database:
         return getattr(cls._local, "transaction_level", 0)
 
     @classmethod
-    def last_insert_id(cls, cursor) -> int:
-        return cursor.lastrowid
+    def last_insert_id(cls, cursor=None) -> int:
+        """
+        সর্বশেষ INSERT হওয়া রো-র ID রিটার্ন করে।
+        Driver-aware implementation:
+        - MySQL: cursor.lastrowid (mysqlclient)
+        - PostgreSQL: RETURNING clause ব্যবহার করতে হয় (query_builder-এ হ্যান্ডল করা)
+        - SQLite: cursor.lastrowid
+        
+        cursor optional - যদি না দেওয়া হয় তাহলে বর্তমান connection থেকে নতুন cursor তৈরি করে
+        """
+        if cursor is None:
+            cursor = cls.cursor(as_dict=False)
+            should_close = True
+        else:
+            should_close = False
+            
+        try:
+            if cls.driver == "mysql":
+                try:
+                    if cursor.lastrowid:
+                        return cursor.lastrowid
+                    # mysqlclient মাঝেও connection থেকে নিতে হয়
+                    cursor.execute("SELECT LAST_INSERT_ID()")
+                    row = cursor.fetchone()
+                    return int(row[0]) if row else 0
+                except Exception:
+                    conn = cls.connection()
+                    cur = conn.cursor()
+                    cur.execute("SELECT LAST_INSERT_ID()")
+                    row = cur.fetchone()
+                    return int(row[0]) if row else 0
+            elif cls.driver == "postgresql":
+                # PostgreSQL-এ RETURNING clause ব্যবহার করা ভালো
+                # এটা fallback হিসেবে কাজ করে
+                cursor.execute("SELECT LASTVAL()")
+                row = cursor.fetchone()
+                return int(row[0]) if row else 0
+            else:  # sqlite
+                return cursor.lastrowid if cursor.lastrowid else 0
+        finally:
+            if should_close:
+                try:
+                    cursor.close()
+                except Exception:
+                    pass
 
     # ──────────────────────────── Hooks ──────────────────────────────────────
 
