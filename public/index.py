@@ -20,7 +20,7 @@ os.chdir(PROJECT_ROOT)
 
 from core.application import Application
 from config.config import get_config
-from config.routes import build_router
+from app.routes import build_router
 
 config = get_config()
 router = build_router()

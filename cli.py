@@ -16,7 +16,7 @@ if PROJECT_ROOT not in sys.path:
 
 from config.config import get_config
 from core.database import Database
-from config.routes import build_router
+from app.routes import build_router
 
 # Colors
 C_RESET = "\033[0m"

@@ -67,7 +67,7 @@ class TrafficMonitorTest(PyFlowTestCase):
         
     def test_global_rate_limiter_block_logs_dos_block(self):
         from core.application import Application
-        from config.routes import build_router
+        from app.routes import build_router
         
         config = {
             "APP_NAME": "Test App",
