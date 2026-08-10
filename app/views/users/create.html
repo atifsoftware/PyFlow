@@ -1,5 +1,5 @@
-@extends('layout.admin')
-@section('content')
+{% extends 'layout/admin.html' %}
+{% block content %}
 
 <!-- Page Header -->
 <div class="adm-page-header fade-up">
@@ -28,7 +28,7 @@
             </div>
             <div class="pm-card-body">
                 <form method="POST" action="/users">
-                    @csrf
+                    <input type="hidden" name="_token" value="{{ csrf_token }}">
 
                     <!-- Name -->
                     <div class="mb-4">
@@ -36,12 +36,12 @@
                         <input type="text" name="name" class="pm-input"
                                placeholder="যেমন: আবদুর রহমান"
                                value="{{ old.get('name', '') }}" required>
-                        @if(errors.get('name'))
+                        {% if errors.get('name' %})
                         <div class="pm-field-error">
                             <i class="fas fa-circle-exclamation" style="font-size:11px;"></i>
                             {{ errors.get('name')[0] }}
                         </div>
-                        @endif
+                        {% endif %}
                     </div>
 
                     <!-- Email -->
@@ -50,12 +50,12 @@
                         <input type="email" name="email" class="pm-input"
                                placeholder="যেমন: info@example.com"
                                value="{{ old.get('email', '') }}" required>
-                        @if(errors.get('email'))
+                        {% if errors.get('email' %})
                         <div class="pm-field-error">
                             <i class="fas fa-circle-exclamation" style="font-size:11px;"></i>
                             {{ errors.get('email')[0] }}
                         </div>
-                        @endif
+                        {% endif %}
                     </div>
 
                     <!-- Password -->
@@ -63,12 +63,12 @@
                         <label class="pm-label">পাসওয়ার্ড</label>
                         <input type="password" name="password" class="pm-input"
                                placeholder="কমপক্ষে ৮ অক্ষর" required minlength="8">
-                        @if(errors.get('password'))
+                        {% if errors.get('password' %})
                         <div class="pm-field-error">
                             <i class="fas fa-circle-exclamation" style="font-size:11px;"></i>
                             {{ errors.get('password')[0] }}
                         </div>
-                        @endif
+                        {% endif %}
                     </div>
 
                     <!-- Role -->
@@ -90,4 +90,4 @@
     </div>
 </div>
 
-@endsection
+{% endblock %}

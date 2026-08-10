@@ -1,5 +1,5 @@
-@extends('layout.admin')
-@section('content')
+{% extends 'layout/admin.html' %}
+{% block content %}
 
 <!-- Page Header -->
 <div class="adm-page-header fade-up">
@@ -33,7 +33,7 @@
             </div>
             <div class="pm-card-body">
                 <form method="POST" action="/users/{{ user.get('id') }}">
-                    @csrf
+                    <input type="hidden" name="_token" value="{{ csrf_token }}">
                     <input type="hidden" name="_method" value="PUT">
 
                     <!-- Name -->
@@ -41,12 +41,12 @@
                         <label class="pm-label">পূর্ণ নাম</label>
                         <input type="text" name="name" class="pm-input"
                                value="{{ user.get('name') }}" required>
-                        @if(errors.get('name'))
+                        {% if errors.get('name' %})
                         <div class="pm-field-error">
                             <i class="fas fa-circle-exclamation" style="font-size:11px;"></i>
                             {{ errors.get('name')[0] }}
                         </div>
-                        @endif
+                        {% endif %}
                     </div>
 
                     <!-- Email (Disabled) -->
@@ -60,8 +60,8 @@
                     <div class="mb-5">
                         <label class="pm-label">ব্যবহারকারীর রোল</label>
                         <select name="role" class="pm-input pm-select">
-                            <option value="user" @if(user.get('role') == 'user') selected @endif>সাধারণ ব্যবহারকারী (User)</option>
-                            <option value="admin" @if(user.get('role') == 'admin') selected @endif>সিস্টেম অ্যাডমিন (Admin)</option>
+                            <option value="user" {% if user.get('role' %} == 'user') selected {% endif %}>সাধারণ ব্যবহারকারী (User)</option>
+                            <option value="admin" {% if user.get('role' %} == 'admin') selected {% endif %}>সিস্টেম অ্যাডমিন (Admin)</option>
                         </select>
                     </div>
 
@@ -75,4 +75,4 @@
     </div>
 </div>
 
-@endsection
+{% endblock %}

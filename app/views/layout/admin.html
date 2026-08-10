@@ -105,7 +105,7 @@
             <div class="sb-label">সিস্টেম</div>
 
             <!-- Settings (Admin Only) -->
-            @if(user_role == 'admin')
+            {% if user_role == 'admin' %}
             <div class="sb-item-wrap">
                 <a href="/settings" class="sb-link" id="menu-settings">
                     <span class="sb-icon"><i class="fas fa-sliders"></i></span>
@@ -124,7 +124,7 @@
                     <span class="sb-text">ডাটাবেস সিঙ্ক</span>
                 </a>
             </div>
-            @endif
+            {% endif %}
 
             <!-- API Keys (All Users) -->
             <div class="sb-item-wrap">
@@ -217,13 +217,13 @@
     <div class="adm-content" id="admContent">
         <div class="adm-page">
 
-            @if(success)
+            {% if success %}
             <div class="adm-flash">
                 <i class="fas fa-circle-check"></i> {{ success }}
             </div>
-            @endif
+            {% endif %}
 
-            @yield('content')
+            {% block content %}{% endblock %}
 
         </div>
     </div>

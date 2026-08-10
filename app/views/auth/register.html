@@ -104,18 +104,18 @@
         <div class="login-subtitle">PyFlow Admin Panel-এ রেজিস্ট্রেশন করুন</div>
     </div>
 
-    @if(errors.get('name'))
+    {% if errors.get('name') %}
     <div class="alert-box alert-error"><i class="fas fa-circle-exclamation"></i> {{ errors.get('name')[0] }}</div>
-    @endif
-    @if(errors.get('email'))
+    {% endif %}
+    {% if errors.get('email') %}
     <div class="alert-box alert-error"><i class="fas fa-circle-exclamation"></i> {{ errors.get('email')[0] }}</div>
-    @endif
-    @if(errors.get('password'))
+    {% endif %}
+    {% if errors.get('password') %}
     <div class="alert-box alert-error"><i class="fas fa-circle-exclamation"></i> {{ errors.get('password')[0] }}</div>
-    @endif
+    {% endif %}
 
     <form method="POST" action="/register">
-        @csrf
+        <input type="hidden" name="_token" value="{{ csrf_token }}">
 
         <div class="form-group">
             <label class="form-label">পূর্ণ নাম</label>
