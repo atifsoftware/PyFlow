@@ -185,6 +185,24 @@ MYSQL_MIGRATIONS = [
             FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     """),
+    ("audit_logs", """
+        CREATE TABLE IF NOT EXISTS `audit_logs` (
+            id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            auditable_type VARCHAR(100) NOT NULL,
+            auditable_id   VARCHAR(100) NOT NULL,
+            event          VARCHAR(50)  NOT NULL,
+            old_values     LONGTEXT     NULL,
+            new_values     LONGTEXT     NULL,
+            user_id        INT UNSIGNED NULL,
+            ip_address     VARCHAR(45)  NULL,
+            user_agent     VARCHAR(255) NULL,
+            url            VARCHAR(255) NULL,
+            created_at     DATETIME     NULL,
+            INDEX idx_audit_target (auditable_type, auditable_id),
+            INDEX idx_audit_user   (user_id),
+            INDEX idx_audit_event  (event)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """),
 ]
 
 # ───────────────────────────────────────────────────── PostgreSQL Schema
@@ -270,6 +288,21 @@ POSTGRESQL_MIGRATIONS = [
             PRIMARY KEY (role_id, permission_id)
         )
     """),
+    ("audit_logs", """
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id             SERIAL          PRIMARY KEY,
+            auditable_type VARCHAR(100)    NOT NULL,
+            auditable_id   VARCHAR(100)    NOT NULL,
+            event          VARCHAR(50)     NOT NULL,
+            old_values     TEXT            NULL,
+            new_values     TEXT            NULL,
+            user_id        INTEGER         NULL,
+            ip_address     VARCHAR(45)     NULL,
+            user_agent     VARCHAR(255)    NULL,
+            url            VARCHAR(255)    NULL,
+            created_at     TIMESTAMPTZ     NULL
+        )
+    """),
 ]
 
 # SQLite-তেও RBAC tables যোগ করা
@@ -298,6 +331,21 @@ SQLITE_MIGRATIONS = list(SQLITE_MIGRATIONS) + [
             role_id       INTEGER NOT NULL,
             permission_id INTEGER NOT NULL,
             PRIMARY KEY (role_id, permission_id)
+        )
+    """),
+    ("audit_logs", """
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id             INTEGER PRIMARY KEY AUTOINCREMENT,
+            auditable_type TEXT NOT NULL,
+            auditable_id   TEXT NOT NULL,
+            event          TEXT NOT NULL,
+            old_values     TEXT,
+            new_values     TEXT,
+            user_id        INTEGER NULL,
+            ip_address     TEXT,
+            user_agent     TEXT,
+            url            TEXT,
+            created_at     TEXT
         )
     """),
 ]

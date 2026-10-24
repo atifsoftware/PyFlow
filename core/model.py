@@ -29,6 +29,10 @@ class Model:
     fillable = []       # mass-assignment-এ কোন কলামগুলো allow করা হবে
     hidden = []          # to_dict()-এ কোন কলাম বাদ যাবে (যেমন password)
     timestamps = True    # created_at/updated_at অটো-ম্যানেজ করবে কিনা
+    soft_deletes = False # Soft delete (deleted_at) সক্রিয় করবে কিনা
+    deleted_at_column = "deleted_at" # Soft delete timestamp column
+    audit_trail = False  # স্বয়ংক্রিয় অডিট লগিং সক্রিয় করবে কিনা
+    audit_exclude = ["password", "remember_token"] # অডিটে বাদ দেওয়ার মতো সংবেদনশীল ফিল্ড
     eager_relations = {} # with_() এর জন্য relation definitions
 
     @classmethod
@@ -38,7 +42,8 @@ class Model:
         return Database.connection(cls.connection) if cls.connection else Database.connection()
 
     def __init__(self, attributes: dict = None):
-        self._attributes = attributes or {}
+        self._attributes = dict(attributes) if attributes else {}
+        self._original = dict(self._attributes)  # Dirty state tracking
         self._loaded_relations = {}  # eager loaded relations cache
 
     def __getattr__(self, name):
@@ -67,6 +72,34 @@ class Model:
                 data[rel_name] = rel_val
         return data
 
+    # ─────────────────────────────────────── State & Dirty Tracking ──────────
+
+    def is_dirty(self, attribute: str = None) -> bool:
+        """কোনো অ্যাট্রিবিউট বা মডেল পরিবর্তিত হয়েছে কিনা চেক করে"""
+        if attribute:
+            return self._attributes.get(attribute) != self._original.get(attribute)
+        all_keys = set(self._attributes.keys()) | set(self._original.keys())
+        return any(self._attributes.get(k) != self._original.get(k) for k in all_keys)
+
+    def get_dirty(self) -> dict:
+        """পরিবর্তিত ফিল্ডগুলোর নতুন ভ্যালুর ডিকশনারি রিটার্ন করে"""
+        dirty = {}
+        for k, v in self._attributes.items():
+            if k not in self._original or v != self._original[k]:
+                dirty[k] = v
+        return dirty
+
+    def get_original(self, attribute: str = None):
+        """ডাটাবেজ থেকে লোড হওয়ার সময়ের আসল মান রিটার্ন করে"""
+        if attribute:
+            return self._original.get(attribute)
+        return dict(self._original)
+
+    def sync_original(self):
+        """বর্তমান অ্যাট্রিবিউটগুলোকে মূল মান হিসেবে সিঙ্ক করে"""
+        self._original = dict(self._attributes)
+        return self
+
     # ─────────────────────────────────────── Query API ──────────────────────
 
     @classmethod
@@ -75,7 +108,24 @@ class Model:
             raise ValueError(f"{cls.__name__} ক্লাসে 'table' সেট করা নেই")
         builder = QueryBuilder(cls.table, connection=cls.get_connection())
         builder.set_model(cls)
+        if cls.soft_deletes:
+            builder.without_trashed(cls.deleted_at_column)
         return builder
+
+    @classmethod
+    def with_trashed(cls) -> QueryBuilder:
+        """Soft-deleted সহ সব রেকর্ড নিয়ে আসে"""
+        return cls.query().with_trashed()
+
+    @classmethod
+    def only_trashed(cls) -> QueryBuilder:
+        """শুধুমাত্র soft-deleted রেকর্ড নিয়ে আসে"""
+        return cls.query().only_trashed(cls.deleted_at_column)
+
+    @classmethod
+    def without_trashed(cls) -> QueryBuilder:
+        """শুধুমাত্র সক্রিয় (নন-ডিলিটেড) রেকর্ড নিয়ে আসে"""
+        return cls.query().without_trashed(cls.deleted_at_column)
 
     @classmethod
     def all(cls):
@@ -109,10 +159,90 @@ class Model:
         Event.fire(f"{cls.table}.creating", filtered)
         new_id = cls.query().insert(filtered)
         instance = cls({**filtered, cls.primary_key: new_id})
+        instance.sync_original()
         if hasattr(cls, "on_created"):
             cls.on_created(instance)
         Event.fire(f"{cls.table}.created", instance)
+        if getattr(cls, "audit_trail", False):
+            try:
+                from core.audit import AuditTrail
+                AuditTrail.log(
+                    auditable=instance,
+                    event="created",
+                    old_values={},
+                    new_values=instance.to_dict(),
+                )
+            except Exception:
+                pass
         return instance
+
+    def save(self):
+        """
+        Active Record save() — নতুন মডেল হলে insert করে, বিদ্যমান হলে শুধু dirty ফিল্ড update করে।
+        """
+        import time
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        pk_value = self._attributes.get(self.primary_key)
+
+        if pk_value is not None:
+            # Existing model update
+            dirty = self.get_dirty()
+            if not dirty:
+                return self
+            filtered = self._filter_fillable(dirty)
+            if self.timestamps:
+                filtered["updated_at"] = now
+                self._attributes["updated_at"] = now
+            if hasattr(self.__class__, "on_updating"):
+                self.__class__.on_updating(self, filtered)
+            Event.fire(f"{self.__class__.table}.updating", self, filtered)
+            old_values = {k: self._original.get(k) for k in filtered if k in self._original}
+            self.__class__.query().with_trashed().where(self.primary_key, pk_value).update(filtered)
+            self._attributes.update(filtered)
+            self.sync_original()
+            if hasattr(self.__class__, "on_updated"):
+                self.__class__.on_updated(self)
+            Event.fire(f"{self.__class__.table}.updated", self)
+            if getattr(self.__class__, "audit_trail", False):
+                try:
+                    from core.audit import AuditTrail
+                    AuditTrail.log(
+                        auditable=self,
+                        event="updated",
+                        old_values=old_values,
+                        new_values=filtered,
+                    )
+                except Exception:
+                    pass
+            return self
+        else:
+            # New model insert
+            filtered = self._filter_fillable(self._attributes)
+            if self.timestamps:
+                filtered.setdefault("created_at", now)
+                filtered.setdefault("updated_at", now)
+            if hasattr(self.__class__, "on_creating"):
+                self.__class__.on_creating(filtered)
+            Event.fire(f"{self.__class__.table}.creating", filtered)
+            new_id = self.__class__.query().insert(filtered)
+            self._attributes[self.primary_key] = new_id
+            self._attributes.update(filtered)
+            self.sync_original()
+            if hasattr(self.__class__, "on_created"):
+                self.__class__.on_created(self)
+            Event.fire(f"{self.__class__.table}.created", self)
+            if getattr(self.__class__, "audit_trail", False):
+                try:
+                    from core.audit import AuditTrail
+                    AuditTrail.log(
+                        auditable=self,
+                        event="created",
+                        old_values={},
+                        new_values=self.to_dict(),
+                    )
+                except Exception:
+                    pass
+            return self
 
     def update(self, data: dict):
         import time
@@ -123,23 +253,133 @@ class Model:
             self.__class__.on_updating(self, filtered)
         Event.fire(f"{self.__class__.table}.updating", self, filtered)
         pk_value = self._attributes.get(self.primary_key)
-        self.__class__.query().where(self.primary_key, pk_value).update(filtered)
+        old_values = {k: self._attributes.get(k) for k in filtered}
+        self.__class__.query().with_trashed().where(self.primary_key, pk_value).update(filtered)
         self._attributes.update(filtered)
+        self.sync_original()
         if hasattr(self.__class__, "on_updated"):
             self.__class__.on_updated(self)
         Event.fire(f"{self.__class__.table}.updated", self)
+        if getattr(self.__class__, "audit_trail", False):
+            try:
+                from core.audit import AuditTrail
+                AuditTrail.log(
+                    auditable=self,
+                    event="updated",
+                    old_values=old_values,
+                    new_values=filtered,
+                )
+            except Exception:
+                pass
         return self
 
-    def delete(self):
+    def delete(self, force: bool = False):
+        """
+        রেকর্ড ডিলিট করে। soft_deletes সক্রিয় থাকলে এবং force=False হলে soft delete করে।
+        """
         if hasattr(self.__class__, "on_deleting"):
             self.__class__.on_deleting(self)
         Event.fire(f"{self.__class__.table}.deleting", self)
         pk_value = self._attributes.get(self.primary_key)
-        result = self.__class__.query().where(self.primary_key, pk_value).delete()
-        if hasattr(self.__class__, "on_deleted"):
-            self.__class__.on_deleted(self)
-        Event.fire(f"{self.__class__.table}.deleted", self)
+
+        if self.soft_deletes and not force:
+            import time
+            now = time.strftime("%Y-%m-%d %H:%M:%S")
+            old_deleted_at = self._attributes.get(self.deleted_at_column)
+            self._attributes[self.deleted_at_column] = now
+            update_data = {self.deleted_at_column: now}
+            if self.timestamps:
+                now_up = time.strftime("%Y-%m-%d %H:%M:%S")
+                update_data["updated_at"] = now_up
+                self._attributes["updated_at"] = now_up
+            result = self.__class__.query().with_trashed().where(self.primary_key, pk_value).update(update_data)
+            self.sync_original()
+            if hasattr(self.__class__, "on_soft_deleted"):
+                self.__class__.on_soft_deleted(self)
+            Event.fire(f"{self.__class__.table}.soft_deleted", self)
+            Event.fire(f"{self.__class__.table}.deleted", self)
+            if getattr(self.__class__, "audit_trail", False):
+                try:
+                    from core.audit import AuditTrail
+                    AuditTrail.log(
+                        auditable=self,
+                        event="soft_deleted",
+                        old_values={self.deleted_at_column: old_deleted_at},
+                        new_values={self.deleted_at_column: now},
+                    )
+                except Exception:
+                    pass
+            return result
+        else:
+            old_attrs = dict(self._attributes)
+            result = self.__class__.query().with_trashed().where(self.primary_key, pk_value).delete()
+            if hasattr(self.__class__, "on_deleted"):
+                self.__class__.on_deleted(self)
+            Event.fire(f"{self.__class__.table}.deleted", self)
+            if getattr(self.__class__, "audit_trail", False):
+                try:
+                    from core.audit import AuditTrail
+                    AuditTrail.log(
+                        auditable=self,
+                        event="force_deleted" if self.soft_deletes else "deleted",
+                        old_values=old_attrs,
+                        new_values={},
+                    )
+                except Exception:
+                    pass
+            return result
+
+    def force_delete(self):
+        """সরাসরি ডাটাবেজ থেকে ফিজিক্যালি ডিলিট করে"""
+        return self.delete(force=True)
+
+    def restore(self):
+        """Soft-deleted রেকর্ড রিস্টোর করে (deleted_at = None)"""
+        if not self.soft_deletes:
+            raise ValueError(f"{self.__class__.__name__} ক্লাসে soft_deletes সক্রিয় নেই")
+        if hasattr(self.__class__, "on_restoring"):
+            self.__class__.on_restoring(self)
+        Event.fire(f"{self.__class__.table}.restoring", self)
+        pk_value = self._attributes.get(self.primary_key)
+        old_deleted_at = self._attributes.get(self.deleted_at_column)
+        self._attributes[self.deleted_at_column] = None
+        update_data = {self.deleted_at_column: None}
+        if self.timestamps:
+            import time
+            now_up = time.strftime("%Y-%m-%d %H:%M:%S")
+            update_data["updated_at"] = now_up
+            self._attributes["updated_at"] = now_up
+        result = self.__class__.query().with_trashed().where(self.primary_key, pk_value).update(update_data)
+        self.sync_original()
+        if hasattr(self.__class__, "on_restored"):
+            self.__class__.on_restored(self)
+        Event.fire(f"{self.__class__.table}.restored", self)
+        if getattr(self.__class__, "audit_trail", False):
+            try:
+                from core.audit import AuditTrail
+                AuditTrail.log(
+                    auditable=self,
+                    event="restored",
+                    old_values={self.deleted_at_column: old_deleted_at},
+                    new_values={self.deleted_at_column: None},
+                )
+            except Exception:
+                pass
         return result
+
+    def trashed(self) -> bool:
+        """রেকর্ডটি soft-deleted কিনা চেক করে"""
+        return bool(self._attributes.get(self.deleted_at_column))
+
+    def audit_logs(self):
+        """এই রেকর্ডের সমস্ত অডিট হিস্টোরি রিটার্ন করে"""
+        try:
+            from core.audit import AuditLog
+            pk_val = str(self._attributes.get(self.primary_key, ""))
+            rows = AuditLog.where("auditable_type", self.__class__.__name__).where("auditable_id", pk_val).order_by("id", "DESC").get()
+            return [AuditLog(r) if isinstance(r, dict) else r for r in rows]
+        except Exception:
+            return []
 
     # ─────────────────────────── Eager Loading (N+1 সমাধান) ──────────────────
 
@@ -261,6 +501,18 @@ class EagerQueryProxy:
 
     def where(self, *args, **kwargs):
         self._qb = self._qb.where(*args, **kwargs)
+        return self
+
+    def with_trashed(self):
+        self._qb = self._qb.with_trashed()
+        return self
+
+    def only_trashed(self, *args, **kwargs):
+        self._qb = self._qb.only_trashed(*args, **kwargs)
+        return self
+
+    def without_trashed(self, *args, **kwargs):
+        self._qb = self._qb.without_trashed(*args, **kwargs)
         return self
 
     def order_by(self, *args, **kwargs):

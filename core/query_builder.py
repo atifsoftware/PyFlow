@@ -54,6 +54,8 @@ class QueryBuilder:
         self._params = []
         self._cache_ttl = None  # None = no cache; int = cache TTL seconds
         self._model = None
+        self._soft_delete_mode = None  # None, "without", "only", "with"
+        self._deleted_at_column = "deleted_at"
 
     @property
     def connection(self):
@@ -169,6 +171,24 @@ class QueryBuilder:
         self._params.extend(values)
         return self
 
+    # ----------------------------------------------------------- SOFT DELETES
+    def without_trashed(self, column: str = "deleted_at"):
+        """Only include non-deleted records (WHERE deleted_at IS NULL)."""
+        self._soft_delete_mode = "without"
+        self._deleted_at_column = column
+        return self
+
+    def only_trashed(self, column: str = "deleted_at"):
+        """Only include soft-deleted records (WHERE deleted_at IS NOT NULL)."""
+        self._soft_delete_mode = "only"
+        self._deleted_at_column = column
+        return self
+
+    def with_trashed(self):
+        """Include both active and soft-deleted records."""
+        self._soft_delete_mode = "with"
+        return self
+
     # --------------------------------------------------------- ORDER / LIMIT
     def order_by(self, column, direction="ASC"):
         col = self.grammar.wrap(column)
@@ -233,10 +253,18 @@ class QueryBuilder:
 
     # ------------------------------------------------------------ BUILD SQL
     def _build_where_clause(self):
-        if not self._wheres:
+        wheres = list(self._wheres)
+        if self._soft_delete_mode == "without":
+            col = self.grammar.wrap(self._deleted_at_column)
+            wheres.append((f"{col} IS NULL", "AND"))
+        elif self._soft_delete_mode == "only":
+            col = self.grammar.wrap(self._deleted_at_column)
+            wheres.append((f"{col} IS NOT NULL", "AND"))
+
+        if not wheres:
             return ""
         parts = []
-        for i, (fragment, joiner) in enumerate(self._wheres):
+        for i, (fragment, joiner) in enumerate(wheres):
             if i == 0:
                 parts.append(fragment)
             else:
@@ -435,4 +463,6 @@ class QueryBuilder:
         new_qb._params = list(self._params)
         new_qb._cache_ttl = self._cache_ttl
         new_qb._model = self._model
+        new_qb._soft_delete_mode = self._soft_delete_mode
+        new_qb._deleted_at_column = self._deleted_at_column
         return new_qb

@@ -79,6 +79,11 @@ class Application:
         except Exception as exc:
             response = self._handle_exception(exc)
         finally:
+            try:
+                from core.audit import AuditTrail
+                AuditTrail.clear_context()
+            except Exception:
+                pass
             Database.close()
 
         start_response(response.status_line(), response.wsgi_headers())
@@ -88,6 +93,40 @@ class Application:
         path_info = environ.get("PATH_INFO", "/")
         if path_info.startswith("/static/"):
             return serve_static(path_info, static_root=self.config.get("STATIC_DIR", "public/static"))
+
+        # Maintenance Mode Check
+        import os, json
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        down_file = os.path.join(base_dir, "storage", "framework", "down.json")
+        if os.path.exists(down_file):
+            try:
+                with open(down_file, "r", encoding="utf-8") as f:
+                    down_data = json.load(f)
+            except Exception:
+                down_data = {}
+
+            bypass_secret = down_data.get("secret")
+            query_string = environ.get("QUERY_STRING", "")
+            cookie_str = environ.get("HTTP_COOKIE", "")
+            is_bypassed = bool(
+                bypass_secret and (
+                    f"secret={bypass_secret}" in query_string or
+                    f"pyflow_maintenance={bypass_secret}" in cookie_str
+                )
+            )
+
+            if not is_bypassed:
+                msg = down_data.get("message", "Application is currently undergoing scheduled maintenance.")
+                accept = environ.get("HTTP_ACCEPT", "")
+                if "application/json" in accept:
+                    return Response.json({"message": msg, "maintenance": True}, status=503)
+                html = f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>503 Under Maintenance</title>
+<style>body{{background:#0f172a;color:#e2e8f0;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}}
+.card{{background:#1e293b;padding:48px;border-radius:12px;border:1px solid #334155;max-width:520px;text-align:center;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);}}
+h1{{color:#f59e0b;margin-bottom:12px;font-size:28px;}}p{{color:#94a3b8;line-height:1.6;font-size:16px;}}
+</style></head><body><div class="card"><h1>🛠️ Under Maintenance</h1><p>{msg}</p><p><small style="color:#64748b;">Please check back shortly.</small></p></div></body></html>"""
+                resp = Response(html.encode("utf-8"), status=503, headers={"Content-Type": "text/html; charset=utf-8"})
+                return resp
 
         # প্রফাইলার শুরু করা
         Profiler.start_request(environ.get("REQUEST_METHOD", "GET"), path_info)
@@ -125,6 +164,17 @@ class Application:
             session_id=cookie_session_id,
         )
         request.session = session
+
+        try:
+            from core.audit import AuditTrail
+            AuditTrail.set_context(
+                user_id=session.get("user_id") if hasattr(session, "get") else None,
+                ip_address=request.ip(),
+                user_agent=request.header("User-Agent"),
+                url=request.path,
+            )
+        except Exception:
+            pass
 
         # HTML ফর্ম PUT/DELETE সরাসরি পাঠাতে পারে না, তাই hidden _method
         # ফিল্ড দিয়ে override করার সুযোগ দেওয়া হয়েছে (শুধু POST-এর ক্ষেত্রে)
@@ -441,6 +491,15 @@ function switchPyFlowTab(tabName) {{
                            headers={"Content-Type": "text/html; charset=utf-8"})
 
     def _handle_exception(self, exc: Exception) -> Response:
+        try:
+            from core.form_request import ValidationException, AuthorizationException
+            if isinstance(exc, ValidationException):
+                return exc.response or Response.json({"message": str(exc), "errors": exc.errors}, status=422)
+            if isinstance(exc, AuthorizationException):
+                return Response.json({"message": str(exc)}, status=403)
+        except Exception:
+            pass
+
         self.logger.error("Unhandled exception: %s\n%s", exc, traceback.format_exc())
         if self.debug:
             # Debug mode: Stack trace সহ 500 page

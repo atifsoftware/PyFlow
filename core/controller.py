@@ -14,6 +14,7 @@ def action(controller_cls, method_name: str):
     রাউট রেজিস্টার করার সময় কন্ট্রোলার মেথড বাইন্ড করার হেল্পার:
         router.get("/", action(HomeController, "index"))
     প্রতিটা রিকোয়েস্টে কন্ট্রোলারের নতুন instance তৈরি হয় (thread-safe থাকার জন্য)।
+    FormRequest টাইপ-হিন্টেড মেথড প্যারামিটার থাকলে তা স্বয়ংক্রিয়ভাবে ভ্যালিডেট ও ইনজেক্ট করা হয়।
     """
     def handler(request, session, view_engine):
         import inspect
@@ -48,7 +49,38 @@ def action(controller_cls, method_name: str):
             controller = controller_cls(*args)
 
         method = getattr(controller, method_name)
-        return method()
+        sign = inspect.signature(method)
+        params = list(sign.parameters.values())
+
+        if not params:
+            return method()
+
+        from core.form_request import FormRequest, ValidationException, AuthorizationException
+        call_args = []
+        for p in params:
+            if inspect.isclass(p.annotation) and issubclass(p.annotation, FormRequest):
+                form = p.annotation(request, session)
+                try:
+                    form.validate()
+                except ValidationException as ve:
+                    return ve.response
+                except AuthorizationException as ae:
+                    if request.wants_json():
+                        return Response.json({"message": str(ae)}, status=403)
+                    return Response.html(f"<h1>403 Forbidden</h1><p>{ae}</p>", status=403)
+                call_args.append(form)
+            elif p.name in ("request", "req") or p.annotation == request.__class__:
+                call_args.append(request)
+            elif p.name in ("session", "sess") or p.annotation == session.__class__:
+                call_args.append(session)
+            elif p.name in ("view_engine", "view") or p.annotation == view_engine.__class__:
+                call_args.append(view_engine)
+            elif p.default is not inspect.Parameter.empty:
+                call_args.append(p.default)
+            else:
+                call_args.append(None)
+
+        return method(*call_args)
     return handler
 
 
@@ -59,6 +91,15 @@ class Controller:
         self.request = request
         self.session = session
         self.view_engine = view_engine
+
+    def validate_request(self, form_request_cls):
+        """
+        FormRequest ক্লাস ব্যবহার করে রিকোয়েস্ট ভ্যালিডেট করে:
+            form = self.validate_request(StoreProductRequest)
+        """
+        form = form_request_cls(self.request, self.session)
+        form.validate()
+        return form
 
     # ------------------------------------------------------------- rendering
     def view(self, template: str, data: dict = None, status: int = 200) -> Response:

@@ -75,6 +75,9 @@ class PyFlowCLI:
             print(f"16. {color('make:seeder — New Database Seeder', C_GREEN)}")
             print(f"17. {color('Run Tests — Unit Test Suite', C_CYAN)}")
             print(f"18. {color('Flush Cache — Clear All Cached Data', C_RED)}")
+            print(f"19. {color('Tinker — Interactive REPL Shell', C_CYAN)}")
+            print(f"20. {color('Maintenance Mode (down / up)', C_YELLOW)}")
+            print(f"21. {color('make:request — New FormRequest File', C_GREEN)}")
             print(f"0. {color('Exit', C_RED)}")
             print()
 
@@ -116,6 +119,12 @@ class PyFlowCLI:
                 self.run_tests()
             elif choice == "18":
                 self.flush_cache()
+            elif choice == "19":
+                self.tinker()
+            elif choice == "20":
+                self.toggle_maintenance()
+            elif choice == "21":
+                self.make_request()
             elif choice == "0":
                 print(color("\n✓ Goodbye from PyFlow!\n", C_GREEN))
                 break
@@ -597,6 +606,123 @@ if __name__ == "__main__":
         print(color(f"✅ {count}টি cache ফাইল মুছে দেওয়া হয়েছে।", C_GREEN))
         pause()
 
+    def tinker(self):
+        import code
+        from core.database import Database
+        from core.query_builder import QueryBuilder
+        from core.model import Model
+        from core.cache import Cache
+        from core.event import Event
+        from core.audit import AuditTrail, AuditLog
+
+        # Auto import app models
+        models_dir = os.path.join(PROJECT_ROOT, "app", "models")
+        local_env = {
+            "Database": Database,
+            "QueryBuilder": QueryBuilder,
+            "Model": Model,
+            "Cache": Cache,
+            "Event": Event,
+            "AuditTrail": AuditTrail,
+            "AuditLog": AuditLog,
+            "config": self.config,
+        }
+        if os.path.exists(models_dir):
+            import importlib
+            for f in os.listdir(models_dir):
+                if f.endswith(".py") and not f.startswith("__"):
+                    mod_name = f[:-3]
+                    try:
+                        m = importlib.import_module(f"app.models.{mod_name}")
+                        for item_name in dir(m):
+                            item = getattr(m, item_name)
+                            if isinstance(item, type) and issubclass(item, Model) and item is not Model:
+                                local_env[item_name] = item
+                    except Exception:
+                        pass
+
+        print_header()
+        print(color("⚡ PyFlow Interactive Shell (Tinker) ⚡", C_GREEN + C_BOLD))
+        print(color("Database and Models loaded. Available objects: " + ", ".join(local_env.keys()), C_CYAN))
+        print(color("Type exit() or press Ctrl+Z/Ctrl+D to exit.\n", C_YELLOW))
+        code.interact(banner="", local=local_env)
+        pause()
+
+    def toggle_maintenance(self):
+        down_dir = os.path.join(PROJECT_ROOT, "storage", "framework")
+        os.makedirs(down_dir, exist_ok=True)
+        down_file = os.path.join(down_dir, "down.json")
+
+        if os.path.exists(down_file):
+            print(color("Application is currently in MAINTENANCE MODE.", C_YELLOW))
+            ans = input(color("Bring application live (up)? (y/n): ", C_CYAN)).strip().lower()
+            if ans == "y":
+                os.remove(down_file)
+                print(color("✅ PyFlow is now LIVE!", C_GREEN))
+        else:
+            print(color("Application is currently LIVE.", C_GREEN))
+            ans = input(color("Put application into MAINTENANCE MODE (down)? (y/n): ", C_YELLOW)).strip().lower()
+            if ans == "y":
+                secret = input(color("Bypass secret key (optional, press Enter for none): ", C_CYAN)).strip()
+                message = input(color("Maintenance message (optional): ", C_CYAN)).strip() or "Application is undergoing maintenance."
+                import json, time
+                with open(down_file, "w", encoding="utf-8") as f:
+                    json.dump({
+                        "secret": secret or None,
+                        "message": message,
+                        "time": time.time()
+                    }, f, indent=2)
+                print(color(f"✅ Application is now in MAINTENANCE MODE.", C_YELLOW))
+                if secret:
+                    print(color(f"Bypass URL: http://localhost:8000/?secret={secret}", C_CYAN))
+        pause()
+
+    def make_request(self):
+        name = input(color("FormRequest name (e.g. StoreUserRequest): ", C_CYAN)).strip()
+        if not name:
+            print(color("Name cannot be empty!", C_RED))
+            pause()
+            return
+        if not name.endswith("Request"):
+            name += "Request"
+        out_dir = os.path.join(PROJECT_ROOT, "app", "requests")
+        os.makedirs(out_dir, exist_ok=True)
+        import re
+        file_name = re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower() + ".py"
+        target_path = os.path.join(out_dir, file_name)
+        if os.path.exists(target_path):
+            print(color(f"File {file_name} already exists!", C_RED))
+            pause()
+            return
+        content = f'''"""
+app/requests/{file_name}
+"""
+
+from core.form_request import FormRequest
+
+
+class {name}(FormRequest):
+    def authorize(self) -> bool:
+        """User authorization check."""
+        return True
+
+    def rules(self) -> dict:
+        """Validation rules."""
+        return {{
+            "title": "required|min:3",
+        }}
+
+    def messages(self) -> dict:
+        """Custom error messages."""
+        return {{
+            "title.required": "Title is required.",
+        }}
+'''
+        with open(target_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        print(color(f"✅ Created FormRequest: app/requests/{file_name}", C_GREEN))
+        pause()
+
 
 if __name__ == "__main__":
     import sys
@@ -776,6 +902,68 @@ class {name_cap}ServiceProvider(ServiceProvider):
             from core.cache import Cache
             count = Cache.flush()
             print(color(f"✅ {count} cache files cleared.", C_GREEN))
+        elif command == "tinker":
+            cli = PyFlowCLI()
+            cli.tinker()
+        elif command == "down":
+            down_dir = os.path.join(PROJECT_ROOT, "storage", "framework")
+            os.makedirs(down_dir, exist_ok=True)
+            down_file = os.path.join(down_dir, "down.json")
+            import json, time
+            secret = None
+            message = "Application is undergoing scheduled maintenance."
+            for a in sys.argv[2:]:
+                if a.startswith("--secret="):
+                    secret = a.split("=", 1)[1]
+                elif a.startswith("--message="):
+                    message = a.split("=", 1)[1]
+            with open(down_file, "w", encoding="utf-8") as f:
+                json.dump({"secret": secret, "message": message, "time": time.time()}, f, indent=2)
+            print(color("✓ PyFlow is now in maintenance mode.", C_YELLOW))
+            if secret:
+                print(color(f"  Bypass URL: ?secret={secret}", C_CYAN))
+        elif command == "up":
+            down_file = os.path.join(PROJECT_ROOT, "storage", "framework", "down.json")
+            if os.path.exists(down_file):
+                os.remove(down_file)
+                print(color("✓ PyFlow is now live.", C_GREEN))
+            else:
+                print(color("Application is already live.", C_CYAN))
+        elif command == "make:request":
+            if not arg: print("Usage: python cli.py make:request <Name>"); sys.exit(1)
+            name = arg
+            if not name.endswith("Request"): name += "Request"
+            out_dir = os.path.join(PROJECT_ROOT, "app", "requests")
+            os.makedirs(out_dir, exist_ok=True)
+            import re
+            file_name = re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower() + ".py"
+            content = f'''"""
+app/requests/{file_name}
+"""
+
+from core.form_request import FormRequest
+
+
+class {name}(FormRequest):
+    def authorize(self) -> bool:
+        """User authorization check."""
+        return True
+
+    def rules(self) -> dict:
+        """Validation rules."""
+        return {{
+            "title": "required|min:3",
+        }}
+
+    def messages(self) -> dict:
+        """Custom error messages."""
+        return {{
+            "title.required": "Title is required.",
+        }}
+'''
+            with open(os.path.join(out_dir, file_name), "w", encoding="utf-8") as f:
+                f.write(content)
+            print(color(f"✅ Created request: app/requests/{file_name}", C_GREEN))
         else:
             print(color(f"Unknown command: {command}", C_RED))
     else:
