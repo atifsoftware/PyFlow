@@ -5,7 +5,7 @@
 # ─── Core: MySQL ড্রাইভার (Production Ready) ───────────────────────────────
 # mysqlclient is faster and production-ready (C extension based)
 # PHP-এর PDO-র মতো কাজ করে, তবে বেশি ফাস্ট
-mysqlclient==2.2.8
+mysqlclient>=2.2.0
 
 # ─── Alternative: Pure Python MySQL client (Development) ───────────────────
 # Uncomment if you don't have C compiler or prefer pure Python
