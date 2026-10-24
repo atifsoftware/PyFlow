@@ -86,6 +86,12 @@ class DatabaseManager:
 
     @property
     def default_driver(self) -> str:
+        if not self._config:
+            try:
+                from config.config import get_config
+                self.init(get_config())
+            except Exception:
+                pass
         return self._default
 
     def connection(self, name: Optional[str] = None) -> BaseConnection:
@@ -93,6 +99,13 @@ class DatabaseManager:
         Get a specific database connection driver instance.
         If name is None, returns the active default connection.
         """
+        if not self._config:
+            try:
+                from config.config import get_config
+                self.init(get_config())
+            except Exception:
+                pass
+
         conn_name = (name or self._default).lower()
         if conn_name in ("postgres", "pgsql"):
             conn_name = "pgsql" if "pgsql" in self._config.get("connections", {}) else "postgresql"

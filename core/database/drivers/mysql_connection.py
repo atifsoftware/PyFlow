@@ -40,11 +40,17 @@ class MySqlConnection(BaseConnection):
         try:
             import MySQLdb
             import MySQLdb.cursors
-        except ImportError as exc:
-            raise QueryError(
-                "MySQL ব্যবহার করতে 'pip install mysqlclient' করুন, "
-                "অথবা .env-এ DB_DRIVER=sqlite দিয়ে রাখুন"
-            ) from exc
+        except ImportError:
+            try:
+                import pymysql
+                pymysql.install_as_MySQLdb()
+                import MySQLdb
+                import MySQLdb.cursors
+            except ImportError as exc:
+                raise QueryError(
+                    "MySQL ব্যবহার করতে 'pip install mysqlclient' অথবা 'pip install pymysql' করুন, "
+                    "অথবা .env-এ DB_DRIVER=sqlite দিয়ে রাখুন"
+                ) from exc
 
         host = self._config.get("host", self._config.get("DB_HOST", "127.0.0.1"))
         port = int(self._config.get("port", self._config.get("DB_PORT", 3306)))
@@ -110,13 +116,30 @@ class MySqlConnection(BaseConnection):
 
     def cursor(self, as_dict: bool = True):
         conn = self.connection()
+        if not as_dict:
+            return conn.cursor()
+        cursor_cls = None
         try:
             import MySQLdb.cursors
-            if as_dict:
-                return conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
-            return conn.cursor()
+            cursor_cls = getattr(MySQLdb.cursors, "DictCursor", None)
         except Exception:
-            return conn.cursor()
+            pass
+        if not cursor_cls:
+            try:
+                import pymysql.cursors
+                cursor_cls = pymysql.cursors.DictCursor
+            except Exception:
+                pass
+
+        if cursor_cls:
+            try:
+                return conn.cursor(cursor=cursor_cls)
+            except (TypeError, ValueError):
+                try:
+                    return conn.cursor(cursorclass=cursor_cls)
+                except Exception:
+                    pass
+        return conn.cursor()
 
     def execute(self, sql: str, params: tuple = (), as_dict: bool = True) -> Any:
         conn = self.connection()
