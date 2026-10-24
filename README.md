@@ -47,22 +47,140 @@ PyFlow brings the elegance of modern PHP MVC frameworks (like Laravel) to Python
 
 ---
 
+## 🗄️ Multi-Database Support & Grammar Architecture (v3.1.0) 🚀
+
+PyFlow 3.1.0 introduces an enterprise-grade **Multi-Database Connection Manager & SQL Grammar Compiler Architecture**, allowing your application to seamlessly interact with multiple databases (SQLite, MySQL, and PostgreSQL) simultaneously within a single project.
+
+### 1. Supported Database Engines
+| Database Engine | Driver | Supported Features |
+|:---|:---|:---|
+| **SQLite 3** | `sqlite3` (built-in) | Thread-local pooling, Write-Ahead Logging (WAL mode), Foreign Keys enforcement, in-memory (`:memory:`) support. |
+| **MySQL / MariaDB** | `MySQLdb` (`mysqlclient`) | Thread-safe connection pool, backtick escaping (`` `column` ``), native JSON queries (`JSON_CONTAINS`), DATE functions, `utf8mb4` full unicode. |
+| **PostgreSQL** | `psycopg2` | Thread-safe connection pool, double quote escaping (`"column"`), JSONB containment (`@>`), fast primary key returning (`RETURNING "id"`), and cast filters (`::date`). |
+
+### 2. Simultaneous Multi-Database Usage
+You can query different databases within the same request or background job with zero friction:
+```python
+from core.database import Database
+
+# 1. Query the default database (e.g. SQLite)
+users = Database.table("users").where("status", "active").get()
+
+# 2. Query MySQL ERP / Orders database
+orders = Database.connection("mysql").table("orders").where("total", ">", 1000).get()
+
+# 3. Insert audit logs into PostgreSQL analytics database
+Database.connection("pgsql").table("audit_logs").insert({
+    "action": "order.checkout",
+    "user_id": 42,
+    "ip_address": "127.0.0.1"
+})
+```
+
+### 3. Model-Level Connection Binding
+Every ORM Model can be bound to a specific database connection via the `connection` attribute:
+```python
+from core.model import Model
+
+class User(Model):
+    table_name = "users"
+    # uses default connection
+
+class Order(Model):
+    table_name = "orders"
+    connection = "mysql"  # automatically routes all queries to MySQL pool
+
+class AuditLog(Model):
+    table_name = "audit_logs"
+    connection = "pgsql"  # automatically routes all queries to PostgreSQL pool
+
+# Queries automatically route to their designated databases:
+recent_orders = Order.where("status", "paid").limit(10).get()
+recent_logs = AuditLog.where("severity", "critical").get()
+```
+
+### 4. Dialect-Specific SQL & Schema Grammars
+Queries and DDL migrations are compiled dynamically based on the active connection's grammar compiler:
+- **Identifier Wrapping:** MySQL wraps identifiers with backticks (`` `table`.`column` ``), while PostgreSQL and SQLite wrap with standard double quotes (`"table"."column"`).
+- **Date Functions:** `where_date("created_at", "2026-10-24")` compiles to `DATE(col) = ?` in MySQL, `CAST(col AS DATE) = ?` in PostgreSQL, and `strftime('%Y-%m-%d', col) = ?` in SQLite.
+- **JSON Queries:** `where_json("payload->status", "active")` compiles to `JSON_CONTAINS()` in MySQL and `@>` in PostgreSQL.
+- **Primary Key Return:** PostgreSQL executes `RETURNING "id"` while MySQL and SQLite resolve the newly created primary key automatically.
+
+### 5. Multi-Database Transactions & Named Savepoints
+Atomic transactions can be opened on the default connection or any specific connection with automatic `SAVEPOINT` nesting:
+```python
+from core.database import Database, atomic
+
+# Context manager on default connection
+with Database.transaction():
+    Database.table("accounts").where("id", 1).decrement("balance", 500)
+    
+    with Database.transaction():  # Named SAVEPOINT created automatically
+        Database.table("transfers").insert({"amount": 500})
+
+# Transaction on a specific connection (e.g. MySQL)
+with Database.connection("mysql").transaction():
+    Order.create({"user_id": 1, "amount": "150.00"})
+
+# Function decorator
+@atomic(connection="mysql")
+def process_order(order_data):
+    # entire function runs inside an isolated MySQL transaction
+    ...
+```
+
+### 6. Environment Configuration (`.env`)
+```ini
+# Default active connection (sqlite, mysql, or pgsql)
+DB_CONNECTION=sqlite
+
+# SQLite Connection
+DB_NAME=storage/database.sqlite
+
+# MySQL Connection Settings
+DB_MYSQL_HOST=127.0.0.1
+DB_MYSQL_PORT=3306
+DB_MYSQL_DATABASE=pyflow_db
+DB_MYSQL_USERNAME=root
+DB_MYSQL_PASSWORD=secret
+DB_MYSQL_POOL_SIZE=10
+
+# PostgreSQL Connection Settings
+DB_PGSQL_HOST=127.0.0.1
+DB_PGSQL_PORT=5432
+DB_PGSQL_DATABASE=pyflow_pg
+DB_PGSQL_USERNAME=postgres
+DB_PGSQL_PASSWORD=secret
+DB_PGSQL_POOL_SIZE=10
+```
+
+---
+
 ## 📂 Folder Structure (ফোল্ডার আর্কিটেকচার)
 ```
 pyflow/
 ├── app/
 │   ├── api/             # FastAPI sub-application routes & schemas
 │   ├── controllers/     # AuthController, UserController, SettingController...
-│   ├── models/          # User, Setting, ActivityLog, ApiKey Models
+│   ├── models/          # User, Setting, ActivityLog, ApiKey Models (Multi-DB bound)
 │   └── views/           # .html View templates (admin, settings, api_keys, logs)
+├── benchmarks/          # Performance benchmark suite (router, grammars, multi-DB)
 ├── config/
-│   ├── config.py        # .env configuration loader
+│   ├── config.py        # Global environment configuration loader
+│   ├── database.py      # Multi-database driver and pool configurations
 │   └── routes.py        # Main PyFlow web routes configuration
-├── core/                # Core engines (router, ORM, validator, database, bridge)
+├── core/                # Core engines (router, ORM, validator, bridge)
+│   └── database/        # Multi-database manager, drivers, and dialect grammars
+│       ├── contracts/   # ConnectionInterface, GrammarInterface, SchemaGrammarInterface
+│       ├── drivers/     # SqliteConnection, MySqlConnection, PostgresConnection
+│       ├── grammar/     # BaseGrammar, MySqlGrammar, PostgresGrammar, SqliteGrammar
+│       ├── schema/      # BaseSchemaGrammar, MySQL, PostgreSQL, SQLite DDL Compilers
+│       └── manager.py   # DatabaseManager (runtime dynamic multi-DB switcher)
 ├── public/
 │   ├── index.py         # WSGI production entry point
 │   └── static/          # CSS/JS/images assets
 ├── storage/             # Log files, session database, sqlite database storage
+├── tests/               # 210+ comprehensive unit and multi-DB tests
 ├── migrate.py           # Database migration runner
 ├── run.py               # Development ASGI server launcher (Uvicorn-based)
 └── requirements.txt     # Python dependencies
@@ -129,37 +247,44 @@ This CLI supports:
 
 ## 🌟 কাস্টম এবং অ্যাডভান্সড ফিচারসমূহ
 
-### ১. ফাস্ট-এপিআই (FastAPI) ইন্টিগ্রেশন
+### ১. এন্টারপ্রাইজ মাল্টি-ডাটাবেজ ইঞ্জিন ও গ্রামার আর্কিটেকচার (Multi-Database & Grammars v3.1.0) 🚀
+PyFlow 3.1.0-এ NovaFlow-এর অনুরূপ কিন্তু পাইথনের শক্তিতে আরও উন্নত **Multi-Database Connection Manager & SQL Grammar Compiler Architecture** যুক্ত করা হয়েছে।
+- **একসাথে ৩টি ডাটাবেজ সমান্তরালভাবে ব্যবহার:** একটি অ্যাপ্লিকেশনে একই সাথে SQLite (লোকাল/ক্যাশ), MySQL (মেইন ট্রানজেকশন/অর্ডার), এবং PostgreSQL (অডিট লগ/অ্যানালিটিক্স) চালানো যায়।
+- **ডায়ালেক্ট অনুযায়ী SQL কম্পাইলার:** MySQL ব্যাকটিক (`` ` ``), Postgres ডাবল কোট (`" "`), ডেট ফিল্টার (`DATE()` বনাম `CAST AS DATE` বনাম `strftime`), এবং JSON কুয়েরি কম্পাইলার।
+- **মডেল লেভেলে ডাটাবেজ বাউন্ডিং:** `Model.connection = "mysql"` লিখে যেকোনো মডেলকে নির্দিষ্ট ডাটাবেজের সাথে যুক্ত করা যায়।
+- **থ্রেড-সেফ কানেকশন পুলিং:** হাই-কনকারেন্ট রিকোয়েস্টে ডাটাবেস হ্যান্ডশেক ওভারহেড দূর করতে থ্রেড-সেফ পুলিং ও SQLite WAL মোড।
+
+### ২. ফাস্ট-এপিআই (FastAPI) ইন্টিগ্রেশন
 একটি রেডিমেড WSGI-to-ASGI ব্রিজের মাধ্যমে PyFlow and FastAPI একই পোর্টে (৮০০০) পাশাপাশি রান করে। সব API রিকোয়েস্ট `/api/*` পাথে FastAPI হ্যান্ডেল করে এবং ইন্টারেক্টিভ Swagger ডক্স পাওয়া যায় `/api/docs`-এ।
 
-### ২. ফর্ম ভ্যালিডেটর ইঞ্জিন (Request Validator)
+### ৩. ফর্ম ভ্যালিডেটর ইঞ্জিন (Request Validator)
 ইনপুট স্যানিটাইজেশন ও ডেটা ভ্যালিডেশনের জন্য `Validator` ক্লাস রয়েছে। এটি `required`, `email`, `numeric`, `min`, `max`, এবং ডাটাবেস চেক করার জন্য `unique:table,column` রুলস সাপোর্ট করে।
 
-### ৩. নেস্টেড ডাটাবেস ট্রানজেকশন (Nested Transactions)
+### ৪. নেস্টেড ডাটাবেস ট্রানজেকশন (Nested Transactions)
 ডাটাবেস লেভেলে জটিল কোয়েরি অপারেশনের জন্য nested transaction বা SQL `SAVEPOINT` ইমপ্লিমেন্ট করা হয়েছে। এর ফলে আংশিক কুয়েরি এরর হলে সম্পূর্ণ ট্রানজেকশন রোলব্যাক না করে নির্দিষ্ট সেভপয়েন্টে ফেরত যাওয়া যায়।
 
-### ৪. এপিআই কী ও অডিট লগ (API Key Management)
+### ৫. এপিআই কী ও অডিট লগ (API Key Management)
 ব্যবহারকারীরা সরাসরি ড্যাশবোর্ড থেকে এপিআই কী (`pm_sk_...`) তৈরি এবং বাতিল করতে পারেন। এটি ডাটাবেসে SHA-256 হ্যাশ করা থাকে। এই কী দিয়ে FastAPI এন্ডপয়েন্টগুলোতে `X-API-Key` হেডারের মাধ্যমে অথেন্টিকেট করা যায়।
 
-### ৫. অ্যাক্টিভিটি লগ (Audit Trail)
+### ৬. অ্যাক্টিভিটি লগ (Audit Trail)
 ইউজার সিকিউরিটি নিশ্চিত করতে অ্যাপ্লিকেশনের সমস্ত কার্যকলাপ (লগইন, লগআউট, সেটিংস পরিবর্তন ইত্যাদি) স্বয়ংক্রিয়ভাবে ইউজারের আইপি এবং ইউজার এজেন্টসহ ডাটাবেসে ট্র্যাকিং লগ তৈরি করে।
 
-### ৬. উন্নত লগিং সিস্টেম (Advanced Logging)
+### ৭. উন্নত লগিং সিস্টেম (Advanced Logging)
 NovaFlow-এর `Logger.php`-র অনুরূপ পাইথন সংস্করণ। এটি আইপি, সেশন আইডি এবং ইউজার এজেন্ট সহ সব স্ট্যান্ডার্ড লেভেলে লগ তৈরি করে যা ব্রাউজারের ফুটবার ডিবাগ বারেও দেখা যায়।
 
-### ৭. ডাটাবেস সিডার ও ফ্যাক্টরি (Database Seeders & Factories)
+### ৮. ডাটাবেস সিডার ও ফ্যাক্টরি (Database Seeders & Factories)
 সহজে ডামি ডেটা তৈরি ও ডাটাবেস টেস্ট করার জন্য ডাইনামিক সিডার ও ফ্যাক্টরি মেকানিজম। CLI অপশন ৯ এর মাধ্যমে এক্সিকিউট করা যায়।
 
-### ৮. ব্যাকগ্রাউন্ড কিউ এবং জব (Queue & Background Jobs)
+### ৯. ব্যাকগ্রাউন্ড কিউ এবং জব (Queue & Background Jobs)
 মেল পাঠানো বা ভারী প্রসেস ব্যাকগ্রাউন্ডে চালানোর জন্য ডাটাবেস-ব্যাকড কিউ এবং থ্রেডেড ওয়ার্কার। CLI অপশন ১০ এর মাধ্যমে রান করা যায়।
 
-### ৯. টাস্ক সিডিউলার (Task Scheduler)
+### ১০. টাস্ক সিডিউলার (Task Scheduler)
 প্রতি মিনিটে বা নির্দিষ্ট সময়ে ব্যাকগ্রাউন্ড টাস্ক রান করানোর জন্য শিডিউলার ইঞ্জিন। CLI অপশন ১১ এর মাধ্যমে চালানো যায়।
 
-### ১০. রিয়েল-টাইম ওয়েবসকেট (WebSockets)
+### ১১. রিয়েল-টাইম ওয়েবসকেট (WebSockets)
 ASGI ব্রিজের সাহায্যে বাই-ডিরেকショナル রিয়েল-টাইম ওয়েবসকেট গেটওয়ে (যেমন `/ws` এন্ডপয়েন্টে)।
 
-### ১১. ইন্টারঅ্যাক্টিভ সিএলআই অ্যাসিস্ট্যান্ট (cli.py) 🖥️
+### ১২. ইন্টারঅ্যাক্টিভ সিএলআই অ্যাসিস্ট্যান্ট (cli.py) 🖥️
 Laravel Artisan-এর মতো PyFlow-তে রয়েছে একটি সম্পূর্ণ ফিচারযুক্ত টার্মিনাল মেনু অ্যাসিস্ট্যান্ট। রান করার নিয়ম:
 ```bash
 python cli.py
@@ -253,16 +378,67 @@ router.get("/settings", action(SettingController, "index"), name="settings")
 router.post("/settings", action(SettingController, "update"), name="settings.update")
 ```
 
-### ডাটাবেস ট্রানজেকশন কন্ট্রোল:
+### ডাটাবেস ও মাল্টি-ডিবি ব্যবহারের উদাহরণ:
+
+#### ক) একই সাথে একাধিক ডাটাবেজে কুয়েরি চালানো:
 ```python
 from core.database import Database
 
+# ১. ডিফল্ট ডাটাবেজে কুয়েরি (যেমন SQLite)
+users = Database.table("users").where("status", "active").get()
+
+# ২. সরাসরি MySQL ডাটাবেজে কুয়েরি (কানেকশন সুইচিং)
+orders = Database.connection("mysql").table("orders").where("total", ">", 1000).get()
+
+# ৩. সরাসরি PostgreSQL ডাটাবেজে ইনসার্ট
+Database.connection("pgsql").table("audit_logs").insert({
+    "action": "order.checkout",
+    "user_id": 42,
+    "ip_address": "192.168.1.1"
+})
+```
+
+#### খ) মডেল লেভেলে ডাটাবেজ বাইন্ডিং (ORM Model):
+```python
+from core.model import Model
+
+class User(Model):
+    table_name = "users"
+    # ডিফল্ট কানেকশন
+
+class Order(Model):
+    table_name = "orders"
+    connection = "mysql"  # স্বয়ংক্রিয়ভাবে MySQL কানেকশনে যাবে
+
+class AuditLog(Model):
+    table_name = "audit_logs"
+    connection = "pgsql"  # স্বয়ংক্রিয়ভাবে PostgreSQL কানেকশনে যাবে
+
+# মডেল কুয়েরি চালালে স্বয়ংক্রিয়ভাবে সংশ্লিষ্ট ডাটাবেজে এক্সিকিউট হবে:
+recent_orders = Order.where("status", "paid").limit(10).get()
+recent_logs = AuditLog.where("severity", "critical").get()
+```
+
+#### গ) ডাটাবেস ট্রানজেকশন ও নেস্টেড সেভপয়েন্ট:
+```python
+from core.database import Database, atomic
+
+# ১. কনটেক্সট ম্যানেজার দিয়ে নেস্টেড ট্রানজেকশন
 with Database.transaction():
-    # প্রথম কুয়েরি
-    Database.execute("INSERT INTO users ...")
+    Database.execute("INSERT INTO users (name, email) VALUES (?, ?)", ("John", "john@example.com"))
     
-    with Database.transaction(): # নেস্টেড সেভপয়েন্ট ট্রানজেকশন
-        Database.execute("UPDATE settings ...")
+    with Database.transaction():  # আংশিক রোলব্যাকের জন্য স্বয়ংক্রিয় SAVEPOINT
+        Database.execute("UPDATE settings SET value = ? WHERE key = ?", ("dark", "theme"))
+
+# ২. স্পেসিফিক কানেকশনে ট্রানজেকশন (যেমন MySQL)
+with Database.connection("mysql").transaction():
+    Order.create({"user_id": 1, "amount": "150.00"})
+
+# ৩. ফাংশন ডেকোরেটর
+@atomic(connection="mysql")
+def process_order(order_data):
+    # সম্পূর্ণ ফাংশনটি একটি সেফ MySQL ট্রানজেকশনের ভেতর চলবে
+    ...
 ```
 
 ### এপিআই কী অথেন্টিকেশন হেডার টেস্ট:
