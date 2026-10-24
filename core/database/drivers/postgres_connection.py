@@ -36,15 +36,6 @@ class PostgresConnection(BaseConnection):
         return "postgresql"
 
     def _create_raw_connection(self):
-        try:
-            import psycopg2
-            import psycopg2.extras
-        except ImportError as exc:
-            raise QueryError(
-                "PostgreSQL ব্যবহার করতে 'pip install psycopg2-binary' করুন, "
-                "অথবা .env-এ DB_DRIVER=sqlite দিয়ে রাখুন"
-            ) from exc
-
         host = self._config.get("host", self._config.get("DB_HOST", "127.0.0.1"))
         port = int(self._config.get("port", self._config.get("DB_PORT", 5432)))
         user = self._config.get("user", self._config.get("DB_USER", "postgres"))
@@ -52,17 +43,43 @@ class PostgresConnection(BaseConnection):
         dbname = self._config.get("database", self._config.get("DB_NAME", ""))
         schema = self._config.get("schema", self._config.get("DB_SCHEMA", "public"))
 
-        conn = psycopg2.connect(
-            host=host,
-            port=port,
-            user=user,
-            password=password,
-            dbname=dbname,
-            connect_timeout=10,
-            options=f"-c search_path={schema}",
-        )
-        conn.autocommit = False
-        return conn
+        # 1. Try modern psycopg (v3) first
+        try:
+            import psycopg
+            conn = psycopg.connect(
+                host=host,
+                port=port,
+                user=user,
+                password=password,
+                dbname=dbname,
+                connect_timeout=10,
+                autocommit=False,
+                options=f"-c search_path={schema}",
+            )
+            return conn
+        except ImportError:
+            pass
+
+        # 2. Fallback to legacy psycopg2
+        try:
+            import psycopg2
+            import psycopg2.extras
+            conn = psycopg2.connect(
+                host=host,
+                port=port,
+                user=user,
+                password=password,
+                dbname=dbname,
+                connect_timeout=10,
+                options=f"-c search_path={schema}",
+            )
+            conn.autocommit = False
+            return conn
+        except ImportError as exc:
+            raise QueryError(
+                "PostgreSQL ব্যবহার করতে 'pip install \"psycopg[binary]\"' বা 'pip install psycopg2-binary' করুন, "
+                "অথবা .env-এ DB_DRIVER=sqlite দিয়ে রাখুন"
+            ) from exc
 
     def _is_alive(self, conn) -> bool:
         if conn is None:
@@ -106,11 +123,22 @@ class PostgresConnection(BaseConnection):
 
     def cursor(self, as_dict: bool = True):
         conn = self.connection()
+        if not as_dict:
+            return conn.cursor()
+
+        # Try modern psycopg (v3) dict_row factory
+        try:
+            import psycopg
+            from psycopg.rows import dict_row
+            if isinstance(conn, psycopg.Connection):
+                return conn.cursor(row_factory=dict_row)
+        except Exception:
+            pass
+
+        # Fallback to psycopg2 RealDictCursor
         try:
             import psycopg2.extras
-            if as_dict:
-                return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            return conn.cursor()
+            return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         except Exception:
             return conn.cursor()
 
@@ -125,7 +153,7 @@ class PostgresConnection(BaseConnection):
 
             sql_upper = sql.strip().upper()
             if sql_upper.startswith(("SELECT", "EXPLAIN")):
-                return cur.fetchall()
+                return list(cur.fetchall())
             elif sql_upper.startswith("INSERT"):
                 affected = cur.rowcount if cur.rowcount > 0 else 1
                 # If RETURNING was used, fetch the inserted id directly

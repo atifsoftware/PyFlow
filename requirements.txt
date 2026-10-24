@@ -16,10 +16,10 @@ mysqlclient>=2.2.0
 jinja2>=3.1.0
 markupsafe>=2.1.0
 
-# ─── Core: PostgreSQL ড্রাইভার ───────────────────────────────────────────
-# DB_DRIVER=postgresql ব্যবহার করলে এটা দরকার
-# binary version — Linux/Mac/Windows সবায় সহজে ইনস্টল হয়
-psycopg2-binary==2.9.10
+# ─── Core: PostgreSQL ড্রাইভার (Modern Standard) ───────────────────────────
+# psycopg (v3) — আধুনিক, দ্রুত এবং নেটিভ Async/FastAPI রেডি ড্রাইভার
+psycopg[binary]>=3.2.0
+# psycopg2-binary>=2.9.10  # Legacy fallback
 
 # ─── FastAPI Integration ────────────────────────────────────────────────────
 # REST API + Swagger UI + OpenAPI — একই পোর্টে /api/* path-এ

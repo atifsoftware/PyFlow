@@ -24,7 +24,7 @@ setup(
     python_requires=">=3.9",
     install_requires=[
         "mysqlclient>=2.2.0",
-        "psycopg2-binary>=2.9.10",
+        "psycopg[binary]>=3.2.0",
         "fastapi>=0.100.0",
         "uvicorn[standard]>=0.23.0",
         "a2wsgi>=1.10.0",
