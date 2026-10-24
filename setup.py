@@ -23,7 +23,7 @@ setup(
     ],
     python_requires=">=3.9",
     install_requires=[
-        "pymysql>=1.1.1",
+        "mysqlclient>=2.2.0",
         "psycopg2-binary>=2.9.10",
         "fastapi>=0.100.0",
         "uvicorn[standard]>=0.23.0",

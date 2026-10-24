@@ -440,13 +440,19 @@ def _ensure_mysql_database(config: dict):
     MySQL-এ database না থাকলে তৈরি করে।
     """
     try:
-        import pymysql
+        try:
+            import MySQLdb
+        except ImportError:
+            import pymysql
+            pymysql.install_as_MySQLdb()
+            import MySQLdb
+
         db_name = config.get("DB_NAME", "pyflow_db")
-        conn = pymysql.connect(
+        conn = MySQLdb.connect(
             host=config.get("DB_HOST", "127.0.0.1"),
             port=int(config.get("DB_PORT", 3306)),
             user=config.get("DB_USER", "root"),
-            password=config.get("DB_PASSWORD", ""),
+            passwd=config.get("DB_PASSWORD", ""),
             charset="utf8mb4",
         )
         cursor = conn.cursor()

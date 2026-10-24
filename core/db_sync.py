@@ -1,5 +1,4 @@
 import sqlite3
-import pymysql
 import json
 import time
 
@@ -7,13 +6,25 @@ class DBSchemaComparer:
     @classmethod
     def compare_mysql(cls, host, user, password, src_db, tgt_db, port=3306):
         """Compare two MySQL databases schema and return differences and SQL upgrade scripts"""
-        conn = pymysql.connect(
+        try:
+            import MySQLdb
+            import MySQLdb.cursors
+        except ImportError:
+            try:
+                import pymysql
+                pymysql.install_as_MySQLdb()
+                import MySQLdb
+                import MySQLdb.cursors
+            except ImportError as exc:
+                raise ImportError("MySQL driver (mysqlclient or pymysql) is required.") from exc
+
+        conn = MySQLdb.connect(
             host=host,
             port=int(port),
             user=user,
-            password=password,
+            passwd=password,
             charset="utf8mb4",
-            cursorclass=pymysql.cursors.DictCursor
+            cursorclass=MySQLdb.cursors.DictCursor
         )
         try:
             cursor = conn.cursor()
