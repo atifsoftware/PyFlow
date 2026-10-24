@@ -64,7 +64,7 @@ def get_config() -> dict:
 
     return {
         "APP_NAME":    merged.get("APP_NAME", "PyFlow App"),
-        "APP_VERSION": merged.get("APP_VERSION", "v3.0.9"),
+        "APP_VERSION": merged.get("APP_VERSION", "v3.1.0"),
         "APP_ENV":     app_env,
         "APP_DEBUG":   merged.get("APP_DEBUG", "true").lower() == "true",
         "APP_URL":     merged.get("APP_URL", "http://localhost:8000"),
@@ -72,6 +72,7 @@ def get_config() -> dict:
 
 
         "DB_DRIVER":    merged.get("DB_DRIVER", "sqlite"),
+        "DB_CONNECTION": merged.get("DB_CONNECTION", merged.get("DB_DRIVER", "sqlite")),
         "DB_HOST":      merged.get("DB_HOST", "127.0.0.1"),
         "DB_PORT":      merged.get("DB_PORT", "3306"),
         "DB_NAME":      merged.get("DB_NAME", "storage/database.sqlite"),
@@ -79,6 +80,45 @@ def get_config() -> dict:
         "DB_PASSWORD":  merged.get("DB_PASSWORD", ""),
         "DB_POOL_SIZE": merged.get("DB_POOL_SIZE", "5"),
         "DB_TIMEZONE":  merged.get("DB_TIMEZONE", "+06:00"),
+
+        "default":      merged.get("DB_CONNECTION", merged.get("DB_DRIVER", "sqlite")),
+        "connections": {
+            "sqlite": {
+                "driver": "sqlite",
+                "database": ":memory:" if app_env == "testing" else merged.get("DB_SQLITE_PATH", merged.get("DB_NAME", "storage/database.sqlite")),
+                "timeout": 10.0,
+            },
+            "mysql": {
+                "driver": "mysql",
+                "host": merged.get("DB_HOST", "127.0.0.1"),
+                "port": int(merged.get("DB_PORT", 3306)),
+                "database": merged.get("DB_NAME", "pyflow_db"),
+                "user": merged.get("DB_USER", "root"),
+                "password": merged.get("DB_PASSWORD", ""),
+                "pool_size": int(merged.get("DB_POOL_SIZE", 5)),
+                "timezone": merged.get("DB_TIMEZONE", "+06:00"),
+            },
+            "pgsql": {
+                "driver": "postgresql",
+                "host": merged.get("PG_HOST", merged.get("DB_HOST", "127.0.0.1")),
+                "port": int(merged.get("PG_PORT", 5432)),
+                "database": merged.get("PG_NAME", merged.get("DB_NAME", "pyflow_db")),
+                "user": merged.get("PG_USER", "postgres"),
+                "password": merged.get("PG_PASSWORD", merged.get("DB_PASSWORD", "")),
+                "schema": merged.get("DB_SCHEMA", "public"),
+                "pool_size": int(merged.get("DB_POOL_SIZE", 5)),
+            },
+            "postgresql": {
+                "driver": "postgresql",
+                "host": merged.get("PG_HOST", merged.get("DB_HOST", "127.0.0.1")),
+                "port": int(merged.get("PG_PORT", 5432)),
+                "database": merged.get("PG_NAME", merged.get("DB_NAME", "pyflow_db")),
+                "user": merged.get("PG_USER", "postgres"),
+                "password": merged.get("PG_PASSWORD", merged.get("DB_PASSWORD", "")),
+                "schema": merged.get("DB_SCHEMA", "public"),
+                "pool_size": int(merged.get("DB_POOL_SIZE", 5)),
+            }
+        },
 
         "SESSION_DIR":            merged.get("SESSION_DIR", "storage/sessions"),
         "SESSION_SECURE_COOKIE":  merged.get("SESSION_SECURE_COOKIE", "false").lower() == "true",

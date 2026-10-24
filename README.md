@@ -3,7 +3,7 @@
 </p>
 
 # PyFlow — Premium Custom Python MVC & FastAPI Framework 🚀
-### Version 3.0.9 (Latest Release)
+### Version 3.1.0 (Latest Release)
 
 🌐 **Live Demo (লাইভ ডেমো):** [https://pyflow.nexterp.bd/](https://pyflow.nexterp.bd/) | 🛠️ **[Installation Guide (ইনস্টলেশন গাইড)](INSTALL.md)**
 
@@ -21,14 +21,15 @@ PyFlow brings the elegance of modern PHP MVC frameworks (like Laravel) to Python
 ---
 
 ## 🌟 Key Features (মূল সুবিধাসমূহ)
-- **Multi-Driver Database Pool (New in v3.0):** Native connection pool support for SQLite, MySQL, and **PostgreSQL** configured easily via `.env`.
-- **Atomic Transactions Manager (New in v3.0):** Database transactions block with context manager (`with Database.transaction()`), `@atomic` decorator, partial rollback using named `SAVEPOINT`, and mail/notify-safe hooks (`on_commit` / `on_rollback`).
-- **Precision Financial Math (New in v3.0):** Floating-point free exact calculations with `Money` class and automated Number-to-Words translation helpers in both Bangla and English.
+- **Multi-Database Engine & Grammar Architecture (New in v3.1.0):** Run SQLite, MySQL, and PostgreSQL simultaneously in a single application (`Database.connection('mysql')`, `Database.connection('pgsql')`). Dialect-specific SQL & Schema Grammars compile ANSI, MySQL (backtick/JSON/date), PostgreSQL (double-quote/JSONB/@>/date), and SQLite queries automatically. Models bind dynamically to any connection via `Model.connection`.
+- **Multi-Driver Database Pool:** Native thread-safe connection pooling for SQLite (with WAL mode), MySQL, and PostgreSQL.
+- **Atomic Transactions Manager:** Database transactions block with context manager (`with Database.transaction()`), `@atomic` decorator, partial rollback using named `SAVEPOINT`, and mail/notify-safe hooks (`on_commit` / `on_rollback`).
+- **Precision Financial Math:** Floating-point free exact calculations with `Money` class and automated Number-to-Words translation helpers in both Bangla and English.
 - **Jinja/Blade-inspired Template Engine:** Supports layout inheritance (`@extends`, `@section`, `@yield`), `@include`, conditional loops, and auto-XSS escaping.
-- **Custom ORM & Query Builder:** Fluent, SQL injection-proof database wrapper.
+- **Custom ORM & Query Builder:** Fluent, SQL injection-proof database wrapper powered by dialect-aware Grammars.
 - **FastAPI Integration:** Mounted on the same port (8000) under `/api/*` with Swagger docs at `/api/docs`.
 - **Secure Security Shield:** Features built-in CSRF protection, rate limiting, PBKDF2-SHA256 password hashing, and session fixation defense.
-- **Exhaustive Unit Tests:** Over 170+ rigorous unit tests cover router, validation, transactions, database pool, and math classes.
+- **Exhaustive Unit Tests:** Over 210+ rigorous unit tests cover router, validation, transactions, multi-database pool, grammars, and math classes.
 - **Debug Bar:** Developer diagnostics bar displaying execution times, active database queries, and session logs.
 
 ### 2. Newly Integrated Advanced Features 🚀

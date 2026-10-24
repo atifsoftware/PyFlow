@@ -1,21 +1,13 @@
 """
 core/query_builder.py
 ======================
-Laravel/PHP Eloquent স্টাইলের ফ্লুয়েন্ট Query Builder। ইউজার ইনপুট কখনোই
-সরাসরি SQL স্ট্রিং-এর ভেতরে বসে না — সবকিছু placeholder (? বা %s) আর bound
-parameter দিয়ে পাঠানো হয় Database.execute()-এ। এটাই SQL Injection ঠেকানোর
-মূল প্রতিরক্ষা।
-
-কলাম/টেবিলের নাম (identifier) হোয়াইটলিস্ট রেজেক্স দিয়ে ভ্যালিডেট করা হয়,
-কারণ identifier bind করা যায় না (placeholder শুধু ভ্যালুর জন্য কাজ করে)।
-
-Driver-aware quoting:
-  - MySQL:           `table`, `column`  (backtick)
-  - PostgreSQL:      "table", "column"  (double-quote)
-  - SQLite:          "table", "column"  (double-quote)
+Laravel/PHP Eloquent-styled Fluent Query Builder with Multi-Database and Grammar Architecture.
+Decouples query state from SQL dialect compilation via Connection Grammars.
+Supports simultaneous querying against SQLite, MySQL, and PostgreSQL.
 """
 
 import re
+from typing import Any, List, Dict, Optional, Tuple, Union
 from core.database import Database, QueryError
 
 # Compile identifier regexes at module level for optimal performance
@@ -23,50 +15,36 @@ _RAW_BASE_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$'
 _ALIAS_RE = re.compile(r'^(?:as\s+)?[a-zA-Z_][a-zA-Z0-9_]*$', re.IGNORECASE)
 
 
-def _safe_identifier(name: str) -> str:
+def _safe_identifier(name: str, grammar=None) -> str:
     """
-    টেবিল/কলামের নাম ভ্যালিডেট করে driver-অনুযায়ী quote যোগ করে।
-
-    - MySQL:      `column`   (ব্যাকটিক)
-    - PostgreSQL: "column"   (ডাবল-কোট)
-    - SQLite:     "column"   (ডাবল-কোট)
+    Validate table/column name and quote according to connection grammar.
     """
     if name == "*":
         return name
-
-    base = name.split(" ")[0]  # "users u" এর মতো alias হলে base অংশ চেক করে
-    # Quote সরিয়ে raw name validate করা
-    raw_base = base.strip("`\"\'")
-    if not _RAW_BASE_RE.match(raw_base):
-        raise QueryError(f"অবৈধ কলাম/টেবিল নাম: {name!r}")
-
-    # Driver অনুযায়ী quote character
-    q = "`" if Database.driver == "mysql" else '"'
-
-    parts  = raw_base.split(".")
-    quoted = ".".join(f"{q}{p}{q}" for p in parts)
-
-    if " " in name:
-        alias = name.split(" ", 1)[1].strip()
-        # Alias-এ SQL injection প্রতিরোধে কঠোর ভ্যালিডেশন
-        if not _ALIAS_RE.match(alias):
-            raise QueryError(f"অবৈধ alias: {alias!r}")
-        
-        # Alias কলামটির উপরেও ড্রাইভের কোট রুল প্রয়োগ করা
-        alias_parts = re.split(r'\s+', alias)
-        if len(alias_parts) == 2 and alias_parts[0].upper() == "AS":
-            return f"{quoted} AS {q}{alias_parts[1]}{q}"
-        else:
-            return f"{quoted} {q}{alias}{q}"
-            
-    return quoted
+    if grammar is not None:
+        return grammar.wrap(name)
+    return Database.connection().grammar.wrap(name)
 
 
 class QueryBuilder:
-    def __init__(self, table: str):
-        self.table = _safe_identifier(table)
+    """
+    Fluent Query Builder bound to a specific database connection and grammar.
+    """
+
+    def __init__(self, table: str, connection=None):
+        from core.database.drivers.base_connection import BaseConnection
+        if isinstance(connection, BaseConnection):
+            self._connection = connection
+        elif connection is not None:
+            self._connection = Database.connection(connection)
+        else:
+            self._connection = Database.connection()
+
+        self.grammar = self._connection.grammar
+        self.raw_table = table
+        self.table = self.grammar.wrap_table(table)
         self._select = ["*"]
-        self._wheres = []       # list of (fragment, params)
+        self._wheres = []       # list of (fragment, joiner)
         self._joins = []
         self._order = []
         self._group = []
@@ -75,16 +53,25 @@ class QueryBuilder:
         self._offset = None
         self._params = []
         self._cache_ttl = None  # None = no cache; int = cache TTL seconds
+        self._model = None
+
+    @property
+    def connection(self):
+        return self._connection
+
+    def set_model(self, model_class):
+        self._model = model_class
+        return self
 
     # ---------------------------------------------------------------- SELECT
     def select(self, *columns):
-        self._select = [_safe_identifier(c) for c in columns] if columns else ["*"]
+        self._select = [self.grammar.wrap(c) for c in columns] if columns else ["*"]
         return self
 
     def join(self, table, first, operator, second, kind="INNER"):
-        table = _safe_identifier(table)
-        first = _safe_identifier(first)
-        second = _safe_identifier(second)
+        table = self.grammar.wrap_table(table)
+        first = self.grammar.wrap(first)
+        second = self.grammar.wrap(second)
         if operator not in ("=", "!=", ">", "<", ">=", "<="):
             raise QueryError("অবৈধ join operator")
         self._joins.append(f"{kind} JOIN {table} ON {first} {operator} {second}")
@@ -95,15 +82,15 @@ class QueryBuilder:
 
     # ----------------------------------------------------------------- WHERE
     def where(self, column, operator, value=None):
-        """where('age', '>', 18)  অথবা  where('active', True) -> '=' ধরে নেবে"""
+        """where('age', '>', 18) অথবা where('active', True) -> '=' ধরে নেবে"""
         if value is None:
             value = operator
             operator = "="
-        column = _safe_identifier(column)
+        col = self.grammar.wrap(column)
         if operator.upper() not in ("=", "!=", "<>", ">", "<", ">=", "<=", "LIKE", "NOT LIKE"):
             raise QueryError("অবৈধ where operator")
-        ph = Database.placeholder()
-        self._wheres.append((f"{column} {operator} {ph}", "AND"))
+        ph = self._connection.placeholder
+        self._wheres.append((f"{col} {operator} {ph}", "AND"))
         self._params.append(value)
         return self
 
@@ -111,18 +98,17 @@ class QueryBuilder:
         if value is None:
             value = operator
             operator = "="
-        column = _safe_identifier(column)
-        ph = Database.placeholder()
-        self._wheres.append((f"{column} {operator} {ph}", "OR"))
+        col = self.grammar.wrap(column)
+        ph = self._connection.placeholder
+        self._wheres.append((f"{col} {operator} {ph}", "OR"))
         self._params.append(value)
         return self
 
     def where_group(self, callback, joiner="AND"):
         """
         Grouped WHERE clauses — e.g. WHERE a AND (b OR c)
-        callback-এ একটি নতুন QueryBuilder instance পাস করা হয় যার wheres-কে parenthesis-এ wrap করা হয়।
         """
-        sub_qb = QueryBuilder(self.table)
+        sub_qb = QueryBuilder(self.raw_table, connection=self._connection)
         callback(sub_qb)
         if sub_qb._wheres:
             parts = []
@@ -137,61 +123,61 @@ class QueryBuilder:
         return self
 
     def where_in(self, column, values):
-        column = _safe_identifier(column)
+        col = self.grammar.wrap(column)
         if not values:
-            self._wheres.append(("1 = 0", "AND"))  # খালি list হলে কোনো রেজাল্ট না
+            self._wheres.append(("1 = 0", "AND"))
             return self
-        ph = Database.placeholder()
+        ph = self._connection.placeholder
         placeholders = ", ".join([ph] * len(values))
-        self._wheres.append((f"{column} IN ({placeholders})", "AND"))
+        self._wheres.append((f"{col} IN ({placeholders})", "AND"))
         self._params.extend(values)
         return self
 
     def where_like(self, column, pattern):
-        column = _safe_identifier(column)
-        ph = Database.placeholder()
-        self._wheres.append((f"{column} LIKE {ph}", "AND"))
+        col = self.grammar.wrap(column)
+        ph = self._connection.placeholder
+        self._wheres.append((f"{col} LIKE {ph}", "AND"))
         self._params.append(pattern)
         return self
 
     def where_null(self, column):
-        column = _safe_identifier(column)
-        self._wheres.append((f"{column} IS NULL", "AND"))
+        col = self.grammar.wrap(column)
+        self._wheres.append((f"{col} IS NULL", "AND"))
         return self
 
     def where_not_null(self, column):
-        column = _safe_identifier(column)
-        self._wheres.append((f"{column} IS NOT NULL", "AND"))
+        col = self.grammar.wrap(column)
+        self._wheres.append((f"{col} IS NOT NULL", "AND"))
         return self
 
     def where_between(self, column, start, end):
-        """WHERE column BETWEEN start AND end — তারিখ বা সংখ্যার range ফিল্টারে উপকারী"""
-        column = _safe_identifier(column)
-        ph = Database.placeholder()
-        self._wheres.append((f"{column} BETWEEN {ph} AND {ph}", "AND"))
+        """WHERE column BETWEEN start AND end"""
+        col = self.grammar.wrap(column)
+        ph = self._connection.placeholder
+        self._wheres.append((f"{col} BETWEEN {ph} AND {ph}", "AND"))
         self._params.extend([start, end])
         return self
 
     def where_not_in(self, column, values):
         """WHERE column NOT IN (...)"""
-        column = _safe_identifier(column)
+        col = self.grammar.wrap(column)
         if not values:
-            return self  # খালি list হলে কোনো ফিল্টার লাগবে না
-        ph = Database.placeholder()
+            return self
+        ph = self._connection.placeholder
         placeholders = ", ".join([ph] * len(values))
-        self._wheres.append((f"{column} NOT IN ({placeholders})", "AND"))
+        self._wheres.append((f"{col} NOT IN ({placeholders})", "AND"))
         self._params.extend(values)
         return self
 
     # --------------------------------------------------------- ORDER / LIMIT
     def order_by(self, column, direction="ASC"):
-        column = _safe_identifier(column)
+        col = self.grammar.wrap(column)
         direction = "DESC" if str(direction).upper() == "DESC" else "ASC"
-        self._order.append(f"{column} {direction}")
+        self._order.append(f"{col} {direction}")
         return self
 
     def group_by(self, *columns):
-        self._group.extend(_safe_identifier(c) for c in columns)
+        self._group.extend(self.grammar.wrap(c) for c in columns)
         return self
 
     def limit(self, n: int):
@@ -212,7 +198,6 @@ class QueryBuilder:
                 page = 1
             page = max(1, page)
 
-            # মূল QueryBuilder অবজেক্টের স্টেট অক্ষুণ্ণ রাখতে ক্লোন ব্যবহার করি
             clone = self.clone()
             total = clone.count()
 
@@ -230,26 +215,18 @@ class QueryBuilder:
             return clone
 
     def having(self, column, operator, value):
-        """GROUP BY-এর পরে ফিল্টার করার জন্য HAVING clause — aggregate ফাংশনে ব্যবহার করুন"""
-        column = _safe_identifier(column)
+        col = self.grammar.wrap(column)
         if operator.upper() not in ("=", "!=", "<>", ">", "<", ">=", "<="):
             raise QueryError("অবৈধ having operator")
-        ph = Database.placeholder()
-        self._havings.append((f"{column} {operator} {ph}", value))
+        ph = self._connection.placeholder
+        self._havings.append((f"{col} {operator} {ph}", value))
         return self
 
     def having_raw(self, fragment: str, operator: str, value=None):
-        """
-        কাস্টম HAVING expression — যেমন having_raw('COUNT(*)', '>', 5)
-        
-        ⚠️ সতর্কবার্তা: কাস্টম এক্সপ্রেশনে ভ্যারিয়েবল বাইন্ড করতে value প্যারামিটারটি ব্যবহার করুন।
-        কখনোই having_raw("COUNT(*) > " + input_val) এভাবে লজিক লিখবেন না।
-        """
         if value is None:
             value = operator
             operator = ""
-        
-        ph = Database.placeholder() if operator else ""
+        ph = self._connection.placeholder if operator else ""
         expr = f"{fragment} {operator} {ph}".strip()
         self._havings.append((expr, value))
         return self
@@ -276,7 +253,7 @@ class QueryBuilder:
             vals.append(value)
         return " HAVING " + " AND ".join(parts), tuple(vals)
 
-    def to_sql(self):
+    def to_sql(self) -> Tuple[str, tuple]:
         sql = f"SELECT {', '.join(self._select)} FROM {self.table}"
         if self._joins:
             sql += " " + " ".join(self._joins)
@@ -295,22 +272,14 @@ class QueryBuilder:
 
     # ------------------------------------------------------------- EXECUTE
     def cache(self, seconds: int = 60):
-        """
-        Query result caching সক্রিয় করে।
-        পরবর্তী .get() call-এ result Cache-এ রাখা হবে।
-
-        ব্যবহার:
-            users = User.where("active", 1).cache(seconds=300).get()
-        """
         self._cache_ttl = seconds
         return self
 
     def get(self):
-        """সব রো রিটার্ন করে (list of dict)। cache() চেইন করলে cached result দেয়।"""
+        """Execute and fetch all records."""
         sql, params = self.to_sql()
 
         if self._cache_ttl is not None:
-            # Cache key namespace with table version tag
             try:
                 from core.cache import Cache
                 version = str(Cache.get(f"table_version:{self.table}", "1"))
@@ -322,7 +291,7 @@ class QueryBuilder:
                 key_source = sql + "|" + json.dumps(params, default=str, sort_keys=True)
             except Exception:
                 key_source = sql + "|" + str(params)
-            
+
             cache_key = f"qb:table:{self.table}:v{version}:" + hashlib.md5(key_source.encode("utf-8")).hexdigest()
 
             try:
@@ -330,17 +299,14 @@ class QueryBuilder:
                 cached = Cache.get(cache_key)
                 if cached is not None:
                     return cached
-                rows = Database.execute(sql, params)
-                # rows already list of dict from Database.execute
+                rows = self._connection.execute(sql, params)
                 Cache.put(cache_key, rows, ttl=self._cache_ttl)
                 return rows
             except Exception:
-                pass  # cache ব্যর্থ হলে normally execute করা
+                pass
 
-        rows = Database.execute(sql, params)
-        # rows already list of dict from Database.execute
+        rows = self._connection.execute(sql, params)
         return rows
-
 
     def first(self):
         self._limit = 1
@@ -348,15 +314,13 @@ class QueryBuilder:
         return rows[0] if rows else None
 
     def count(self):
-        """ফিক্স: মূল QueryBuilder-এর _select না বদলে আলাদা কপি দিয়ে COUNT করে"""
         count_qb = self.clone()
         count_qb._select = ["COUNT(*) as cnt"]
         count_qb._order = []
         count_qb._limit = None
         count_qb._offset = None
         sql, params = count_qb.to_sql()
-        rows = Database.execute(sql, params)
-        # rows is list of dict from Database.execute
+        rows = self._connection.execute(sql, params)
         if rows and len(rows) > 0:
             return rows[0].get("cnt", 0)
         return 0
@@ -366,7 +330,6 @@ class QueryBuilder:
 
     # --------------------------------------------------------- WRITE OPS
     def _invalidate_cache(self):
-        """টেবিলের রাইট অপারেশন হলে ক্যাশ ইনভ্যালিডেট করে"""
         try:
             from core.cache import Cache
             Cache.increment(f"table_version:{self.table}")
@@ -375,36 +338,36 @@ class QueryBuilder:
 
     def insert(self, data: dict):
         """
-        Insert a single record into the table.
-        Returns: dict with 'id' and 'affected' keys (or just 'affected' if no auto-increment)
+        Insert record into table. Returns primary key ID if available, or affected dict.
         """
         self._invalidate_cache()
-        columns = [_safe_identifier(c) for c in data.keys()]
-        ph = Database.placeholder()
+        columns = [self.grammar.wrap(c) for c in data.keys()]
+        ph = self._connection.placeholder
         placeholders = ", ".join([ph] * len(columns))
         sql = f"INSERT INTO {self.table} ({', '.join(columns)}) VALUES ({placeholders})"
-        
-        is_postgres = Database.driver == "postgresql"
-        if is_postgres:
+
+        if self._connection.driver == "postgresql":
             sql += ' RETURNING "id"'
-            cursor = Database.execute(sql, tuple(data.values()))
-            row = cursor.fetchone()
-            inserted_id = dict(row).get("id") if row and isinstance(row, dict) else (row[0] if row else None)
-            result = {'id': inserted_id, 'affected': 1}
+            result = self._connection.execute(sql, tuple(data.values()))
+            if not self._connection.in_transaction():
+                self._connection.commit()
+            if isinstance(result, dict) and "id" in result and result["id"] is not None:
+                return result["id"]
+            return result
         else:
-            # Database.execute now returns dict for INSERT operations
-            result = Database.execute(sql, tuple(data.values()))
-            
-        if not Database.in_transaction():
-            Database.commit()
-        return result
+            result = self._connection.execute(sql, tuple(data.values()))
+            if not self._connection.in_transaction():
+                self._connection.commit()
+            if isinstance(result, dict) and "id" in result and result["id"] is not None:
+                return result["id"]
+            return result
 
     def update(self, data: dict) -> int:
         if not data:
             return 0
         self._invalidate_cache()
-        columns = [_safe_identifier(c) for c in data.keys()]
-        ph = Database.placeholder()
+        columns = [self.grammar.wrap(c) for c in data.keys()]
+        ph = self._connection.placeholder
         set_clause = ", ".join([f"{c} = {ph}" for c in columns])
         sql = f"UPDATE {self.table} SET {set_clause}"
         sql += self._build_where_clause()
@@ -414,27 +377,26 @@ class QueryBuilder:
                 "সব রো আপডেট করতে চাইলে .update_all() ব্যবহার করুন।"
             )
         params = tuple(data.values()) + tuple(self._params)
-        cursor = Database.execute(sql, params)
-        if not Database.in_transaction():
-            Database.commit()
-        return cursor.rowcount
+        cursor = self._connection.execute(sql, params)
+        if not self._connection.in_transaction():
+            self._connection.commit()
+        return cursor if isinstance(cursor, int) else getattr(cursor, "rowcount", 0)
 
     def update_all(self, data: dict) -> int:
-        """সব রো আপডেট করে (সতর্কতা: বিপজ্জনক হতে পারে!)"""
         if not data:
             return 0
         self._invalidate_cache()
-        columns = [_safe_identifier(c) for c in data.keys()]
-        ph = Database.placeholder()
+        columns = [self.grammar.wrap(c) for c in data.keys()]
+        ph = self._connection.placeholder
         set_clause = ", ".join([f"{c} = {ph}" for c in columns])
         sql = f"UPDATE {self.table} SET {set_clause}"
         if self._wheres:
             sql += self._build_where_clause()
         params = tuple(data.values()) + tuple(self._params)
-        cursor = Database.execute(sql, params)
-        if not Database.in_transaction():
-            Database.commit()
-        return cursor.rowcount
+        cursor = self._connection.execute(sql, params)
+        if not self._connection.in_transaction():
+            self._connection.commit()
+        return cursor if isinstance(cursor, int) else getattr(cursor, "rowcount", 0)
 
     def delete(self) -> int:
         self._invalidate_cache()
@@ -445,47 +407,32 @@ class QueryBuilder:
                 "নিরাপত্তার কারণে WHERE ছাড়া DELETE চালানো নিষেধ। "
                 "সব রো ডিলিট করতে চাইলে .delete_all() ব্যবহার করুন।"
             )
-        cursor = Database.execute(sql, tuple(self._params))
-        if not Database.in_transaction():
-            Database.commit()
-        return cursor.rowcount
+        cursor = self._connection.execute(sql, tuple(self._params))
+        if not self._connection.in_transaction():
+            self._connection.commit()
+        return cursor if isinstance(cursor, int) else getattr(cursor, "rowcount", 0)
 
     def delete_all(self) -> int:
-        """সব রো ডিলিট করে (সতর্কতা: বিপজ্জনক হতে পারে!)"""
         self._invalidate_cache()
         sql = f"DELETE FROM {self.table}"
         if self._wheres:
             sql += self._build_where_clause()
-        cursor = Database.execute(sql, tuple(self._params))
-        if not Database.in_transaction():
-            Database.commit()
-        return cursor.rowcount
+        cursor = self._connection.execute(sql, tuple(self._params))
+        if not self._connection.in_transaction():
+            self._connection.commit()
+        return cursor if isinstance(cursor, int) else getattr(cursor, "rowcount", 0)
 
     def clone(self):
-        """
-        QueryBuilder অবজেক্টের একটি গভীর ক্লোন (deep/clean copy) তৈরি করে
-        যাতে ক্লোন করা অবজেক্টের লিস্ট মিউটেট করলে মূল অবজেক্ট পরিবর্তিত না হয়।
-        """
-        import copy
-        new_qb = copy.copy(self)
+        new_qb = QueryBuilder(self.raw_table, connection=self._connection)
         new_qb._select = list(self._select)
         new_qb._wheres = list(self._wheres)
         new_qb._joins = list(self._joins)
         new_qb._order = list(self._order)
         new_qb._group = list(self._group)
         new_qb._havings = list(self._havings)
+        new_qb._limit = self._limit
+        new_qb._offset = self._offset
         new_qb._params = list(self._params)
+        new_qb._cache_ttl = self._cache_ttl
+        new_qb._model = self._model
         return new_qb
-
-    @staticmethod
-    def raw(sql: str, params: tuple = ()):
-        """
-        একদম কাস্টম query চালানোর জন্য - কিন্তু params সবসময় bound রাখতে হবে।
-        কখনো raw(f"... {user_input}") এভাবে লিখবেন না।
-        """
-        result = Database.execute(sql, params)
-        if sql.strip().upper().startswith("SELECT"):
-            # result is already list of dict from Database.execute
-            return result
-        Database.commit()
-        return result if isinstance(result, int) else (result.get('affected', 0) if isinstance(result, dict) else 0)

@@ -24,11 +24,18 @@ from core.event import Event
 
 class Model:
     table = None
+    connection = None    # নির্দিষ্ট ডাটাবেজ কানেকশন নাম (যেমন 'mysql', 'pgsql', 'sqlite')
     primary_key = "id"
     fillable = []       # mass-assignment-এ কোন কলামগুলো allow করা হবে
     hidden = []          # to_dict()-এ কোন কলাম বাদ যাবে (যেমন password)
     timestamps = True    # created_at/updated_at অটো-ম্যানেজ করবে কিনা
     eager_relations = {} # with_() এর জন্য relation definitions
+
+    @classmethod
+    def get_connection(cls):
+        """মডেলের জন্য নির্দিষ্ট করা ডাটাবেজ কানেকশন রিটার্ন করে"""
+        from core.database import Database
+        return Database.connection(cls.connection) if cls.connection else Database.connection()
 
     def __init__(self, attributes: dict = None):
         self._attributes = attributes or {}
@@ -66,7 +73,9 @@ class Model:
     def query(cls) -> QueryBuilder:
         if not cls.table:
             raise ValueError(f"{cls.__name__} ক্লাসে 'table' সেট করা নেই")
-        return QueryBuilder(cls.table)
+        builder = QueryBuilder(cls.table, connection=cls.get_connection())
+        builder.set_model(cls)
+        return builder
 
     @classmethod
     def all(cls):
