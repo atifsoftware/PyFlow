@@ -84,7 +84,10 @@ class MySqlConnection(BaseConnection):
             return False
         try:
             if hasattr(conn, "ping"):
-                conn.ping(reconnect=True)
+                try:
+                    conn.ping(reconnect=True)
+                except TypeError:
+                    conn.ping()
                 return True
             return True
         except Exception:
@@ -105,11 +108,17 @@ class MySqlConnection(BaseConnection):
                         self._created += 1
                     else:
                         try:
-                            conn = self._pool.get(timeout=5.0)
+                            conn = self._pool.get(timeout=2.0)
                             if not self._is_alive(conn):
                                 conn = self._create_raw_connection()
                         except Empty:
-                            raise QueryError(f"MySQL connection pool exhausted (size={self._pool_size}).")
+                            max_overflow = max(15, self._pool_size * 3)
+                            if self._created < max_overflow:
+                                conn = self._create_raw_connection()
+                                self._created += 1
+                                logger.warning("[%s] Pool busy. Created overflow connection (%d/%d).", self._name, self._created, max_overflow)
+                            else:
+                                raise QueryError(f"MySQL connection pool exhausted (size={self._pool_size}, max_overflow={max_overflow}).")
             self._local.conn = conn
 
         return self._local.conn
@@ -152,7 +161,7 @@ class MySqlConnection(BaseConnection):
 
             sql_upper = sql.strip().upper()
             if sql_upper.startswith(("SELECT", "SHOW", "DESCRIBE", "EXPLAIN")):
-                return cur.fetchall()
+                return list(cur.fetchall())
             elif sql_upper.startswith("INSERT"):
                 affected = cur.rowcount if cur.rowcount > 0 else 1
                 last_id = self.last_insert_id(cur)
@@ -225,6 +234,8 @@ class MySqlConnection(BaseConnection):
             try:
                 self._pool.put_nowait(conn)
             except Exception:
+                with self._lock:
+                    self._created = max(0, self._created - 1)
                 try:
                     conn.close()
                 except Exception:

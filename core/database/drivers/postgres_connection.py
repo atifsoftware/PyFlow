@@ -89,11 +89,17 @@ class PostgresConnection(BaseConnection):
                         self._created += 1
                     else:
                         try:
-                            conn = self._pool.get(timeout=5.0)
+                            conn = self._pool.get(timeout=2.0)
                             if not self._is_alive(conn):
                                 conn = self._create_raw_connection()
                         except Empty:
-                            raise QueryError(f"PostgreSQL connection pool exhausted (size={self._pool_size}).")
+                            max_overflow = max(15, self._pool_size * 3)
+                            if self._created < max_overflow:
+                                conn = self._create_raw_connection()
+                                self._created += 1
+                                logger.warning("[%s] Pool busy. Created overflow connection (%d/%d).", self._name, self._created, max_overflow)
+                            else:
+                                raise QueryError(f"PostgreSQL connection pool exhausted (size={self._pool_size}, max_overflow={max_overflow}).")
             self._local.conn = conn
 
         return self._local.conn
@@ -204,6 +210,8 @@ class PostgresConnection(BaseConnection):
             try:
                 self._pool.put_nowait(conn)
             except Exception:
+                with self._lock:
+                    self._created = max(0, self._created - 1)
                 try:
                     conn.close()
                 except Exception:
