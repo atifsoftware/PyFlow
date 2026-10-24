@@ -12,6 +12,17 @@ import time
 import tracemalloc
 from typing import List, Dict, Any
 
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+if hasattr(sys.stderr, 'reconfigure'):
+    try:
+        sys.stderr.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+
 # Ensure project root is in sys.path
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
@@ -24,6 +35,8 @@ from core.database.grammar.sqlite_grammar import SqliteGrammar
 from core.query_builder import QueryBuilder
 from core.container import Container
 from core.decimal_math import Money
+from core.form_request import FormRequest
+from core.request import Request
 from app.routes import build_router
 
 
@@ -31,7 +44,7 @@ def run_benchmarks():
     tracemalloc.start()
     
     print("\n" + "=" * 70)
-    print("   ⚡ PyFlow v3.0.x — Real-Time Performance Benchmark Suite")
+    print("   ⚡ PyFlow v3.1.x — Real-Time Performance Benchmark Suite")
     print(f"   Python Version: {sys.version.split()[0]} | Platform: {sys.platform}")
     print("=" * 70 + "\n")
 
@@ -197,7 +210,49 @@ def run_benchmarks():
     print(f"   • Math Engine Rate:    {ops_math:,.0f} calculations/sec\n")
 
     # -------------------------------------------------------------
-    # Benchmark 6: Memory Consumption & Peak Overhead
+    # Benchmark 6: FormRequest DTO Validation & Field Filtering
+    # -------------------------------------------------------------
+    class OrderFormRequest(FormRequest):
+        def rules(self):
+            return {
+                "customer_name": "required|min:3",
+                "email": "required|email",
+                "total": "required|numeric",
+            }
+
+    import json, io
+    payload_bytes = json.dumps({
+        "customer_name": "Rahim Khan",
+        "email": "rahim@example.com",
+        "total": "1450.00",
+        "untracked": "discarded"
+    }).encode("utf-8")
+    req_env = {
+        "REQUEST_METHOD": "POST",
+        "PATH_INFO": "/orders",
+        "CONTENT_TYPE": "application/json",
+        "CONTENT_LENGTH": str(len(payload_bytes)),
+        "wsgi.input": io.BytesIO(payload_bytes),
+        "HTTP_ACCEPT": "application/json",
+    }
+    dummy_req = Request(req_env)
+
+    form_iterations = 25_000
+    start = time.perf_counter()
+    for _ in range(form_iterations):
+        form = OrderFormRequest(dummy_req)
+        form.validate()
+        _ = form.validated()
+    duration_form = time.perf_counter() - start
+    avg_form_ms = (duration_form / form_iterations) * 1000
+    ops_form = form_iterations / duration_form
+
+    print(f"6. FormRequest DTO Validation & Field Filtering (25,000 iterations):")
+    print(f"   • Avg Validation Time: {avg_form_ms:.5f} ms / validation")
+    print(f"   • Validation Rate:     {ops_form:,.0f} forms/sec\n")
+
+    # -------------------------------------------------------------
+    # Benchmark 7: Memory Consumption & Peak Overhead
     # -------------------------------------------------------------
     current_mem, peak_mem = tracemalloc.get_traced_memory()
     tracemalloc.stop()
@@ -205,7 +260,7 @@ def run_benchmarks():
     current_mb = current_mem / (1024 * 1024)
     peak_mb = peak_mem / (1024 * 1024)
 
-    print(f"6. Memory Footprint (RAM Profiling):")
+    print(f"7. Memory Footprint (RAM Profiling):")
     print(f"   • Active Memory:       {current_mb:.2f} MB")
     print(f"   • Peak Memory Usage:   {peak_mb:.2f} MB\n")
 
